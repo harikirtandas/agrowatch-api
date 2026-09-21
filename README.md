@@ -107,6 +107,301 @@ notas) si es descartable, como en el hermano.
 
 Usuario demo: **`demo@demo.test` / `secret`**.
 
+## API AgroWatchOut — endpoints y contratos (dominio real)
+
+> **Diseño, todavía sin implementar.** Esta sección documenta los endpoints y
+> los contratos JSON que va a exponer el dominio real (`docker/mysql/init/01-schema.sql`),
+> para guiar la implementación de Controllers/Models. El backend que corre hoy
+> sigue siendo el slice demo de la tabla arriba (`Ping`/`Auth`/`Nota`) — nótese
+> que `NotaController` ya quedó roto porque la tabla `notas` no existe más en
+> el schema; se borra junto con el resto del slice demo cuando se implemente
+> esto (ver "Arrancar un proyecto real").
+>
+> Convenciones para todos los endpoints de esta sección (ya vigentes en el
+> slice demo, se mantienen): todo bajo `/api`, JSON en request/response,
+> escritura protegida con `Authorization: Bearer <token>`, y errores con la
+> forma `{ "error": { "status", "mensaje", "errores"? } }`. Códigos: `200`
+> lectura, `201` alta (+ header `Location`), `204` baja o `PUT` sin cuerpo de
+> vuelta, `400` body JSON inválido, `401` sin token / token vencido, `404`
+> recurso inexistente (o fuera del alcance del usuario), `409` violación de
+> `UNIQUE`, `422` validación semántica (campo obligatorio, FK inexistente).
+
+### Tabla de rutas
+
+| Método | Ruta | Auth | Qué hace |
+|---|---|---|---|
+| `GET` | `/api/establecimientos` | sí | establecimientos del usuario logueado |
+| `POST` | `/api/establecimientos` | sí | crea uno y vincula al usuario como `dueno` |
+| `GET` | `/api/establecimientos/{id:\d+}` | sí | uno, si el usuario tiene vínculo |
+| `PUT` | `/api/establecimientos/{id:\d+}` | sí | reemplaza (solo `dueno`) |
+| `DELETE` | `/api/establecimientos/{id:\d+}` | sí | borra (solo `dueno`) -> 204 |
+| `GET` | `/api/lotes?establecimiento_id=` | sí | lotes de ese establecimiento |
+| `POST` | `/api/lotes` | sí | crea un lote |
+| `GET` | `/api/lotes/{id:\d+}` | sí | uno |
+| `PUT` | `/api/lotes/{id:\d+}` | sí | reemplaza |
+| `DELETE` | `/api/lotes/{id:\d+}` | sí | borra -> 204 |
+| `GET` | `/api/campanias` | sí | todas las campañas |
+| `POST` | `/api/campanias` | sí | crea una campaña |
+| `GET` | `/api/campanias/{id:\d+}` | sí | una |
+| `PUT` | `/api/campanias/{id:\d+}` | sí | reemplaza (incluye cerrarla con `cerrada: true`) |
+| `DELETE` | `/api/campanias/{id:\d+}` | sí | borra -> 409 si tiene siembras |
+| `GET` | `/api/cultivos` | no | catálogo completo (solo lectura) |
+| `GET` | `/api/cultivos/{id:\d+}` | no | uno del catálogo |
+| `GET` | `/api/siembras?campania_id=&lote_id=` | sí | siembras, filtros opcionales combinables |
+| `POST` | `/api/siembras` | sí | crea una siembra -> 409 si ya existe esa combinación |
+| `GET` | `/api/siembras/{id:\d+}` | sí | una, con nombres de lote/cultivo/campaña embebidos |
+| `PUT` | `/api/siembras/{id:\d+}` | sí | reemplaza |
+| `DELETE` | `/api/siembras/{id:\d+}` | sí | borra -> 204 (cascada a `costos`) |
+| `GET` | `/api/siembras/{id:\d+}/costos` | sí | costos cargados a esa siembra |
+| `POST` | `/api/siembras/{id:\d+}/costos` | sí | carga un costo -> 201 + `Location: /api/costos/{id}` |
+| `PUT` | `/api/costos/{id:\d+}` | sí | reemplaza |
+| `DELETE` | `/api/costos/{id:\d+}` | sí | borra -> 204 |
+| `GET` | `/api/siembras/{id:\d+}/margen` | sí | costo total, margen y color del semáforo (no persiste nada) |
+| `POST` | `/api/sync/cotizaciones` | sí | trae dólar (y cotización de granos) de la API externa |
+
+Rutas literales antes que paramétricas con el mismo prefijo (ej.
+`/api/siembras/{id}/margen` antes que un eventual `/api/siembras/{id}` genérico
+si se llegaran a anidar más sub-recursos), igual que ya exige el Router.
+
+### Auth (contratos actualizados con `apellido`)
+
+`POST /api/auth/login`
+
+```json
+// request
+{ "email": "demo@demo.test", "password": "secret" }
+
+// 200
+{
+  "token": "3f9e2c...",
+  "expira": "2026-09-28 12:00:00",
+  "usuario": {
+    "id": 1, "nombre": "Usuario", "apellido": "Demo",
+    "email": "demo@demo.test",
+    "created_at": "2026-09-21 10:00:00", "updated_at": "2026-09-21 10:00:00"
+  }
+}
+
+// 401
+{ "error": { "status": 401, "mensaje": "Email o contrasena incorrectos." } }
+```
+
+`GET /api/auth/me` -> 200, mismo objeto `usuario` de arriba (sin `password_hash`).
+
+### Establecimientos
+
+`GET /api/establecimientos` -> 200
+
+```json
+[
+  {
+    "id": 1, "nombre": "La Esperanza", "localidad": "Coronel Suarez",
+    "provincia": "Buenos Aires", "rol": "dueno",
+    "created_at": "2026-09-21 10:00:00", "updated_at": "2026-09-21 10:00:00"
+  }
+]
+```
+
+`POST /api/establecimientos`
+
+```json
+// request
+{ "nombre": "La Esperanza", "localidad": "Coronel Suarez", "provincia": "Buenos Aires" }
+
+// 201 + Location: /api/establecimientos/1
+{
+  "id": 1, "nombre": "La Esperanza", "localidad": "Coronel Suarez",
+  "provincia": "Buenos Aires", "rol": "dueno",
+  "created_at": "2026-09-21 10:00:00", "updated_at": "2026-09-21 10:00:00"
+}
+
+// 422 (falta un campo)
+{ "error": { "status": 422, "mensaje": "Datos invalidos.", "errores": { "nombre": "Requerido" } } }
+```
+
+`GET/PUT /api/establecimientos/{id}` devuelven la misma forma. `DELETE` -> 204.
+`404` si el establecimiento no existe o el usuario no tiene fila en
+`usuario_establecimiento` para ese id (no se distingue de "no existe": no hay
+que filtrar si el establecimiento existe pero es ajeno).
+
+### Lotes
+
+`GET /api/lotes?establecimiento_id=1` -> 200
+
+```json
+[
+  {
+    "id": 1, "establecimiento_id": 1, "nombre": "Lote 1",
+    "ha_totales": "85.50", "ha_efectivas": "80.00",
+    "lat": "-37.4525000", "lng": "-61.9333000",
+    "created_at": "2026-09-21 10:00:00", "updated_at": "2026-09-21 10:00:00"
+  }
+]
+```
+
+Sin `?establecimiento_id=` -> `422 { "errores": { "establecimiento_id": "Requerido" } }`.
+
+`POST /api/lotes`
+
+```json
+// request
+{ "establecimiento_id": 1, "nombre": "Lote 4", "ha_totales": 62.0, "ha_efectivas": 58.3, "lat": -37.4601, "lng": -61.9420 }
+
+// 201 + Location: /api/lotes/2
+```
+
+`lat`/`lng` opcionales (`null` si no vienen). `GET/PUT /{id}` misma forma,
+`DELETE` -> 204.
+
+### Campañas
+
+`GET /api/campanias` -> 200
+
+```json
+[
+  { "id": 1, "nombre": "2026/27", "fecha_inicio": "2026-09-01", "fecha_fin": "2027-03-31", "cerrada": false, "created_at": "...", "updated_at": "..." }
+]
+```
+
+`POST /api/campanias`
+
+```json
+// request
+{ "nombre": "2026/27", "fecha_inicio": "2026-09-01", "fecha_fin": "2027-03-31" }
+```
+
+`cerrada` arranca en `false`; se cierra con `PUT { ..., "cerrada": true }`.
+`DELETE` -> `409 { "error": { "status": 409, "mensaje": "La campana tiene siembras asociadas." } }`
+si `siembras` referencia esa campaña (FK sin `ON DELETE CASCADE` a propósito:
+cerrar, no borrar, es la operación esperada sobre una campaña con datos).
+
+### Cultivos (catálogo, solo lectura)
+
+`GET /api/cultivos` -> 200
+
+```json
+[
+  { "id": 1, "nombre": "Soja", "unidad": "tn", "simbolo_api": "soja", "retencion_pct": "33.00" },
+  { "id": 2, "nombre": "Trigo", "unidad": "tn", "simbolo_api": "trigo", "retencion_pct": "12.00" }
+]
+```
+
+Sin `POST`/`PUT`/`DELETE` en esta iteración: el catálogo se carga por seed
+(`01-schema.sql`) y se edita a mano si hace falta.
+
+### Siembras
+
+`GET /api/siembras?campania_id=1&lote_id=2` -> 200 (ambos filtros opcionales,
+se pueden combinar o usar el endpoint sin ninguno)
+
+```json
+[
+  {
+    "id": 1, "campania_id": 1, "lote_id": 1, "cultivo_id": 1,
+    "cultivo_nombre": "Soja", "lote_nombre": "Lote 1", "campania_nombre": "2026/27",
+    "ha_sembradas": "78.00", "fecha_siembra": "2026-10-15",
+    "variedad": "DM 53i53", "rinde_esperado": "3200.00",
+    "created_at": "...", "updated_at": "..."
+  }
+]
+```
+
+`cultivo_nombre`/`lote_nombre`/`campania_nombre` son campos derivados de un
+`JOIN`, solo de lectura — no se mandan en el `POST`/`PUT`.
+
+`POST /api/siembras`
+
+```json
+// request
+{ "campania_id": 1, "lote_id": 1, "cultivo_id": 1, "ha_sembradas": 78.0, "fecha_siembra": "2026-10-15", "variedad": "DM 53i53", "rinde_esperado": 3200 }
+
+// 409 (ya existe esa combinacion campania+lote+cultivo)
+{ "error": { "status": 409, "mensaje": "Ya existe una siembra con ese cultivo para este lote en esta campana." } }
+```
+
+`GET/PUT /{id}` misma forma que el `GET` de lista (con los `_nombre`
+derivados en el `GET`, sin ellos en el `PUT`). `DELETE` -> 204, borra en
+cascada los `costos` de esa siembra.
+
+### Costos
+
+`GET /api/siembras/1/costos` -> 200
+
+```json
+[
+  {
+    "id": 1, "siembra_id": 1, "categoria": "semilla",
+    "descripcion": "DM 53i53, bolsa 40kg", "cantidad": "2.00", "unidad": "bolsa",
+    "precio_unitario": "45000.00", "moneda": "ARS", "fecha": "2026-10-10",
+    "created_at": "...", "updated_at": "..."
+  }
+]
+```
+
+`POST /api/siembras/1/costos`
+
+```json
+// request
+{ "categoria": "fertilizante", "descripcion": "Urea", "cantidad": 150, "unidad": "kg", "precio_unitario": 950.50, "moneda": "ARS", "fecha": "2026-10-12" }
+
+// 201 + Location: /api/costos/2
+```
+
+`categoria` valida contra el `ENUM` de la tabla (`semilla`, `fertilizante`,
+`herbicida`, `maquinaria`, `labor`, `flete`, `otro`); otro valor -> `422`.
+`moneda` valida `ARS`/`USD`. `PUT /api/costos/{id}` misma forma, `DELETE` -> 204.
+
+### Margen (calculado, no persiste nada)
+
+`GET /api/siembras/1/margen` -> 200
+
+```json
+{
+  "siembra_id": 1,
+  "ha_sembradas": "78.00",
+  "costo_total_ars": "8235000.00",
+  "costo_por_ha_ars": "105576.92",
+  "cotizacion_vigente": { "precio": "380.50", "moneda": "USD", "fecha": "2026-09-20", "mercado": "Chicago" },
+  "tipo_cambio_usado": { "tipo": "oficial", "valor": "1050.0000", "fecha": "2026-09-20" },
+  "precio_neto_retencion_ars": { "por_unidad": "0.00", "nota": "precio x (1 - retencion_pct/100), convertido a ARS con el tipo de cambio" },
+  "rinde_indiferencia_kg_ha": "2450.30",
+  "ingreso_esperado_ars": "12480000.00",
+  "margen_bruto_ars": "4245000.00",
+  "semaforo": "verde",
+  "detalle_costos": [
+    { "id": 1, "categoria": "semilla", "moneda": "ARS", "importe_original": "90000.00", "importe_ars": "90000.00" }
+  ]
+}
+```
+
+`semaforo` sale de `margen_bruto_ars / ingreso_esperado_ars`: `verde` si
+`>= 0.20`, `amarillo` si está entre `0` y `0.20`, `rojo` si `<= 0` (umbrales a
+ajustar durante la implementación, no son parte fija del contrato). `422` si
+no hay ninguna fila en `cotizaciones` con `fecha <= hoy` para el cultivo de la
+siembra (`{ "error": { "status": 422, "mensaje": "No hay cotizacion cargada para este cultivo." } }`),
+o si falta el `tipo_cambio` correspondiente a alguna fecha de costo en USD.
+
+### Sync de cotizaciones (integración cloud)
+
+`POST /api/sync/cotizaciones` -> 200
+
+```json
+{
+  "tipos_cambio_insertados": [
+    { "tipo": "oficial", "fecha": "2026-09-21", "valor": "1052.5000" },
+    { "tipo": "blue", "fecha": "2026-09-21", "valor": "1210.0000" }
+  ],
+  "cotizaciones_insertadas": [],
+  "ya_existian": ["oficial 2026-09-21", "mep 2026-09-21"]
+}
+```
+
+Trae `tipos_cambio` desde `https://dolarapi.com/v1/dolares` (sin API key) y,
+si la fuente de granos elegida está disponible, `cotizaciones`. Inserta solo
+lo que falta (respeta los `UNIQUE`, nunca actualiza una fila existente). Si la
+API externa no responde o corta la conexión -> `502 { "error": { "status": 502, "mensaje": "No se pudo contactar la API de cotizaciones." } }`,
+sin romper el resto de la aplicación.
+
 ## El cliente JS (`public/js/api.js`) — el foco de este starter
 
 `api.js` es un wrapper de `fetch` de ~150 lineas, comentado en espanol

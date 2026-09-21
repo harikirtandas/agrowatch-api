@@ -16,7 +16,7 @@ final class Usuario
     public static function porEmail(string $email): ?array
     {
         $stmt = Database::connection()->prepare(
-            'SELECT id, nombre, email, password_hash, created_at, updated_at
+            'SELECT id, nombre, apellido, email, password_hash, created_at, updated_at
              FROM usuarios WHERE email = :email'
         );
         $stmt->execute(['email' => $email]);
@@ -32,7 +32,7 @@ final class Usuario
     public static function buscar(int $id): ?array
     {
         $stmt = Database::connection()->prepare(
-            'SELECT id, nombre, email, created_at, updated_at FROM usuarios WHERE id = :id'
+            'SELECT id, nombre, apellido, email, created_at, updated_at FROM usuarios WHERE id = :id'
         );
         $stmt->execute(['id' => $id]);
 
@@ -44,14 +44,15 @@ final class Usuario
     /**
      * Alta de usuario con la contrasena ya hasheada aca (nunca se guarda en texto).
      */
-    public static function crear(string $nombre, string $email, string $password): int
+    public static function crear(string $nombre, string $apellido, string $email, string $password): int
     {
         $stmt = Database::connection()->prepare(
-            'INSERT INTO usuarios (nombre, email, password_hash, created_at, updated_at)
-             VALUES (:nombre, :email, :hash, NOW(), NOW())'
+            'INSERT INTO usuarios (nombre, apellido, email, password_hash, created_at, updated_at)
+             VALUES (:nombre, :apellido, :email, :hash, NOW(), NOW())'
         );
         $stmt->execute([
             'nombre' => $nombre,
+            'apellido' => $apellido,
             'email' => $email,
             'hash' => password_hash($password, PASSWORD_DEFAULT),
         ]);
