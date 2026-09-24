@@ -9,21 +9,6 @@ use App\Core\Auth;
 use App\Core\Controller;
 use App\Models\Establecimiento;
 
-// ---------------------------------------------------------------------------
-// MATERIAL DE ESTUDIO. Vive en planning/ para leerse en grupo -- NO esta
-// enchufada al router todavia (src/public/index.php ya tiene las rutas de
-// /api/establecimientos apuntando a "EstablecimientoController@...", pero la
-// clase real todavia no existe en src/app/Controllers/). Cuando el equipo
-// entienda este archivo, se copia/adapta a
-// src/app/Controllers/EstablecimientoController.php. Ver el README de esta
-// carpeta para el flujo completo request -> response.
-//
-// Comparar con src/app/Controllers/NotaController.php: exactamente la misma
-// forma (index/show/store/update/destroy, un metodo privado usuario() para
-// no repetir Auth::usuarioActual(), un validarCuerpo() al final). Lo unico
-// que cambia es el nombre de los campos y que update()/destroy() ademas
-// chequean el campo `rol` antes de escribir -- ver el comentario ahi abajo.
-// ---------------------------------------------------------------------------
 final class EstablecimientoController extends Controller
 {
     /** @return array<string, mixed> usuario autenticado (sin password_hash) */
@@ -121,12 +106,6 @@ final class EstablecimientoController extends Controller
     }
 
     /**
-     * Mismo patron que NotaController::validarCuerpo(): junta los tres
-     * campos del body, valida todos ANTES de tirar la excepcion (para que el
-     * 422 devuelva todos los errores juntos en vez de uno a la vez -- mejor
-     * experiencia para quien consume la API, no tiene que hacer prueba y
-     * error campo por campo).
-     *
      * @return array{0: string, 1: string, 2: string} [nombre, localidad, provincia]
      */
     private function validarCuerpo(): array
