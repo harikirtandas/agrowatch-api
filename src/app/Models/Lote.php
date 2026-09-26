@@ -70,4 +70,35 @@ final class Lote
 
         return $fila === false ? null : $fila;
     }
+
+    /**
+     * Solo inserta la fila de `lotes`. NO valida que el establecimiento sea
+     * del usuario -- eso lo hace el controller ANTES de llamar a este metodo,
+     * con Establecimiento::buscarDeUsuario(). Misma convencion que
+     * Establecimiento::actualizar(): el chequeo de pertenencia vive una sola
+     * vez, en el controller, no repetido en cada metodo del modelo.
+     */
+    public static function crear(
+        int $establecimientoId,
+        string $nombre,
+        float $haTotales,
+        float $haEfectivas,
+        ?float $lat,
+        ?float $lng
+    ): int {
+        $stmt = Database::connection()->prepare(
+            'INSERT INTO lotes (establecimiento_id, nombre, ha_totales, ha_efectivas, lat, lng, created_at, updated_at)
+             VALUES (:estId, :nombre, :haTotales, :haEfectivas, :lat, :lng, NOW(), NOW())'
+        );
+        $stmt->execute([
+            'estId' => $establecimientoId,
+            'nombre' => $nombre,
+            'haTotales' => $haTotales,
+            'haEfectivas' => $haEfectivas,
+            'lat' => $lat,
+            'lng' => $lng,
+        ]);
+
+        return (int) Database::connection()->lastInsertId();
+    }
 }

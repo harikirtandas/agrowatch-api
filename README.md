@@ -136,7 +136,7 @@ Usuario demo: **`demo@demo.test` / `secret`**.
 | `PUT` | `/api/establecimientos/{id:\d+}` | sí | reemplaza (solo `dueno`) |
 | `DELETE` | `/api/establecimientos/{id:\d+}` | sí | borra (solo `dueno`) -> 204 |
 | `GET` | `/api/lotes?establecimiento_id=` | sí | lotes de ese establecimiento |
-| `POST` | `/api/lotes` | sí | crea un lote |
+| `POST` | `/api/lotes` | sí | crea un lote (solo `dueno`) |
 | `GET` | `/api/lotes/{id:\d+}` | sí | uno |
 | `PUT` | `/api/lotes/{id:\d+}` | sí | reemplaza |
 | `DELETE` | `/api/lotes/{id:\d+}` | sí | borra -> 204 |
@@ -250,8 +250,11 @@ Sin `?establecimiento_id=` -> `422 { "errores": { "establecimiento_id": "Requeri
 // 201 + Location: /api/lotes/2
 ```
 
-`lat`/`lng` opcionales (`null` si no vienen). `GET/PUT /{id}` misma forma,
-`DELETE` -> 204.
+`lat`/`lng` opcionales (`null` si no vienen). `POST` solo lo puede hacer el
+`dueno` del establecimiento (`403` si el usuario es `asesor`); `404` si el
+`establecimiento_id` no existe o no es del usuario, misma convencion que
+Establecimientos (no se distingue "no existe" de "no es tuyo"). `GET/PUT /{id}`
+misma forma, `DELETE` -> 204.
 
 ### Campañas
 
