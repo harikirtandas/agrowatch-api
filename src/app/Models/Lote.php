@@ -40,4 +40,34 @@ final class Lote
 
         return $stmt->fetchAll();
     }
+
+    /**
+     * Un lote puntual, pero SOLO si el usuario tiene vinculo con el
+     * establecimiento al que pertenece (mismo JOIN doble que
+     * delEstablecimiento, filtrado por l.id en vez de l.establecimiento_id --
+     * asi no hace falta que el caller sepa a que establecimiento pertenece el
+     * lote, el JOIN lo resuelve solo subiendo desde la fila).
+     *
+     * Si el lote no existe o es de un establecimiento ajeno, devuelve null en
+     * los dos casos -- misma convencion que Establecimiento::buscarDeUsuario,
+     * para no confirmarle a un atacante que un id "existe pero no es tuyo".
+     *
+     * @return array<string, mixed>|null
+     */
+    public static function buscarDeUsuario(int $id, int $usuarioId): ?array
+    {
+        $stmt = Database::connection()->prepare(
+            'SELECT l.id, l.establecimiento_id, l.nombre, l.ha_totales, l.ha_efectivas,
+                    l.lat, l.lng, ue.rol, l.created_at, l.updated_at
+             FROM lotes l
+             INNER JOIN establecimientos e ON e.id = l.establecimiento_id
+             INNER JOIN usuario_establecimiento ue ON ue.establecimiento_id = e.id
+             WHERE l.id = :id AND ue.usuario_id = :uid'
+        );
+        $stmt->execute(['id' => $id, 'uid' => $usuarioId]);
+
+        $fila = $stmt->fetch();
+
+        return $fila === false ? null : $fila;
+    }
 }

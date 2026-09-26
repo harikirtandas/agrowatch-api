@@ -33,4 +33,17 @@ final class LoteController extends Controller
         $uid = (int) $this->usuario()['id'];
         $this->json(Lote::delEstablecimiento((int) $establecimientoId, $uid));
     }
+
+    // GET /api/lotes/{id}
+    public function show(int $id): void
+    {
+        $uid = (int) $this->usuario()['id'];
+        $lote = Lote::buscarDeUsuario($id, $uid);
+
+        if ($lote === null) {
+            throw new ApiException(404, 'Lote no encontrado.');
+        }
+
+        $this->json($lote);
+    }
 }
