@@ -1,0 +1,125 @@
+:root {
+  --fondo-pagina: #f2f1ec;
+  --blanco: #ffffff;
+  --gris-borde: #ddded8;
+  --gris-entrada: #f7f7f4;
+  --gris-placeholder: #9a9a94;
+  --verde-boton: #4f8f63;
+  --verde-boton-hover: #457f57;
+  --verde-enlace: #4f8f63;
+  --negro-texto: #1a1a1a;
+  --gris-etiqueta: #4a4a46;
+  --radio: 12px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--fondo-pagina);
+}
+
+.pagina-login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.tarjeta-login {
+  width: 100%;
+  max-width: 420px;
+  background: var(--blanco);
+  border-radius: 20px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+  padding: 40px 36px;
+  text-align: center;
+}
+
+.tarjeta-login__titulo {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--negro-texto);
+  margin-bottom: 24px;
+}
+
+.formulario-login {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.campo {
+  margin-bottom: 20px;
+}
+
+.campo__etiqueta {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gris-etiqueta);
+  margin-bottom: 8px;
+}
+
+.campo__entrada {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--gris-borde);
+  border-radius: var(--radio);
+  background: var(--gris-entrada);
+  font-size: 15px;
+  color: var(--negro-texto);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.campo__entrada::placeholder {
+  color: var(--gris-placeholder);
+}
+
+.campo__entrada:focus {
+  border-color: var(--verde-boton);
+}
+
+.boton {
+  display: block;
+  width: 100%;
+  border: none;
+  border-radius: var(--radio);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.boton--principal {
+  background: var(--verde-boton);
+  color: var(--blanco);
+  padding: 16px;
+  margin-top: 4px;
+  margin-bottom: 20px;
+}
+
+.boton--principal:hover {
+  background: var(--verde-boton-hover);
+}
+
+.boton:active {
+  transform: translateY(1px);
+}
+
+.enlace {
+  color: var(--verde-enlace);
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.enlace:hover {
+  text-decoration: underline;
+}

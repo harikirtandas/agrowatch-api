@@ -1,0 +1,130 @@
+:root {
+  --fondo-pagina: #f2f1ec;
+  --blanco: #ffffff;
+  --gris-borde: #ddded8;
+  --gris-entrada: #f7f7f4;
+  --verde-boton: #4f8f63;
+  --verde-boton-hover: #457f57;
+  --negro-texto: #1a1a1a;
+  --gris-etiqueta: #4a4a46;
+  --radio: 12px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--fondo-pagina);
+}
+
+.pagina-registro {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.tarjeta-registro {
+  width: 100%;
+  max-width: 700px;
+  background: var(--blanco);
+  border-radius: 24px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+  padding: 44px 48px;
+}
+
+.tarjeta-registro__titulo {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--negro-texto);
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.formulario-registro__fila {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.campo {
+  flex: 1;
+  margin-bottom: 20px;
+}
+
+.formulario-registro__fila .campo {
+  margin-bottom: 0;
+}
+
+.campo--ancho-completo {
+  width: 100%;
+}
+
+.campo__etiqueta {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gris-etiqueta);
+  margin-bottom: 8px;
+}
+
+.campo__entrada {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--gris-borde);
+  border-radius: var(--radio);
+  background: var(--gris-entrada);
+  font-size: 15px;
+  color: var(--negro-texto);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.campo__entrada:focus {
+  border-color: var(--verde-boton);
+}
+
+.boton {
+  display: block;
+  width: 100%;
+  border: none;
+  border-radius: var(--radio);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.boton--principal {
+  background: var(--verde-boton);
+  color: var(--blanco);
+  padding: 16px;
+  margin-top: 4px;
+}
+
+.boton--principal:hover {
+  background: var(--verde-boton-hover);
+}
+
+.boton:active {
+  transform: translateY(1px);
+}
+
+/* Responsive */
+@media (max-width: 560px) {
+  .tarjeta-registro {
+    padding: 32px 24px;
+  }
+  .formulario-registro__fila {
+    flex-direction: column;
+    gap: 20px;
+  }
+  .formulario-registro__fila .campo {
+    margin-bottom: 0;
+  }
+}

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgroWatchOut — Mi campo</title>
+  <link rel="stylesheet" href="../css/dashboard_mi_campo.css">
+</head>
+<body>
+
+  <div class="aplicacion">
+
+    <!-- Barra lateral -->
+    <aside class="barra-lateral">
+      <span class="barra-lateral__logo"></span>
+
+      <nav class="barra-lateral__nav">
+        <button class="barra-lateral__icono barra-lateral__icono--activo" data-vista="panel" aria-label="Panel">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>
+        </button>
+        <button class="barra-lateral__icono" data-vista="lotes" aria-label="Lotes">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
+        </button>
+        <button class="barra-lateral__icono" data-vista="perfil" aria-label="Perfil">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.2"/><path d="M4.5 20c1.6-3.6 5-5 7.5-5s5.9 1.4 7.5 5"/></svg>
+        </button>
+      </nav>
+
+      <span class="barra-lateral__avatar" aria-hidden="true"></span>
+    </aside>
+
+    <!-- Contenido principal -->
+    <div class="contenido">
+
+      <header class="encabezado-panel">
+        <div>
+          <h1 class="encabezado-panel__saludo">¡Buen día, Juan!</h1>
+          <p class="encabezado-panel__fecha">Lunes 8 de septiembre — así está tu campo hoy</p>
+        </div>
+        <div class="encabezado-panel__acciones">
+          <input type="search" class="encabezado-panel__buscador" placeholder="Buscar lote, cultivo...">
+          <button class="encabezado-panel__campana" aria-label="Notificaciones">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 1.5 5.5h-15S6 14 6 10Z"/><path d="M10 18a2 2 0 0 0 4 0"/></svg>
+          </button>
+          <span class="encabezado-panel__perfil" aria-hidden="true"></span>
+        </div>
+      </header>
+
+      <section class="tarjetas-resumen">
+        <div class="tarjeta-resumen">
+          <span class="tarjeta-resumen__etiqueta">Hectáreas totales</span>
+          <strong class="tarjeta-resumen__valor">185 ha</strong>
+        </div>
+        <div class="tarjeta-resumen">
+          <span class="tarjeta-resumen__etiqueta">Rinde de indiferencia prom.</span>
+          <strong class="tarjeta-resumen__valor">29 qq/ha</strong>
+        </div>
+        <div class="tarjeta-resumen">
+          <span class="tarjeta-resumen__etiqueta">Margen proyectado prom.</span>
+          <strong class="tarjeta-resumen__valor">$134k /ha</strong>
+          <span class="tarjeta-resumen__cambio tarjeta-resumen__cambio--positivo">▲ 4% vs. semana pasada</span>
+        </div>
+        <div class="tarjeta-resumen">
+          <span class="tarjeta-resumen__etiqueta">Lotes en alerta</span>
+          <strong class="tarjeta-resumen__valor tarjeta-resumen__valor--alerta">1 de 3</strong>
+        </div>
+      </section>
+
+      <section class="panel-principal">
+
+        <!-- Mapa interactivo -->
+        <div class="mapa-lotes" id="mapaLotes">
+          <div class="mapa-lotes__encabezado">
+            <h2 class="mapa-lotes__titulo">Mapa de lotes</h2>
+            <button class="mapa-lotes__establecimiento">🏡 Ea. Las Marías <span aria-hidden="true">▾</span></button>
+            <div class="mapa-lotes__leyenda">
+              <span class="leyenda-item"><i class="punto punto--bien"></i>Bien</span>
+              <span class="leyenda-item"><i class="punto punto--ajustado"></i>Ajustado</span>
+              <span class="leyenda-item"><i class="punto punto--alerta"></i>Alerta</span>
+            </div>
+          </div>
+
+          <div class="mapa-lotes__lienzo" id="lienzoMapa">
+            <svg id="svgMapa" class="mapa-lotes__svg" viewBox="0 0 1000 700" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="gradienteFondo" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#eef2ea"/>
+                  <stop offset="100%" stop-color="#9bb890"/>
+                </linearGradient>
+              </defs>
+
+              <rect x="0" y="0" width="1000" height="700" fill="url(#gradienteFondo)"/>
+
+              <polygon class="lote lote--bien" data-lote="2"
+                points="40,40 480,20 430,300 150,340 20,180"></polygon>
+              <polygon class="lote lote--ajustado" data-lote="4"
+                points="480,260 760,220 860,460 480,560 260,340"></polygon>
+              <polygon class="lote lote--alerta" data-lote="7"
+                points="780,480 980,360 980,660 560,600"></polygon>
+
+              <g class="marcador" data-lote="2" transform="translate(250,190)">
+                <circle r="26" class="marcador__circulo marcador__circulo--bien"></circle>
+                <text class="marcador__texto" text-anchor="middle" dy="8">2</text>
+              </g>
+              <g class="marcador" data-lote="4" transform="translate(620,380)">
+                <circle r="26" class="marcador__circulo marcador__circulo--ajustado"></circle>
+                <text class="marcador__texto" text-anchor="middle" dy="8">4</text>
+              </g>
+              <g class="marcador" data-lote="7" transform="translate(830,540)">
+                <circle r="26" class="marcador__circulo marcador__circulo--alerta"></circle>
+                <text class="marcador__texto" text-anchor="middle" dy="8">7</text>
+              </g>
+            </svg>
+          </div>
+
+          <div class="mapa-lotes__zoom">
+            <button type="button" data-zoom="in" aria-label="Acercar">+</button>
+            <button type="button" data-zoom="out" aria-label="Alejar">−</button>
+            <button type="button" data-zoom="reset" aria-label="Restablecer vista">⤾</button>
+          </div>
+
+          <div class="tarjeta-flotante" id="tarjetaFlotante" hidden>
+            <h3 id="flotanteTitulo" class="tarjeta-flotante__titulo"></h3>
+            <div class="tarjeta-flotante__fila"><span>Hectáreas</span><strong id="flotanteHectareas"></strong></div>
+            <div class="tarjeta-flotante__fila"><span>Rinde de indiferencia</span><strong id="flotanteRinde"></strong></div>
+            <div class="tarjeta-flotante__fila"><span>Estado</span><strong id="flotanteEstado"></strong></div>
+          </div>
+        </div>
+
+        <!-- Panel derecho -->
+        <aside class="panel-derecho">
+
+          <div class="tarjeta-info">
+            <h2 class="tarjeta-info__titulo">Cotización de hoy</h2>
+            <p class="tarjeta-info__fuente">Vía granos.ar</p>
+            <div class="cotizacion-fila">
+              <span>Trigo</span>
+              <strong>$220,7</strong>
+              <span class="cambio cambio--positivo">▲ 0,4%</span>
+            </div>
+            <div class="cotizacion-fila">
+              <span>Cebada</span>
+              <strong>Manual</strong>
+            </div>
+            <p class="tarjeta-info__actualizado">Actualizado hoy 09:14</p>
+          </div>
+
+          <div class="tarjeta-info">
+            <div class="tarjeta-info__encabezado">
+              <h2 class="tarjeta-info__titulo">Clima</h2>
+              <button class="etiqueta-lote">Lote 2 <span aria-hidden="true">▾</span></button>
+            </div>
+            <p class="tarjeta-info__texto">Cada lote tiene su propia ubicación — el pronóstico es por lote, no por establecimiento</p>
+            <div class="clima-actual">
+              <span class="clima-actual__temperatura">21°</span>
+              <div>
+                <strong>Parcialmente nublado</strong>
+                <p>Máx 24° · Mín 12°</p>
+              </div>
+            </div>
+            <div class="clima-datos">
+              <div><strong>60%</strong><span>Lluvia jue.</span></div>
+              <div><strong>58%</strong><span>Humedad</span></div>
+              <div><strong>14 km/h</strong><span>Viento</span></div>
+            </div>
+          </div>
+
+          <div class="tarjeta-info">
+            <h2 class="tarjeta-info__titulo">Semáforo — resumen</h2>
+            <p class="tarjeta-info__texto">3 lotes activos</p>
+            <div class="semaforo">
+              <div class="semaforo__dona" aria-hidden="true"></div>
+              <ul class="semaforo__lista">
+                <li><i class="punto punto--bien"></i>1 en verde</li>
+                <li><i class="punto punto--ajustado"></i>1 ajustado</li>
+                <li><i class="punto punto--alerta"></i>1 en alerta</li>
+              </ul>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <section class="lista-lotes">
+        <button class="tarjeta-lote" data-lote="2">
+          <i class="punto punto--bien"></i>
+          <span class="tarjeta-lote__texto">
+            <strong>Lote 2 — Trigo</strong>
+            <span>85 ha · 28 qq/ha</span>
+          </span>
+          <span class="tarjeta-lote__flecha" aria-hidden="true">›</span>
+        </button>
+        <button class="tarjeta-lote" data-lote="4">
+          <i class="punto punto--ajustado"></i>
+          <span class="tarjeta-lote__texto">
+            <strong>Lote 4 — Cebada</strong>
+            <span>60 ha · 31 qq/ha</span>
+          </span>
+          <span class="tarjeta-lote__flecha" aria-hidden="true">›</span>
+        </button>
+        <button class="tarjeta-lote" data-lote="7">
+          <i class="punto punto--alerta"></i>
+          <span class="tarjeta-lote__texto">
+            <strong>Lote 7 — Trigo</strong>
+            <span>40 ha · 34 qq/ha</span>
+          </span>
+          <span class="tarjeta-lote__flecha" aria-hidden="true">›</span>
+        </button>
+      </section>
+
+    </div>
+  </div>
+
+  <script src=""></script>
+</body>
+</html>
