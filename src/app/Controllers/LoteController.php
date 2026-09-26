@@ -73,6 +73,47 @@ final class LoteController extends Controller
         $this->creado(Lote::buscarDeUsuario($id, $uid), "/api/lotes/{$id}");
     }
 
+    // PUT /api/lotes/{id}   { "nombre", "ha_totales", "ha_efectivas", "lat"?, "lng"? }
+    // El establecimiento_id NO se puede reasignar por aca -- el lote queda
+    // pegado al establecimiento con el que se creo. Mudar un lote de
+    // establecimiento es una operacion distinta (y mas delicada, exigiria
+    // validar el rol en el establecimiento DESTINO tambien), fuera del
+    // alcance de este contrato.
+    public function update(int $id): void
+    {
+        $uid = (int) $this->usuario()['id'];
+        $lote = Lote::buscarDeUsuario($id, $uid);
+
+        if ($lote === null) {
+            throw new ApiException(404, 'Lote no encontrado.');
+        }
+        if ($lote['rol'] !== 'dueno') {
+            throw new ApiException(403, 'Solo el dueno puede modificar este lote.');
+        }
+
+        [$nombre, $haTotales, $haEfectivas, $lat, $lng] = $this->validarCamposLote();
+        Lote::actualizar($id, $nombre, $haTotales, $haEfectivas, $lat, $lng);
+
+        $this->json(Lote::buscarDeUsuario($id, $uid));
+    }
+
+    // DELETE /api/lotes/{id}
+    public function destroy(int $id): void
+    {
+        $uid = (int) $this->usuario()['id'];
+        $lote = Lote::buscarDeUsuario($id, $uid);
+
+        if ($lote === null) {
+            throw new ApiException(404, 'Lote no encontrado.');
+        }
+        if ($lote['rol'] !== 'dueno') {
+            throw new ApiException(403, 'Solo el dueno puede borrar este lote.');
+        }
+
+        Lote::eliminar($id);
+        $this->sinContenido();
+    }
+
     /**
      * @return array{0: int, 1: string, 2: float, 3: float, 4: ?float, 5: ?float}
      *         [establecimiento_id, nombre, ha_totales, ha_efectivas, lat, lng]
@@ -80,6 +121,25 @@ final class LoteController extends Controller
     private function validarCuerpo(): array
     {
         $establecimientoId = $this->request->input('establecimiento_id');
+
+        if (!is_int($establecimientoId) && !ctype_digit((string) $establecimientoId)) {
+            throw ApiException::validacion(['establecimiento_id' => 'Requerido.']);
+        }
+
+        [$nombre, $haTotales, $haEfectivas, $lat, $lng] = $this->validarCamposLote();
+
+        return [(int) $establecimientoId, $nombre, $haTotales, $haEfectivas, $lat, $lng];
+    }
+
+    /**
+     * Campos comunes a store() y update() -- todo menos establecimiento_id,
+     * que store() valida aparte (update() no lo toca, ver comentario arriba).
+     *
+     * @return array{0: string, 1: float, 2: float, 3: ?float, 4: ?float}
+     *         [nombre, ha_totales, ha_efectivas, lat, lng]
+     */
+    private function validarCamposLote(): array
+    {
         $nombre = trim((string) $this->request->input('nombre', ''));
         $haTotales = $this->request->input('ha_totales');
         $haEfectivas = $this->request->input('ha_efectivas');
@@ -87,9 +147,6 @@ final class LoteController extends Controller
         $lng = $this->request->input('lng');
 
         $errores = [];
-        if (!is_int($establecimientoId) && !ctype_digit((string) $establecimientoId)) {
-            $errores['establecimiento_id'] = 'Requerido.';
-        }
         if ($nombre === '') {
             $errores['nombre'] = 'Requerido.';
         }
@@ -110,7 +167,6 @@ final class LoteController extends Controller
         }
 
         return [
-            (int) $establecimientoId,
             $nombre,
             (float) $haTotales,
             (float) $haEfectivas,

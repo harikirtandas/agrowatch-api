@@ -101,4 +101,44 @@ final class Lote
 
         return (int) Database::connection()->lastInsertId();
     }
+
+    /**
+     * Actualiza por id, sin volver a filtrar por usuario/rol aca adentro --
+     * el controller ya lo chequeo antes de llamar (buscarDeUsuario() +
+     * comparar `rol`). No toca establecimiento_id: un lote no cambia de
+     * establecimiento por este metodo.
+     */
+    public static function actualizar(
+        int $id,
+        string $nombre,
+        float $haTotales,
+        float $haEfectivas,
+        ?float $lat,
+        ?float $lng
+    ): bool {
+        $stmt = Database::connection()->prepare(
+            'UPDATE lotes
+             SET nombre = :nombre, ha_totales = :haTotales, ha_efectivas = :haEfectivas,
+                 lat = :lat, lng = :lng, updated_at = NOW()
+             WHERE id = :id'
+        );
+        $stmt->execute([
+            'nombre' => $nombre,
+            'haTotales' => $haTotales,
+            'haEfectivas' => $haEfectivas,
+            'lat' => $lat,
+            'lng' => $lng,
+            'id' => $id,
+        ]);
+
+        return $stmt->rowCount() > 0;
+    }
+
+    public static function eliminar(int $id): bool
+    {
+        $stmt = Database::connection()->prepare('DELETE FROM lotes WHERE id = :id');
+        $stmt->execute(['id' => $id]);
+
+        return $stmt->rowCount() > 0;
+    }
 }

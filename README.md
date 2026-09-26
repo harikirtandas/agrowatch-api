@@ -138,8 +138,8 @@ Usuario demo: **`demo@demo.test` / `secret`**.
 | `GET` | `/api/lotes?establecimiento_id=` | sí | lotes de ese establecimiento |
 | `POST` | `/api/lotes` | sí | crea un lote (solo `dueno`) |
 | `GET` | `/api/lotes/{id:\d+}` | sí | uno |
-| `PUT` | `/api/lotes/{id:\d+}` | sí | reemplaza |
-| `DELETE` | `/api/lotes/{id:\d+}` | sí | borra -> 204 |
+| `PUT` | `/api/lotes/{id:\d+}` | sí | reemplaza (solo `dueno`) |
+| `DELETE` | `/api/lotes/{id:\d+}` | sí | borra (solo `dueno`) -> 204 |
 | `GET` | `/api/campanias` | sí | todas las campañas |
 | `POST` | `/api/campanias` | sí | crea una campaña |
 | `GET` | `/api/campanias/{id:\d+}` | sí | una |
@@ -254,7 +254,9 @@ Sin `?establecimiento_id=` -> `422 { "errores": { "establecimiento_id": "Requeri
 `dueno` del establecimiento (`403` si el usuario es `asesor`); `404` si el
 `establecimiento_id` no existe o no es del usuario, misma convencion que
 Establecimientos (no se distingue "no existe" de "no es tuyo"). `GET/PUT /{id}`
-misma forma, `DELETE` -> 204.
+misma forma, `DELETE` -> 204. `PUT`/`DELETE` tambien son solo `dueno` (`403`
+si `asesor`); `PUT` no admite reasignar `establecimiento_id` -- un lote no
+cambia de establecimiento por este endpoint.
 
 ### Campañas
 
