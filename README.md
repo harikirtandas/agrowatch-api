@@ -4,13 +4,15 @@ Plantilla de GitHub para arrancar una **API REST en PHP plano** (sin framework,
 sin librerias externas) dockerizada, con **Apache + mod_php + MySQL 8**, en
 cualquier maquina, con un solo comando — igual que
 [`php-api-docker-starter-apache-mysql`](../php-api-docker-starter-apache-mysql),
-del que sale este repo. Backend, Docker y `app/Core/` son **identicos, sin
-ningun cambio**.
+del que sale este repo. Backend y `app/Core/` son **identicos, sin ningun
+cambio**. Docker difiere en una cosa: el frontend corre en su propio
+contenedor/puerto, separado del backend (ver "Arquitectura" y "CORS" mas
+abajo) — no comparten origen.
 
-**La diferencia es el frontend.** En el hermano original, `public/index.html`
-y `public/js/*` son parte del "slice demo descartable" — sirven para probar
+**La diferencia es el frontend.** En el hermano original, `src/public/index.html`
+y `src/public/js/*` son parte del "slice demo descartable" — sirven para probar
 que todo funciona de punta a punta, y en un proyecto real se borran enteros.
-Acá es al reves: `public/js/api.js` es el entregable principal del repo, un
+Acá es al reves: `web/js/api.js` es el entregable principal del repo, un
 wrapper de `fetch` completo y comentado linea por linea para **estudiar como
 se consume una API REST desde JavaScript puro** — sesion con token Bearer en
 `localStorage`, `login()`/`logout()`, los cinco verbos, y manejo de errores
@@ -33,7 +35,8 @@ make install
 
 Al terminar:
 
-- API + cliente JS -> **http://localhost:8080**
+- API -> **http://localhost:8080**
+- Frontend (`web/`, otro contenedor/puerto) -> **http://localhost:8082**
 - Adminer (cliente web de MySQL) -> **http://localhost:8081**
 
 `make install` es **obligatorio** antes del primer arranque: sin `vendor/` no
@@ -42,40 +45,45 @@ existe el autoloader de Composer y el proyecto no corre con solo
 
 ## Arquitectura
 
-Un solo contenedor de aplicacion (`php:8.4-apache`, mod_php) mas MySQL y Adminer:
+**Backend y frontend son dos servicios Docker independientes**, cada uno con
+su propio puerto — a proposito, para que puedan ejecutarse, deployarse y
+escalar por separado (mobile y web consumen la misma API). La unica
+comunicacion entre ambos es HTTP contra la API (ver "CORS" mas abajo). A eso
+se suman MySQL y Adminer:
 
 | Servicio | Imagen | Rol |
 |---|---|---|
-| `app` | build propio, `php:8.4-apache` | Apache y PHP en el mismo proceso. Publica `APP_PORT` (default 8080). |
+| `app` | build propio, `php:8.4-apache` | Solo API: Apache + PHP sirviendo `/api/*`. Publica `APP_PORT` (default 8080). |
+| `web` | `php:8.4-cli-alpine` | Frontend estatico (`web/`): `index.html`, `css/`, `js/`, `html/`, servido con el servidor embebido de PHP (`php -S`) — no corre ningun `.php` propio, solo sirve archivos. Publica `WEB_PORT` (default 8082). |
 | `mysql` | `mysql:8` | Base de datos, volumen persistente `mysql-data` + healthcheck. |
 | `adminer` | `adminer` | Cliente web de MySQL, publica `ADMINER_PORT` (default 8081). |
 
 `./src` se monta como bind mount en `app`: `src/public` es el docroot (unico
-directorio que Apache expone por URL), el resto queda fuera.
+directorio que Apache expone por URL) y **ya no tiene frontend adentro**,
+solo el front controller de la API. `./web` se monta, de solo lectura, en
+`web` — el servidor embebido de PHP sirve esos archivos tal cual, sin build
+step.
 
-## Estructura de `src/`
+## Estructura del repo
 
 ```
-src/
-├── app/
-│   ├── Core/
-│   │   ├── Router.php         # router propio: verbos, parametros {id:\d+}, method override, 404/405 JSON
-│   │   ├── Controller.php     # base: json(), creado(), sinContenido()
-│   │   ├── Request.php        # body JSON, query params, Bearer token
-│   │   ├── ApiException.php   # excepcion HTTP con status + errores de validacion
-│   │   ├── Auth.php           # login -> token opaco en tabla `tokens`; usuarioActual()
-│   │   └── Database.php       # PDO singleton (getenv, ERRMODE_EXCEPTION, FETCH_ASSOC)
-│   ├── Controllers/           # PingController, AuthController, NotaController  (slice demo)
-│   └── Models/                # Usuario, Token, Nota  (slice demo)
-├── config/app.php             # debug, cors_origin, token_ttl_horas
-└── public/
-    ├── .htaccess              # front controller + fix del header Authorization
-    ├── index.php              # UNICO lugar donde se arma la tabla de rutas
-    ├── index.html             # pantalla de login + CRUD de notas
-    ├── css/app.css
-    └── js/
-        ├── api.js             # EL ENTREGABLE: wrapper de fetch, comentado a fondo
-        └── app.js             # cliente demo que usa api.js (este si es reemplazable)
+.
+├── src/
+│   ├── app/
+│   │   ├── Core/               # Router, Controller, Request, ApiException, Auth, Database
+│   │   ├── Controllers/        # PingController, AuthController, NotaController (slice demo) + dominio real
+│   │   └── Models/             # Usuario, Token, Nota (slice demo) + dominio real (Establecimiento, Lote, ...)
+│   ├── config/app.php          # debug, cors_origin, token_ttl_horas
+│   └── public/                 # docroot de Apache — SOLO la API
+│       ├── .htaccess           # front controller + fix del header Authorization
+│       └── index.php           # UNICO lugar donde se arma la tabla de rutas
+└── web/                        # docroot del servidor embebido de PHP — SOLO el frontend, otro puerto
+    ├── index.html              # demo del starter (login + CRUD de notas), descartable
+    ├── css/                    # app.css (demo) + css por pantalla real (landing, login, dashboard, ...)
+    ├── js/
+    │   ├── api.js              # wrapper de fetch, agnostico al dominio
+    │   └── app.js              # cliente demo que usa api.js (descartable)
+    └── html/                   # pantallas reales de AgroWatchOut (landing, login, dashboard_mi_campo, ...)
 ```
 
 ## El backend: vertical slice, igual que en el hermano (descartable)
@@ -86,7 +94,7 @@ repo original, sin cambios: sirve para probar que Apache + PHP + router +
 MySQL + auth funcionan juntos, y en un proyecto real se reemplaza por el
 dominio propio. Lo que se conserva siempre es `app/Core/`.
 
-**La excepcion es `public/js/api.js`**: ese archivo esta pensado para
+**La excepcion es `web/js/api.js`**: ese archivo esta pensado para
 quedarse tal cual (o extendido) en cualquier proyecto que arranque desde este
 template, sea cual sea el dominio real — el patron login/token/fetch no
 cambia aunque cambien los endpoints. `app.js` (el que arma la pantalla de
@@ -407,7 +415,7 @@ lo que falta (respeta los `UNIQUE`, nunca actualiza una fila existente). Si la
 API externa no responde o corta la conexión -> `502 { "error": { "status": 502, "mensaje": "No se pudo contactar la API de cotizaciones." } }`,
 sin romper el resto de la aplicación.
 
-## El cliente JS (`public/js/api.js`) — el foco de este starter
+## El cliente JS (`web/js/api.js`) — el foco de este starter
 
 `api.js` es un wrapper de `fetch` de ~150 lineas, comentado en espanol
 explicando el porque de cada decision (no solo el que), pensado para
@@ -440,7 +448,7 @@ comentados ahi mismo, no repetidos aca):
 - `logout()` nunca deja tirado un token roto: si el aviso al servidor falla,
   borra igual el token local en el `finally`.
 
-`public/js/app.js` (el cliente demo de notas) usa las ocho funciones de
+`web/js/app.js` (el cliente demo de notas) usa las ocho funciones de
 arriba para armar login, logout, listar, crear, editar (con `PATCH`, inline
 en cada fila) y borrar notas — sirve de ejemplo de uso, pero **es
 reemplazable entero**, a diferencia de `api.js`.
@@ -548,22 +556,34 @@ igual para un cliente JS y para una app Android que consuma la misma API.
 
 ## CORS
 
-`src/public/index.php` manda los headers CORS en toda respuesta y contesta el
-preflight `OPTIONS` con 204. El origen permitido sale de `CORS_ORIGIN` (default
-`*` para desarrollo; en produccion, el dominio del frontend).
+Backend (`app`, puerto `APP_PORT`) y frontend (`web`, puerto `WEB_PORT`) son
+dos origenes distintos para el navegador (mismo host, pero **puerto**
+distinto ya cuenta como otro origen). `src/public/index.php` manda los
+headers CORS en toda respuesta y contesta el preflight `OPTIONS` con 204. El
+origen permitido sale de `CORS_ORIGIN`, que **hay que mantener sincronizado
+con `WEB_PORT`** (default `http://localhost:8082`); si cambia uno, cambia el
+otro. Nota: esto es puramente para el navegador — la app Android no aplica
+politica de mismo origen y no le afecta este valor.
 
 ## Configuracion (`.env` en la raiz, no en `src/`)
 
 ```bash
 APP_PORT=8080
+WEB_PORT=8082
 ADMINER_PORT=8081
 DB_DATABASE=app
 DB_USERNAME=app
 DB_PASSWORD=secret
 APP_DEBUG=1
-CORS_ORIGIN=*
+CORS_ORIGIN=http://localhost:8082
 TOKEN_TTL_HORAS=168
 ```
+
+Si cambia el puerto de la API, hay que actualizar tambien la linea
+`window.API_BASE_URL = ...` en cada pantalla de `web/` que consuma la API.
+Hoy solo la define `web/index.html` (el demo); las pantallas reales de
+`web/html/` todavia no llaman a la API — cuando se conecten, van a necesitar
+la misma linea antes de cargar `api.js`.
 
 `App\Core\Database::connection()` lee `DB_*` con `getenv()` dentro del
 contenedor (docker-compose las inyecta como `environment:`), no hace falta
@@ -573,7 +593,7 @@ editar codigo.
 
 | Comando | Que hace |
 |---|---|
-| `make install` | Instala Composer si hace falta y levanta los tres contenedores. Una sola vez por proyecto. |
+| `make install` | Instala Composer si hace falta y levanta los cuatro contenedores (`app`, `web`, `mysql`, `adminer`). Una sola vez por proyecto. |
 | `make up` / `make down` | Levanta / apaga. `down` **no borra datos**. |
 | `make restart` | Reinicia sin rebuildear. |
 | `make shell` | `bash` dentro del contenedor `app`. |
@@ -600,11 +620,11 @@ sumar una tabla a un proyecto con datos ya cargados:
    `Models/` (`Auth` solo si el proyecto no usa login; si lo usa, adaptar
    `Usuario`/`Token` a las tablas reales), y las rutas del slice en
    `src/public/index.php`.
-4. Conservar todo `app/Core/` **y `public/js/api.js`** — el wrapper de fetch
+4. Conservar todo `app/Core/` **y `web/js/api.js`** — el wrapper de fetch
    no depende del dominio (notas, usuarios, lo que sea), solo de la forma
    de las respuestas (`{ error: { mensaje, errores } }`) y del flujo de auth
    (Bearer + login/logout), que es igual para cualquier endpoint que agregues.
-5. Reemplazar `public/index.html` + `public/js/app.js` + `public/css/app.css`
+5. Reemplazar `web/index.html` + `web/js/app.js` + `web/css/app.css`
    por la pantalla real, usando las funciones de `api.js` (`API.get`,
    `API.post`, `API.login`, etc.) igual que hace el `app.js` de este starter.
 6. `make install`.

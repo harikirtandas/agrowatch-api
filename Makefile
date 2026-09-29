@@ -11,7 +11,8 @@ install:
 		echo "==> no hay composer.json, nada que instalar."; \
 	fi
 	HOST_UID=$$(id -u) HOST_GID=$$(id -g) docker compose up -d --build
-	@echo "App     -> http://localhost:$${APP_PORT:-8080}"
+	@echo "API     -> http://localhost:$${APP_PORT:-8080}"
+	@echo "Web     -> http://localhost:$${WEB_PORT:-8082}"
 	@echo "Adminer -> http://localhost:$${ADMINER_PORT:-8081}"
 
 up:

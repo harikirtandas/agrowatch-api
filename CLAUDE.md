@@ -1,11 +1,26 @@
-# php-api-docker-starter-apache-mysql-cliente-js
+# agrowatch-api
 
-- Hermano de `php-api-docker-starter-apache-mysql`, del que sale este repo.
-  **Backend, Docker y `app/Core/` identicos, sin cambios.** La unica diferencia
-  es `src/public/js/api.js`: en el hermano es parte del slice demo descartable;
-  aca es el entregable principal, pensado para quedarse y estudiarse, no para
-  tirarse. `public/js/app.js` (el cliente de notas que lo usa) si es
-  reemplazable, igual que en el hermano.
+- Nace de `php-api-docker-starter-apache-mysql-cliente-js`. **Backend y
+  `app/Core/` identicos al starter, sin cambios.** `web/js/api.js` es el
+  wrapper de fetch heredado del starter (pensado para quedarse); `web/js/app.js`
+  es el demo de notas del starter, descartable. El dominio real (AgroWatchOut:
+  establecimientos, lotes, campanias, cultivos, siembras, costos) vive en
+  `Controllers/`/`Models/` nuevos, y el frontend real en `web/html/`
+  (landing, login, dashboard, etc., todavia sin conectar a la API).
+- **Docker difiere del starter original, a proposito: `app` (API) y `web`
+  (frontend estatico) son dos servicios/puertos separados**, no uno solo.
+  Motivo: backend y frontend (web + la app Android que consume la misma API)
+  deben poder ejecutarse, deployarse y escalar de forma independiente, con la
+  API como unico medio de comunicacion. `web` corre `php:8.4-cli-alpine` con
+  el servidor embebido (`php -S 0.0.0.0:80 -t /var/www/html`) apuntando a
+  `./web` — no nginx ni Apache: servidor de desarrollo, no para produccion,
+  pero evita sumar una tecnologia nueva solo para servir estatico.
+  Consecuencia directa: `web/js/api.js` ya NO puede asumir mismo origen
+  (`BASE_URL = '/api'` relativo); lee `window.API_BASE_URL`, que hay que
+  setear en un `<script>` ANTES de cargar `api.js` en cada pantalla que
+  consuma la API (hoy solo lo hace `web/index.html`, el demo — las pantallas
+  reales de `web/html/` todavia no llaman a la API). Si cambia `APP_PORT`,
+  hay que actualizar esa linea Y `CORS_ORIGIN` (ver bullet de CORS).
 - `api.js` expone `get/post/put/patch/del` + `login(email, password)` (loguea,
   guarda el token, devuelve el usuario) + `logout()` (avisa al backend Y borra
   el token local aunque esa llamada falle, en un `finally`) + `haySesion()`.
@@ -31,8 +46,10 @@
   `put()`/`patch()`/`delete()`, method override (`X-HTTP-Method-Override` o
   `?_method=` sobre POST) y responde 404/405 como JSON en vez de `require` de una
   vista. Se agregan `Request`, `ApiException` y `Auth` en `Core/`.
-- **Solo `src/public/` es DocumentRoot.** `app/`, `config/` y `vendor/` quedan un
-  nivel arriba, fuera del alcance de Apache por URL.
+- **Solo `src/public/` es DocumentRoot de Apache, y solo tiene la API.**
+  `app/`, `config/` y `vendor/` quedan un nivel arriba, fuera del alcance de
+  Apache por URL. El frontend estatico vive en `./web/`, fuera de `src/`,
+  servido por un contenedor aparte (ver bullet de Docker arriba).
 - **`make install` es obligatorio antes del primer arranque**: sin
   `vendor/autoload.php` (que solo genera `composer install`) el `require` de
   `src/public/index.php` explota. `composer.json` no tiene dependencias reales:
@@ -40,19 +57,27 @@
 - `composer.json` vive en `src/composer.json`, **no en la raiz**: el bind mount es
   `./src:/var/www/html`, `vendor/` tiene que quedar dentro de `src/`.
 - **Mayusculas en dirs que mapean namespace**: `Core/`, `Controllers/`, `Models/`
-  con inicial mayuscula (PSR-4 `App\ -> app/`); `config/`, `public/css`,
-  `public/js` en minuscula. En Mac el FS es case-insensitive y el contenedor
-  Debian no: un mismatch de case anda en local y rompe en el contenedor.
+  con inicial mayuscula (PSR-4 `App\ -> app/`); `config/`, `web/css`, `web/js`
+  en minuscula. En Mac el FS es case-insensitive y el contenedor Debian no: un
+  mismatch de case anda en local y rompe en el contenedor.
 - **Las rutas se registran solo en `src/public/index.php`**, con
   `$router->get/post/put/patch/delete(...)` y `$router->dispatch()`. Literales
-  antes que parametricas con el mismo prefijo, o quedan inalcanzables. Todo bajo
-  `/api`; el frontend estatico (`index.html`, `css/`, `js/`) lo sirve Apache
-  directo gracias a las condiciones `-f`/`-d` del `.htaccess`.
+  antes que parametricas con el mismo prefijo, o quedan inalcanzables. Todo
+  bajo `/api`; ya no hay nada estatico que servir desde este docroot (se movio
+  a `./web/`), asi que el `.htaccess` manda **todo** al front controller.
 - **`.htaccess` reinyecta el header `Authorization`** como `HTTP_AUTHORIZATION`
   via `mod_rewrite` (Apache lo descarta antes de PHP). `Request::bearerToken()`
   depende de eso; en un hosting sin `.htaccess` hay que resolverlo aparte.
-- **CORS**: se setea en `src/public/index.php` para toda respuesta y el preflight
-  `OPTIONS` se contesta ahi con 204, antes del router. Origen desde `CORS_ORIGIN`.
+- **CORS ya no es cosmetico, cumple su funcion real**: `app` y `web` corren en
+  puertos distintos, asi que para el navegador son origenes distintos.
+  `src/public/index.php` manda los headers CORS en toda respuesta y contesta
+  el preflight `OPTIONS` con 204, antes del router. El origen permitido sale
+  de `CORS_ORIGIN`, inyectado por `docker-compose.yml` con default
+  `http://localhost:8082` (el puerto de `web`) — **antes de este cambio,
+  `docker-compose.yml` ni siquiera pasaba `CORS_ORIGIN`/`APP_DEBUG`/
+  `TOKEN_TTL_HORAS` al contenedor `app`**, asi que `config/app.php` siempre
+  caia al default `'*'`; se corrigio de paso. Un cliente movil (Android) no
+  pasa por CORS, este valor no le afecta.
 - **Manejo de errores central**: `set_exception_handler` en `index.php`.
   `ApiException` lleva su `status` (y opcional `errores` de validacion) y se
   traduce a `{ "error": { ... } }`. Cualquier otra excepcion es 500; con
@@ -77,9 +102,11 @@
   `PingController` (ping + health/db), `AuthController` + `Auth`/`Usuario`/
   `Token` (login por token), `NotaController` + `Nota` (CRUD con los 5 verbos,
   filtrado por usuario), el schema `01-schema.sql` (`usuarios`/`tokens`/`notas`
-  + usuario demo `demo@demo.test`/`secret`) y `public/index.html` +
-  `public/js/app.js` + `public/css/*`. Prueba de punta a punta Apache + PHP +
-  router + MySQL + autoloader + auth. En un proyecto real se borra todo eso;
-  se conserva `app/Core/` **y `public/js/api.js`** (ver bullets de arriba) —
-  a diferencia de `php-api-docker-starter-apache-mysql`, donde todo `js/`
-  entra en el paquete descartable.
+  + usuario demo `demo@demo.test`/`secret`) y `web/index.html` +
+  `web/js/app.js` + `web/css/app.css`. Prueba de punta a punta Apache + PHP +
+  router + MySQL + autoloader + auth. Se conserva `app/Core/` **y
+  `web/js/api.js`**. El dominio real de AgroWatchOut (`Establecimiento`,
+  `Lote`, etc. en `Controllers/`/`Models/`, y las pantallas de `web/html/`)
+  convive con este slice demo todavia sin borrar — hasta que se borre, no
+  reusar los endpoints `/api/notas` ni el schema demo para nada del dominio
+  real.

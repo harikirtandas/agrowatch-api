@@ -1,5 +1,5 @@
 Options -Indexes
-DirectoryIndex index.html index.php
+DirectoryIndex index.php
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
@@ -10,12 +10,8 @@ DirectoryIndex index.html index.php
     RewriteCond %{HTTP:Authorization} .
     RewriteRule ^ - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-    # archivos y directorios que existen se sirven tal cual: index.html, css/, js/
-    RewriteCond %{REQUEST_FILENAME} -f [OR]
-    RewriteCond %{REQUEST_FILENAME} -d
-    RewriteRule ^ - [L]
-
-    # todo lo demas (las rutas /api/...) al front controller: App\Core\Router
-    # resuelve desde ahi. Esta regla es el corazon del esquema, no es borrable.
+    # este docroot ya no sirve frontend estatico (se movio a ./web, otro
+    # contenedor/puerto): todo lo que llegue aca es API, asi que todo va
+    # directo al front controller. App\Core\Router resuelve desde ahi.
     RewriteRule ^ index.php [L]
 </IfModule>

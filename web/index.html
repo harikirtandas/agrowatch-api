@@ -40,6 +40,11 @@
         </section>
     </main>
 
+    <!-- La API vive en otro origen (otro contenedor, otro puerto) que este
+         HTML: no comparten servidor a propósito, así que api.js no puede
+         asumir una ruta relativa. Esta es la única línea que hay que tocar
+         si cambia el host/puerto del backend. -->
+    <script>window.API_BASE_URL = 'http://localhost:8080/api';</script>
     <script src="/js/api.js"></script>
     <script src="/js/app.js"></script>
 </body>

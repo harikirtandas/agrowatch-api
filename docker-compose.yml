@@ -16,9 +16,34 @@ services:
       DB_DATABASE: ${DB_DATABASE:-app}
       DB_USERNAME: ${DB_USERNAME:-app}
       DB_PASSWORD: ${DB_PASSWORD:-secret}
+      APP_DEBUG: ${APP_DEBUG:-1}
+      # Origen del servicio `web` (abajo). Es la unica URL que puede llamar a
+      # esta API desde un navegador; una app movil no pasa por CORS y no le
+      # afecta este valor. Si cambia WEB_PORT, hay que actualizar esto tambien.
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:8082}
+      TOKEN_TTL_HORAS: ${TOKEN_TTL_HORAS:-168}
     depends_on:
       mysql:
         condition: service_healthy
+
+  # Frontend estatico, desacoplado del backend a proposito: corre en su
+  # propio contenedor y puerto (otro origen para el navegador), y solo se
+  # comunica con `app` por HTTP via fetch (ver web/js/api.js). No comparte
+  # proceso ni puerto con la API.
+  #
+  # Servidor embebido de PHP (`php -S`), no nginx/Apache: no agrega una
+  # imagen/tecnologia nueva al proyecto (ya hay PHP) y sirve estatico igual
+  # de bien para este alcance. Es un servidor de desarrollo, no para
+  # produccion.
+  web:
+    image: php:8.4-cli-alpine
+    command: php -S 0.0.0.0:80 -t /var/www/html
+    ports:
+      - "${WEB_PORT:-8082}:80"
+    volumes:
+      - ./web:/var/www/html:ro
+    depends_on:
+      - app
 
   mysql:
     image: mysql:8

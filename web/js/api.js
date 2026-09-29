@@ -13,12 +13,15 @@
 // solo el QUÉ (eso ya lo dice el código).
 
 const API = (() => {
-    // Todas las rutas de este backend cuelgan de /api (ver src/public/index.php
-    // del starter). El cliente lo sirve el mismo Apache que la API — mismo
-    // origen, mismo puerto — así que alcanza con una ruta relativa. Si algún
-    // día el frontend vive en otro dominio/puerto que el backend, esto pasa a
-    // ser una URL absoluta (y ahí es donde entra CORS, ver README).
-    const BASE_URL = '/api';
+    // La API corre en su propio contenedor/puerto (servicio `app` del
+    // docker-compose), separado del servidor que sirve este HTML (servicio
+    // `web`) a propósito: backend y frontend deben poder ejecutarse y
+    // deployarse de forma independiente, y la única comunicación entre
+    // ambos debe ser HTTP contra la API. Por eso cada página define
+    // `window.API_BASE_URL` en un <script> ANTES de cargar este archivo, y
+    // acá solo caemos a la ruta relativa '/api' como fallback si por algún
+    // motivo esa variable no está.
+    const BASE_URL = window.API_BASE_URL || '/api';
 
     // Clave que usamos en localStorage. La sacamos a una constante para no
     // repetir el string 'token' suelto en cinco lugares distintos y arriesgar
