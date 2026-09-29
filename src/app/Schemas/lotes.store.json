@@ -1,0 +1,17 @@
+{
+  "type": "object",
+  "required": ["establecimiento_id", "nombre", "ha_totales", "ha_efectivas"],
+  "properties": {
+    "establecimiento_id": {
+      "anyOf": [
+        { "type": "integer" },
+        { "type": "string", "pattern": "^[0-9]+$" }
+      ]
+    },
+    "nombre": { "type": "string", "minLength": 1 },
+    "ha_totales": { "type": "number" },
+    "ha_efectivas": { "type": "number" },
+    "lat": { "type": ["number", "null"] },
+    "lng": { "type": ["number", "null"] }
+  }
+}

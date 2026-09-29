@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Core\ApiException;
 use App\Core\Auth;
 use App\Core\Controller;
+use App\Core\Validator;
 use App\Models\Establecimiento;
 
 final class EstablecimientoController extends Controller
@@ -110,24 +111,15 @@ final class EstablecimientoController extends Controller
      */
     private function validarCuerpo(): array
     {
-        $nombre = trim((string) $this->request->input('nombre', ''));
-        $localidad = trim((string) $this->request->input('localidad', ''));
-        $provincia = trim((string) $this->request->input('provincia', ''));
-
-        $errores = [];
-        if ($nombre === '') {
-            $errores['nombre'] = 'Requerido.';
-        }
-        if ($localidad === '') {
-            $errores['localidad'] = 'Requerido.';
-        }
-        if ($provincia === '') {
-            $errores['provincia'] = 'Requerido.';
-        }
-        if ($errores !== []) {
-            throw ApiException::validacion($errores);
+        $datos = $this->request->json();
+        foreach (['nombre', 'localidad', 'provincia'] as $campo) {
+            if (array_key_exists($campo, $datos)) {
+                $datos[$campo] = trim((string) $datos[$campo]);
+            }
         }
 
-        return [$nombre, $localidad, $provincia];
+        Validator::validar('establecimientos', $datos);
+
+        return [$datos['nombre'], $datos['localidad'], $datos['provincia']];
     }
 }

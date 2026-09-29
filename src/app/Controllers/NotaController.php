@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Core\ApiException;
 use App\Core\Auth;
 use App\Core\Controller;
+use App\Core\Validator;
 use App\Models\Nota;
 use PDOException;
 
@@ -85,20 +86,16 @@ final class NotaController extends Controller
      */
     private function validarCuerpo(): array
     {
-        $titulo = trim((string) $this->request->input('titulo', ''));
-        $cuerpo = trim((string) $this->request->input('cuerpo', ''));
-
-        $errores = [];
-        if ($titulo === '') {
-            $errores['titulo'] = 'Requerido.';
+        $datos = $this->request->json();
+        if (array_key_exists('titulo', $datos)) {
+            $datos['titulo'] = trim((string) $datos['titulo']);
         }
-        if (mb_strlen($titulo) > 120) {
-            $errores['titulo'] = 'Maximo 120 caracteres.';
-        }
-        if ($errores !== []) {
-            throw ApiException::validacion($errores);
+        if (array_key_exists('cuerpo', $datos)) {
+            $datos['cuerpo'] = trim((string) $datos['cuerpo']);
         }
 
-        return [$titulo, $cuerpo];
+        Validator::validar('notas', $datos);
+
+        return [$datos['titulo'], $datos['cuerpo'] ?? ''];
     }
 }

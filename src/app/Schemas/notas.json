@@ -1,0 +1,8 @@
+{
+  "type": "object",
+  "required": ["titulo"],
+  "properties": {
+    "titulo": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "cuerpo": {}
+  }
+}

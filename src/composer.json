@@ -3,7 +3,8 @@
     "description": "Esqueleto de API REST en PHP plano, sin framework: router propio con verbos HTTP, respuestas JSON, auth por token y CORS",
     "type": "project",
     "require": {
-        "php": ">=8.2"
+        "php": ">=8.2",
+        "opis/json-schema": "^2.6"
     },
     "autoload": {
         "psr-4": {

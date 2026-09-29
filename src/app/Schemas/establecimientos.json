@@ -1,0 +1,9 @@
+{
+  "type": "object",
+  "required": ["nombre", "localidad", "provincia"],
+  "properties": {
+    "nombre": { "type": "string", "minLength": 1 },
+    "localidad": { "type": "string", "minLength": 1 },
+    "provincia": { "type": "string", "minLength": 1 }
+  }
+}

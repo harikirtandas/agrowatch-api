@@ -1,0 +1,11 @@
+{
+  "type": "object",
+  "required": ["nombre", "ha_totales", "ha_efectivas"],
+  "properties": {
+    "nombre": { "type": "string", "minLength": 1 },
+    "ha_totales": { "type": "number" },
+    "ha_efectivas": { "type": "number" },
+    "lat": { "type": ["number", "null"] },
+    "lng": { "type": ["number", "null"] }
+  }
+}

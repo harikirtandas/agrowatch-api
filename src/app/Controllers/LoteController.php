@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Core\ApiException;
 use App\Core\Auth;
 use App\Core\Controller;
+use App\Core\Validator;
 use App\Models\Establecimiento;
 use App\Models\Lote;
 
@@ -120,15 +121,17 @@ final class LoteController extends Controller
      */
     private function validarCuerpo(): array
     {
-        $establecimientoId = $this->request->input('establecimiento_id');
+        $datos = $this->prepararDatos($this->request->json());
+        Validator::validar('lotes.store', $datos);
 
-        if (!is_int($establecimientoId) && !ctype_digit((string) $establecimientoId)) {
-            throw ApiException::validacion(['establecimiento_id' => 'Requerido.']);
-        }
-
-        [$nombre, $haTotales, $haEfectivas, $lat, $lng] = $this->validarCamposLote();
-
-        return [(int) $establecimientoId, $nombre, $haTotales, $haEfectivas, $lat, $lng];
+        return [
+            (int) $datos['establecimiento_id'],
+            $datos['nombre'],
+            (float) $datos['ha_totales'],
+            (float) $datos['ha_efectivas'],
+            isset($datos['lat']) ? (float) $datos['lat'] : null,
+            isset($datos['lng']) ? (float) $datos['lng'] : null,
+        ];
     }
 
     /**
@@ -140,38 +143,28 @@ final class LoteController extends Controller
      */
     private function validarCamposLote(): array
     {
-        $nombre = trim((string) $this->request->input('nombre', ''));
-        $haTotales = $this->request->input('ha_totales');
-        $haEfectivas = $this->request->input('ha_efectivas');
-        $lat = $this->request->input('lat');
-        $lng = $this->request->input('lng');
-
-        $errores = [];
-        if ($nombre === '') {
-            $errores['nombre'] = 'Requerido.';
-        }
-        if (!is_int($haTotales) && !is_float($haTotales)) {
-            $errores['ha_totales'] = 'Requerido, tiene que ser numerico.';
-        }
-        if (!is_int($haEfectivas) && !is_float($haEfectivas)) {
-            $errores['ha_efectivas'] = 'Requerido, tiene que ser numerico.';
-        }
-        if ($lat !== null && !is_int($lat) && !is_float($lat)) {
-            $errores['lat'] = 'Tiene que ser numerico.';
-        }
-        if ($lng !== null && !is_int($lng) && !is_float($lng)) {
-            $errores['lng'] = 'Tiene que ser numerico.';
-        }
-        if ($errores !== []) {
-            throw ApiException::validacion($errores);
-        }
+        $datos = $this->prepararDatos($this->request->json());
+        Validator::validar('lotes.update', $datos);
 
         return [
-            $nombre,
-            (float) $haTotales,
-            (float) $haEfectivas,
-            $lat === null ? null : (float) $lat,
-            $lng === null ? null : (float) $lng,
+            $datos['nombre'],
+            (float) $datos['ha_totales'],
+            (float) $datos['ha_efectivas'],
+            isset($datos['lat']) ? (float) $datos['lat'] : null,
+            isset($datos['lng']) ? (float) $datos['lng'] : null,
         ];
+    }
+
+    /**
+     * @param array<string, mixed> $datos
+     * @return array<string, mixed>
+     */
+    private function prepararDatos(array $datos): array
+    {
+        if (array_key_exists('nombre', $datos)) {
+            $datos['nombre'] = trim((string) $datos['nombre']);
+        }
+
+        return $datos;
     }
 }

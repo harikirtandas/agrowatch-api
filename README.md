@@ -535,6 +535,48 @@ Forma de la respuesta de error:
 Con `APP_DEBUG=1`, un 500 no controlado incluye `error.debug` con la excepcion,
 el mensaje y el archivo:linea. En `0`, solo un mensaje generico.
 
+## Validacion (JSON Schema)
+
+Los campos de cada request (`POST`/`PUT`) se validan contra un JSON Schema
+con **`opis/json-schema`**, no a mano campo por campo. El wrapper es
+`App\Core\Validator::validar(string $nombreSchema, array $datos)`, y los
+schemas viven en `src/app/Schemas/*.json`, uno por recurso (o por
+recurso+verbo cuando las reglas difieren entre `store` y `update`, como en
+`lotes`). Si algo no valida, `Validator` arma el mismo array
+`{ campo: mensaje }` de siempre y tira `ApiException::validacion(...)` — el
+contrato de un 422 (`{ "error": { "errores": {...} } }`) **no cambia**, solo
+cambia como se arma internamente.
+
+Patron en un controller:
+
+```php
+$datos = $this->request->json();
+if (array_key_exists('nombre', $datos)) {
+    $datos['nombre'] = trim((string) $datos['nombre']);   // normalizar ANTES de validar
+}
+
+Validator::validar('establecimientos', $datos);            // tira 422 si no matchea el schema
+
+// aca $datos ya paso el schema: usar sus valores con confianza
+```
+
+Reglas:
+- El **trim/normalizacion de strings sigue siendo responsabilidad del
+  controller**, antes de llamar a `Validator::validar()` — el schema valida
+  la forma final de los datos, no le importa si vino con espacios.
+- Un campo ausente del body dispara el keyword `required` del schema
+  (mensaje `"Requerido."`); un campo presente pero del tipo equivocado
+  dispara `type`/`minLength`/`maxLength`/`pattern` (ver
+  `App\Core\Validator::mensaje()` para el mapeo keyword -> texto en
+  espanol).
+- Agregar un campo nuevo a un endpoint es editar el `.json` del schema, no
+  tocar el controller.
+- `composer require opis/json-schema` ya esta en `src/composer.json`. Si
+  alguien del equipo tira `git pull` y el proyecto ya le estaba corriendo,
+  **`docker compose up` solo no alcanza**: hace falta reinstalar
+  dependencias con `make composer CMD=install` (o `docker compose exec app
+  composer install` si no tiene `make`).
+
 ## Autenticacion
 
 `App\Core\Auth`:

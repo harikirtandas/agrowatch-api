@@ -21,6 +21,29 @@
   consuma la API (hoy solo lo hace `web/index.html`, el demo — las pantallas
   reales de `web/html/` todavia no llaman a la API). Si cambia `APP_PORT`,
   hay que actualizar esa linea Y `CORS_ORIGIN` (ver bullet de CORS).
+- **Validacion de body con JSON Schema (`opis/json-schema`), no a mano.**
+  `App\Core\Validator::validar($nombreSchema, $datos)` carga un `.json` de
+  `src/app/Schemas/` (uno por recurso, o por recurso+verbo si `store`/`update`
+  difieren, ver `lotes.store.json` vs `lotes.update.json`), valida, y si falla
+  arma el mismo array `{ campo: mensaje }` de siempre y tira
+  `ApiException::validacion(...)` — el JSON de un 422 no cambia, solo la
+  implementacion interna. El trim/normalizacion de strings sigue siendo del
+  controller, ANTES de llamar a `Validator::validar()` (ver
+  `EstablecimientoController::validarCuerpo()` como referencia). Un campo
+  ausente dispara `required` (mensaje "Requerido."); presente pero mal
+  tipado dispara `type`/`minLength`/`maxLength`/`pattern` (mapeo keyword ->
+  texto en espanol en `Validator::mensaje()`). Detalle no obvio: PHP
+  `json_encode([])` serializa `[]` (array), no `{}` (objeto) — `Validator`
+  lo fuerza a `stdClass` a mano para un body vacio, si no opis nunca llega a
+  chequear los campos requeridos. `NotaController` (slice demo, descartable)
+  quedo con el mismo patron pero apunta a una tabla `notas` que YA NO EXISTE
+  en el schema real (se reemplazo por el dominio AgroWatchOut) — no probar
+  `/api/notas` en runtime, va a tirar 500.
+- **Nueva dependencia de Composer**: `opis/json-schema` (`^2.6`), ya en
+  `src/composer.json`/`composer.lock`. Quien ya tenia el proyecto corriendo
+  necesita `make composer CMD=install` (o `docker compose exec app composer
+  install`) despues de `git pull` — `docker compose up` solo no instala
+  dependencias nuevas.
 - `api.js` expone `get/post/put/patch/del` + `login(email, password)` (loguea,
   guarda el token, devuelve el usuario) + `logout()` (avisa al backend Y borra
   el token local aunque esa llamada falle, en un `finally`) + `haySesion()`.

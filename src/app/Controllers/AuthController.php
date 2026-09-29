@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use App\Core\ApiException;
 use App\Core\Auth;
 use App\Core\Controller;
+use App\Core\Validator;
 
 // slice demo (auth). El patron login -> token -> requests con Bearer es el que
 // todo proyecto de este starter necesita; lo que se descarta es el detalle de
@@ -16,21 +16,14 @@ final class AuthController extends Controller
     // POST /api/auth/login  { "email": "...", "password": "..." }
     public function login(): void
     {
-        $email = trim((string) $this->request->input('email', ''));
-        $password = (string) $this->request->input('password', '');
-
-        $errores = [];
-        if ($email === '') {
-            $errores['email'] = 'Requerido.';
-        }
-        if ($password === '') {
-            $errores['password'] = 'Requerido.';
-        }
-        if ($errores !== []) {
-            throw ApiException::validacion($errores);
+        $datos = $this->request->json();
+        if (array_key_exists('email', $datos)) {
+            $datos['email'] = trim((string) $datos['email']);
         }
 
-        $this->json(Auth::login($email, $password));
+        Validator::validar('auth.login', $datos);
+
+        $this->json(Auth::login($datos['email'], (string) $datos['password']));
     }
 
     // GET /api/auth/me  (protegida) -> devuelve el usuario dueno del token.
