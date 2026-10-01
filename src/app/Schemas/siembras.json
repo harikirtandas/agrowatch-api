@@ -1,0 +1,28 @@
+{
+  "type": "object",
+  "required": ["campania_id", "lote_id", "cultivo_id", "ha_sembradas", "fecha_siembra"],
+  "properties": {
+    "campania_id": {
+      "anyOf": [
+        { "type": "integer" },
+        { "type": "string", "pattern": "^[0-9]+$" }
+      ]
+    },
+    "lote_id": {
+      "anyOf": [
+        { "type": "integer" },
+        { "type": "string", "pattern": "^[0-9]+$" }
+      ]
+    },
+    "cultivo_id": {
+      "anyOf": [
+        { "type": "integer" },
+        { "type": "string", "pattern": "^[0-9]+$" }
+      ]
+    },
+    "ha_sembradas": { "type": "number", "exclusiveMinimum": 0, "maximum": 99999999.99 },
+    "fecha_siembra": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+    "variedad": { "type": ["string", "null"], "maxLength": 60 },
+    "rinde_esperado": { "type": ["number", "null"], "minimum": 0, "maximum": 99999999.99 }
+  }
+}
