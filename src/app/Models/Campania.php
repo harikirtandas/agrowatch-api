@@ -18,4 +18,18 @@ final class Campania
 
         return $stmt->fetchAll();
     }
+    
+    public static function buscar(int $id): ?array
+    {
+        $stmt = Database::connection()->prepare(
+            'SELECT id, nombre, fecha_inicio, fecha_fin, cerrada, created_at, updated_at
+            FROM campanias
+            WHERE id = :id'
+        );
+        $stmt->execute(['id' => $id]);
+
+        $fila = $stmt->fetch();
+
+        return $fila === false ? null : $fila;
+    }
 }
