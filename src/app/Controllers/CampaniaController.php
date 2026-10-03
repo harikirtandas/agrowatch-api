@@ -104,4 +104,23 @@ final class CampaniaController extends Controller
 
         return [$datos['nombre'], $datos['fecha_inicio'], $datos['fecha_fin'], $datos['cerrada']];
     }
+    // DELETE /api/campanias/{id}
+    // Borra la campania. 409 si tiene siembras asociadas: la FK fk_siembras_campania
+    // NO tiene ON DELETE CASCADE a proposito (una campania con datos se cierra, no se
+    // borra). Se chequea el conteo ANTES de borrar. Sin chequeo de pertenencia porque
+    // las campanias no se filtran por usuario.
+    public function destroy(int $id): void
+    {
+        Auth::usuarioActual($this->request);
+        if (Campania::buscar($id) === null) { 
+            throw new ApiException(404, 'Campania no encontrada.');
+        }
+
+        if (Campania::contarSiembras($id) > 0) {          
+            throw new ApiException(409, 'La campana tiene siembras asociadas.');
+        }
+
+        Campania::eliminar($id);                           
+        $this->sinContenido(); 
+    }
 }   

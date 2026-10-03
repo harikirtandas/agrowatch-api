@@ -65,4 +65,31 @@ final class Campania
 
         return $stmt->rowCount() > 0;
     }
+
+    /**
+     * Cuenta cuantas siembras referencian esta campania. Lo usa
+     * CampaniaController::destroy() para decidir el 409: una campania con
+     * siembras asociadas NO se puede borrar (se cierra, no se borra). Devuelve
+     * un entero (0 si no tiene ninguna), no las filas -- por eso COUNT(*) +
+     * fetchColumn() en vez de un SELECT normal con fetchAll().
+     */
+    public static function contarSiembras(int $id): int
+    {
+    $stmt = Database::connection()->prepare(
+            'SELECT COUNT(*) FROM siembras WHERE campania_id = :id'
+            );
+    $stmt->execute(['id' => $id]);
+
+    return (int) $stmt->fetchColumn();
+    }
+
+    public static function eliminar(int $id): bool
+    {
+        $stmt = Database::connection()->prepare('DELETE FROM campanias WHERE id = :id');
+        $stmt->execute(['id' => $id]);
+
+        return $stmt->rowCount() > 0;
+    }
+
+
 }
