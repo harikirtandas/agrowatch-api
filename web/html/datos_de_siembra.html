@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgroWatchOut — Datos de siembra</title>
+  <link rel="stylesheet" href="../css/datos_de_siembra.css">
+</head>
+<body>
+
+  <div class="aplicacion">
+
+    <!-- Barra lateral (misma que el resto de la app) -->
+    <aside class="barra-lateral">
+      <span class="barra-lateral__logo"></span>
+
+      <nav class="barra-lateral__nav">
+        <a href="dashboard_mi_campo.html" class="barra-lateral__icono barra-lateral__icono--activo" data-vista="panel" aria-label="Panel">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>
+        </a>
+        <a href="semaforo.html" class="barra-lateral__icono" data-vista="lotes" aria-label="Lotes">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
+        </a>
+        <a href="perfil.html" class="barra-lateral__icono" data-vista="perfil" aria-label="Perfil">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.2"/><path d="M4.5 20c1.6-3.6 5-5 7.5-5s5.9 1.4 7.5 5"/></svg>
+        </a>
+      </nav>
+
+      <a href="configuracion_de_campos.html" class="barra-lateral__avatar" aria-label="Agregar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </a>
+    </aside>
+
+    <!-- Contenido principal -->
+    <div class="contenido">
+
+      <a href="dashboard_mi_campo.html" class="enlace-volver">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Volver a mi campo
+      </a>
+
+      <header class="encabezado-siembra">
+        <div>
+          <h1 class="encabezado-siembra__titulo">Datos de siembra</h1>
+          <p class="encabezado-siembra__subtitulo">Cargá los datos del lote sembrado</p>
+        </div>
+        <div class="encabezado-siembra__acciones">
+          <button class="encabezado-siembra__campana" aria-label="Notificaciones">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 1.5 5.5h-15S6 14 6 10Z"/><path d="M10 18a2 2 0 0 0 4 0"/></svg>
+          </button>
+          <span class="encabezado-siembra__avatar" aria-hidden="true"></span>
+        </div>
+      </header>
+
+      <div class="tarjeta-siembra">
+        <form class="formulario-siembra" action="procesar-siembra.php" method="POST">
+
+          <div class="formulario-siembra__fila">
+            <div class="campo">
+              <label for="campana" class="campo__etiqueta">Campaña</label>
+              <input type="text" id="campana" name="campana" class="campo__entrada" value="2026/27">
+            </div>
+            <div class="campo">
+              <label for="lote" class="campo__etiqueta">Lote / parcela</label>
+              <input type="text" id="lote" name="lote" class="campo__entrada" value="Lote 2">
+            </div>
+            <div class="campo">
+              <label for="cultivo" class="campo__etiqueta">Cultivo</label>
+              <input type="text" id="cultivo" name="cultivo" class="campo__entrada" value="Trigo">
+            </div>
+          </div>
+
+          <div class="formulario-siembra__fila formulario-siembra__fila--dos">
+            <div class="campo">
+              <label for="fechaSiembra" class="campo__etiqueta">Fecha de siembra</label>
+              <input type="text" id="fechaSiembra" name="fechaSiembra" class="campo__entrada" placeholder="dd/mm/aaaa">
+            </div>
+            <div class="campo">
+              <label for="hectareasSembradas" class="campo__etiqueta">Hectáreas sembradas</label>
+              <input type="number" id="hectareasSembradas" name="hectareasSembradas" class="campo__entrada" placeholder="Ej. 85">
+            </div>
+          </div>
+
+          <h2 class="tarjeta-siembra__subtitulo">Costos</h2>
+
+          <table class="tabla-costos">
+            <thead>
+              <tr>
+                <th>Categoría</th>
+                <th>Descripción</th>
+                <th>Cantidad</th>
+                <th>Precio unit.</th>
+                <th>Moneda</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Semilla</td>
+                <td>Trigo Baguette 620</td>
+                <td>90</td>
+                <td>420 kg</td>
+                <td>USD</td>
+              </tr>
+              <tr>
+                <td>Fertilizante</td>
+                <td>Urea 46%</td>
+                <td>120</td>
+                <td>680 kg</td>
+                <td>USD</td>
+              </tr>
+              <tr>
+                <td>Labor</td>
+                <td>Siembra directa</td>
+                <td>85</td>
+                <td>38 ha</td>
+                <td>USD</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <button type="button" class="enlace-agregar-costo">+ Agregar costo</button>
+
+          <span class="estado-sincronizacion">Sin señal: guarda y sincroniza después</span>
+
+          <button type="submit" class="boton boton--principal">Comenzar proyección</button>
+
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,368 @@
+:root {
+  --verde-oscuro: #1c3325;
+  --verde-medio: #4f8f63;
+  --verde-boton-hover: #457f57;
+  --verde-rol-fondo: #dcebe0;
+  --verde-rol-texto: #2f6b43;
+  --amarillo-logo: #e8b84b;
+  --amarillo-rol-fondo: #f6e7bc;
+  --amarillo-rol-texto: #8a6b1f;
+  --blanco: #ffffff;
+  --fondo-app: #f2f1ec;
+  --negro-texto: #1a1a1a;
+  --gris-texto: #6b7268;
+  --gris-claro: #efeeea;
+  --gris-foto: #cdd7cf;
+  --gris-borde: #e2e2dc;
+  --radio: 16px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--fondo-app);
+  color: var(--negro-texto);
+}
+
+.aplicacion {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Barra lateral (igual que el resto de la app) */
+.barra-lateral {
+  width: 80px;
+  background: var(--verde-oscuro);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 0;
+  gap: 32px;
+}
+
+.barra-lateral__logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  background: var(--amarillo-logo);
+}
+
+.barra-lateral__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+.barra-lateral__icono {
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: #b9c4bb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.barra-lateral__icono svg {
+  width: 22px;
+  height: 22px;
+}
+
+.barra-lateral__icono:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.barra-lateral__icono--activo {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--blanco);
+}
+
+.barra-lateral__avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #4f9d63;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--blanco);
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+
+.barra-lateral__avatar svg {
+  width: 18px;
+  height: 18px;
+}
+
+.barra-lateral__avatar:hover {
+  background: var(--verde-boton-hover);
+}
+
+/* Contenido */
+.contenido {
+  flex: 1;
+  padding: 32px 40px 48px;
+  overflow-x: hidden;
+}
+
+/* Encabezado */
+.encabezado-perfil {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.encabezado-perfil__titulo {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.encabezado-perfil__subtitulo {
+  color: var(--gris-texto);
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.encabezado-perfil__acciones {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.encabezado-perfil__campana {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--gris-borde);
+  background: var(--blanco);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--negro-texto);
+}
+
+.encabezado-perfil__campana svg {
+  width: 18px;
+  height: 18px;
+}
+
+.encabezado-perfil__avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--gris-foto);
+  display: inline-block;
+}
+
+/* Tarjeta genérica */
+.tarjeta-perfil {
+  background: var(--blanco);
+  border-radius: var(--radio);
+  padding: 28px 32px;
+  margin-bottom: 20px;
+}
+
+.tarjeta-perfil__titulo {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.tarjeta-perfil__subtitulo {
+  font-size: 13px;
+  color: var(--gris-texto);
+  margin-top: 4px;
+  margin-bottom: 20px;
+}
+
+/* Formulario de perfil */
+.formulario-perfil {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 32px;
+}
+
+.formulario-perfil__foto {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.foto-perfil {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: var(--gris-foto);
+  display: block;
+}
+
+.enlace-cambiar-foto {
+  background: none;
+  border: none;
+  color: var(--verde-medio);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.enlace-cambiar-foto:hover {
+  text-decoration: underline;
+}
+
+.formulario-perfil__campos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.campo__etiqueta {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--negro-texto);
+  margin-bottom: 8px;
+}
+
+.campo__entrada {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--gris-borde);
+  border-radius: 10px;
+  background: var(--gris-claro);
+  font-size: 14px;
+  color: var(--negro-texto);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.campo__entrada:focus {
+  border-color: var(--verde-medio);
+}
+
+/* Botones */
+.boton {
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 13px 26px;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.boton--principal {
+  background: var(--verde-medio);
+  color: var(--blanco);
+}
+
+.boton--principal:hover {
+  background: var(--verde-boton-hover);
+}
+
+.boton:active {
+  transform: translateY(1px);
+}
+
+/* Lista de personas con acceso */
+.lista-accesos {
+  list-style: none;
+}
+
+.lista-accesos__item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--gris-borde);
+}
+
+.lista-accesos__foto {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--gris-foto);
+  flex-shrink: 0;
+}
+
+.lista-accesos__nombre {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.etiqueta-rol {
+  margin-left: auto;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.etiqueta-rol--dueno {
+  background: var(--verde-rol-fondo);
+  color: var(--verde-rol-texto);
+}
+
+.etiqueta-rol--asesor {
+  background: var(--amarillo-rol-fondo);
+  color: var(--amarillo-rol-texto);
+}
+
+.enlace-invitar {
+  background: none;
+  border: none;
+  color: var(--verde-medio);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  padding-top: 16px;
+}
+
+.enlace-invitar:hover {
+  text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 760px) {
+  .formulario-perfil {
+    grid-template-columns: 1fr;
+  }
+  .formulario-perfil__campos {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .aplicacion {
+    flex-direction: column;
+  }
+  .barra-lateral {
+    width: 100%;
+    flex-direction: row;
+    padding: 12px 20px;
+  }
+  .barra-lateral__nav {
+    flex-direction: row;
+  }
+  .contenido {
+    padding: 20px;
+  }
+  .tarjeta-perfil {
+    padding: 20px;
+  }
+}

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgroWatchOut — Mi perfil</title>
+  <link rel="stylesheet" href="../css/perfil.css">
+</head>
+<body>
+
+  <div class="aplicacion">
+
+    <!-- Barra lateral (misma que el resto de la app) -->
+    <aside class="barra-lateral">
+      <span class="barra-lateral__logo"></span>
+
+      <nav class="barra-lateral__nav">
+        <a href="dashboard_mi_campo.html" class="barra-lateral__icono" data-vista="panel" aria-label="Panel">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>
+        </a>
+        <a href="semaforo.html" class="barra-lateral__icono" data-vista="lotes" aria-label="Lotes">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
+        </a>
+        <a href="perfil.html" class="barra-lateral__icono barra-lateral__icono--activo" data-vista="perfil" aria-label="Perfil">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.2"/><path d="M4.5 20c1.6-3.6 5-5 7.5-5s5.9 1.4 7.5 5"/></svg>
+        </a>
+      </nav>
+
+      <a href="configuracion_de_campos.html" class="barra-lateral__avatar" aria-label="Agregar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </a>
+    </aside>
+
+    <!-- Contenido principal -->
+    <div class="contenido">
+
+      <header class="encabezado-perfil">
+        <div>
+          <h1 class="encabezado-perfil__titulo">Mi perfil</h1>
+          <p class="encabezado-perfil__subtitulo">Datos personales y del establecimiento</p>
+        </div>
+        <div class="encabezado-perfil__acciones">
+          <button class="encabezado-perfil__campana" aria-label="Notificaciones">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 1.5 5.5h-15S6 14 6 10Z"/><path d="M10 18a2 2 0 0 0 4 0"/></svg>
+          </button>
+          <span class="encabezado-perfil__avatar" aria-hidden="true"></span>
+        </div>
+      </header>
+
+      <div class="tarjeta-perfil">
+        <form class="formulario-perfil" action="procesar-perfil.php" method="POST">
+
+          <div class="formulario-perfil__foto">
+            <span class="foto-perfil" aria-hidden="true"></span>
+            <button type="button" class="enlace-cambiar-foto">Cambiar foto</button>
+          </div>
+
+          <div class="formulario-perfil__campos">
+            <div class="campo">
+              <label for="nombre" class="campo__etiqueta">Nombre</label>
+              <input type="text" id="nombre" name="nombre" class="campo__entrada" value="Juan">
+            </div>
+            <div class="campo">
+              <label for="apellido" class="campo__etiqueta">Apellido</label>
+              <input type="text" id="apellido" name="apellido" class="campo__entrada" value="Pérez">
+            </div>
+            <div class="campo">
+              <label for="email" class="campo__etiqueta">Email</label>
+              <input type="email" id="email" name="email" class="campo__entrada" value="juan@ejemplo.com">
+            </div>
+            <div class="campo">
+              <label for="establecimiento" class="campo__etiqueta">Nombre del establecimiento</label>
+              <input type="text" id="establecimiento" name="establecimiento" class="campo__entrada" value="Ea. Las Marías">
+            </div>
+            <div class="campo">
+              <label for="provincia" class="campo__etiqueta">Provincia</label>
+              <input type="text" id="provincia" name="provincia" class="campo__entrada" value="Buenos Aires">
+            </div>
+            <div class="campo">
+              <label for="localidad" class="campo__etiqueta">Localidad</label>
+              <input type="text" id="localidad" name="localidad" class="campo__entrada" value="Bolívar">
+            </div>
+
+            <button type="submit" class="boton boton--principal">Guardar cambios</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="tarjeta-perfil tarjeta-perfil--accesos">
+        <h2 class="tarjeta-perfil__titulo">Personas con acceso a este establecimiento</h2>
+        <p class="tarjeta-perfil__subtitulo">El dueño puede compartir el campo con un asesor, sin duplicar datos</p>
+
+        <ul class="lista-accesos">
+          <li class="lista-accesos__item">
+            <span class="lista-accesos__foto" aria-hidden="true"></span>
+            <span class="lista-accesos__nombre">Juan Pérez</span>
+            <span class="etiqueta-rol etiqueta-rol--dueno">Dueño</span>
+          </li>
+          <li class="lista-accesos__item">
+            <span class="lista-accesos__foto" aria-hidden="true"></span>
+            <span class="lista-accesos__nombre">María Insaurralde</span>
+            <span class="etiqueta-rol etiqueta-rol--asesor">Asesora</span>
+          </li>
+        </ul>
+
+        <button type="button" class="enlace-invitar">+ Invitar a un asesor</button>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>

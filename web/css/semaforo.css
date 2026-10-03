@@ -1,0 +1,303 @@
+:root {
+  --verde-oscuro: #1c3325;
+  --verde-medio: #4f8f63;
+  --verde-boton-hover: #457f57;
+  --amarillo-logo: #e8b84b;
+  --amarillo-insignia-fondo: #f6e7bc;
+  --amarillo-insignia-texto: #8a6b1f;
+  --blanco: #ffffff;
+  --fondo-app: #f2f1ec;
+  --negro-texto: #1a1a1a;
+  --gris-texto: #6b7268;
+  --gris-foto: #cdd7cf;
+  --gris-borde: #e2e2dc;
+  --gris-linea: #ececE6;
+  --radio: 16px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--fondo-app);
+  color: var(--negro-texto);
+}
+
+.aplicacion {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Barra lateral (igual que el resto de la app) */
+.barra-lateral {
+  width: 80px;
+  background: var(--verde-oscuro);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 0;
+  gap: 32px;
+}
+
+.barra-lateral__logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  background: var(--amarillo-logo);
+}
+
+.barra-lateral__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+.barra-lateral__icono {
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: #b9c4bb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.barra-lateral__icono svg {
+  width: 22px;
+  height: 22px;
+}
+
+.barra-lateral__icono:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.barra-lateral__icono--activo {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--blanco);
+}
+
+.barra-lateral__avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #4f9d63;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--blanco);
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+
+.barra-lateral__avatar svg {
+  width: 18px;
+  height: 18px;
+}
+
+.barra-lateral__avatar:hover {
+  background: var(--verde-boton-hover);
+}
+
+/* Contenido */
+.contenido {
+  flex: 1;
+  padding: 32px 40px 48px;
+  overflow-x: hidden;
+}
+
+.enlace-volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--verde-medio);
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+  margin-bottom: 16px;
+}
+
+.enlace-volver svg {
+  width: 16px;
+  height: 16px;
+}
+
+.enlace-volver:hover {
+  text-decoration: underline;
+}
+
+/* Encabezado */
+.encabezado-lote {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.encabezado-lote__titulo {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.encabezado-lote__subtitulo {
+  color: var(--gris-texto);
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.encabezado-lote__acciones {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.encabezado-lote__campana {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--gris-borde);
+  background: var(--blanco);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--negro-texto);
+}
+
+.encabezado-lote__campana svg {
+  width: 18px;
+  height: 18px;
+}
+
+.encabezado-lote__avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--gris-foto);
+  display: inline-block;
+}
+
+/* Insignia "pantalla clave" */
+.insignia-clave {
+  display: inline-block;
+  background: var(--amarillo-insignia-fondo);
+  color: var(--amarillo-insignia-texto);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 20px;
+  margin-bottom: 20px;
+}
+
+/* Tarjeta principal */
+.tarjeta-semaforo {
+  background: var(--blanco);
+  border-radius: var(--radio);
+  padding: 32px;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+/* Gauge (velocímetro) */
+.semaforo-gauge {
+  display: flex;
+  flex-direction: column;
+}
+
+.semaforo-gauge__svg {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.semaforo-gauge__valor {
+  font-size: 30px;
+  font-weight: 700;
+  margin-top: 6px;
+}
+
+.semaforo-gauge__valor--secundario {
+  margin-top: 18px;
+}
+
+.semaforo-gauge__etiqueta {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--gris-texto);
+  margin-top: 2px;
+}
+
+/* Gráfico de margen */
+.grafico-margen__titulo {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--negro-texto);
+  margin-bottom: 18px;
+}
+
+.grafico-margen__svg {
+  width: 100%;
+  height: 220px;
+  display: block;
+}
+
+.grafico-margen__linea-guia {
+  stroke: var(--gris-linea);
+  stroke-width: 1;
+}
+
+.grafico-margen__linea {
+  stroke: var(--verde-medio);
+  stroke-width: 3;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.grafico-margen__meses {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--gris-texto);
+  margin-top: 6px;
+}
+
+/* Responsive */
+@media (max-width: 860px) {
+  .tarjeta-semaforo {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .aplicacion {
+    flex-direction: column;
+  }
+  .barra-lateral {
+    width: 100%;
+    flex-direction: row;
+    padding: 12px 20px;
+  }
+  .barra-lateral__nav {
+    flex-direction: row;
+  }
+  .contenido {
+    padding: 20px;
+  }
+  .tarjeta-semaforo {
+    padding: 20px;
+  }
+}

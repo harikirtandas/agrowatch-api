@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AgroWatchOut — Creación de usuario</title>
-  <link rel="stylesheet" href="../css/creacion_de_usuario.css">
+  <title>AgroWatchOut — Creación de usuario (Paso 1)</title>
+  <link rel="stylesheet" href="../css/creacion_de_usuario_partes.css">
 </head>
 <body>
 
@@ -13,8 +13,16 @@
 
       <h1 class="tarjeta-registro__titulo">Creación de usuario</h1>
 
+      <div class="progreso">
+        <span class="progreso__punto progreso__punto--activo"></span>
+        <span class="progreso__linea progreso__linea--activa"></span>
+        <span class="progreso__etiqueta">Información del usuario</span>
+        <span class="progreso__linea progreso__linea--activa"></span>
+        <span class="progreso__punto progreso__punto--activo"></span>
+      </div>
+
       <!-- method="POST" evita que los datos del formulario viajen en la URL -->
-      <form class="formulario-registro" method="POST">
+      <form class="formulario-registro" action="creacion_de_usuario_parte_2.html" method="POST">
 
         <div class="formulario-registro__fila">
           <div class="campo">
@@ -38,23 +46,7 @@
           </div>
         </div>
 
-        <div class="formulario-registro__fila">
-          <div class="campo">
-            <label for="establecimiento" class="campo__etiqueta">Nombre del establecimiento</label>
-            <input type="text" id="establecimiento" name="establecimiento" class="campo__entrada">
-          </div>
-          <div class="campo">
-            <label for="provincia" class="campo__etiqueta">Provincia</label>
-            <input type="text" id="provincia" name="provincia" class="campo__entrada">
-          </div>
-        </div>
-
-        <div class="campo campo--ancho-completo">
-          <label for="localidad" class="campo__etiqueta">Localidad</label>
-          <input type="text" id="localidad" name="localidad" class="campo__entrada">
-        </div>
-
-        <button type="submit" class="boton boton--principal">Crear cuenta</button>
+        <button type="submit" class="boton boton--principal">Siguiente</button>
 
       </form>
 

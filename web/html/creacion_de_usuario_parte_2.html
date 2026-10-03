@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgroWatchOut — Creación de usuario (Paso 2)</title>
+  <link rel="stylesheet" href="../css/creacion_de_usuario_partes.css">
+</head>
+<body>
+
+  <main class="pagina-registro">
+    <div class="tarjeta-registro">
+
+      <h1 class="tarjeta-registro__titulo">Creación de usuario</h1>
+
+      <div class="progreso progreso--paso2">
+        <span class="progreso__punto progreso__punto--activo"></span>
+        <span class="progreso__linea progreso__linea--activa"></span>
+        <span class="progreso__etiqueta">Información del Establecimiento</span>
+      </div>
+
+      <!-- method="POST" evita que los datos del formulario viajen en la URL -->
+      <form class="formulario-registro" action="login.html" method="POST">
+
+        <div class="formulario-registro__fila">
+          <div class="campo">
+            <label for="establecimiento" class="campo__etiqueta">Nombre del establecimiento</label>
+            <input type="text" id="establecimiento" name="establecimiento" class="campo__entrada">
+          </div>
+          <div class="campo">
+            <label for="provincia" class="campo__etiqueta">Provincia</label>
+            <input type="text" id="provincia" name="provincia" class="campo__entrada">
+          </div>
+        </div>
+
+        <div class="formulario-registro__fila">
+          <div class="campo">
+            <label for="localidad" class="campo__etiqueta">Localidad</label>
+            <input type="text" id="localidad" name="localidad" class="campo__entrada">
+          </div>
+          <div class="campo">
+            <label for="ubicacion" class="campo__etiqueta">Ubica tu establecimiento en el mapa</label>
+            <div class="campo__con-icono">
+              <input type="text" id="ubicacion" name="ubicacion" class="campo__entrada" placeholder="Seleccionar ubicación">
+              <svg class="campo__icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.2 7-11.5a7 7 0 1 0-14 0C5 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.3"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" name="accion" value="completar" class="boton boton--principal">Finalizar</button>
+        <button type="submit" name="accion" value="omitir" formnovalidate class="boton boton--secundario">Omitir y Finalizar</button>
+
+      </form>
+
+      <p class="tarjeta-registro__nota">
+        Si omites este paso igual podrás agregar los establecimientos que quieras dentro de la app
+      </p>
+
+    </div>
+  </main>
+
+</body>
+</html>

@@ -1,0 +1,354 @@
+:root {
+  --verde-oscuro: #1c3325;
+  --verde-medio: #4f8f63;
+  --verde-boton-hover: #457f57;
+  --amarillo-logo: #e8b84b;
+  --rojo-fondo: #f8d9d4;
+  --rojo-texto: #a8382a;
+  --blanco: #ffffff;
+  --fondo-app: #f2f1ec;
+  --negro-texto: #1a1a1a;
+  --gris-texto: #6b7268;
+  --gris-claro: #efeeea;
+  --gris-foto: #cdd7cf;
+  --gris-borde: #e2e2dc;
+  --radio: 16px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--fondo-app);
+  color: var(--negro-texto);
+}
+
+.aplicacion {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Barra lateral (igual que el resto de la app) */
+.barra-lateral {
+  width: 80px;
+  background: var(--verde-oscuro);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 0;
+  gap: 32px;
+}
+
+.barra-lateral__logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  background: var(--amarillo-logo);
+}
+
+.barra-lateral__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+.barra-lateral__icono {
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: #b9c4bb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.barra-lateral__icono svg {
+  width: 22px;
+  height: 22px;
+}
+
+.barra-lateral__icono:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.barra-lateral__icono--activo {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--blanco);
+}
+
+.barra-lateral__avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #4f9d63;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--blanco);
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+
+.barra-lateral__avatar svg {
+  width: 18px;
+  height: 18px;
+}
+
+.barra-lateral__avatar:hover {
+  background: var(--verde-boton-hover);
+}
+
+/* Contenido */
+.contenido {
+  flex: 1;
+  padding: 32px 40px 48px;
+  overflow-x: hidden;
+}
+
+.enlace-volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--verde-medio);
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+  margin-bottom: 16px;
+}
+
+.enlace-volver svg {
+  width: 16px;
+  height: 16px;
+}
+
+.enlace-volver:hover {
+  text-decoration: underline;
+}
+
+/* Encabezado */
+.encabezado-siembra {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.encabezado-siembra__titulo {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.encabezado-siembra__subtitulo {
+  color: var(--gris-texto);
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.encabezado-siembra__acciones {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.encabezado-siembra__campana {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--gris-borde);
+  background: var(--blanco);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--negro-texto);
+}
+
+.encabezado-siembra__campana svg {
+  width: 18px;
+  height: 18px;
+}
+
+.encabezado-siembra__avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--gris-foto);
+  display: inline-block;
+}
+
+/* Tarjeta del formulario */
+.tarjeta-siembra {
+  background: var(--blanco);
+  border-radius: var(--radio);
+  padding: 28px 32px 32px;
+  max-width: 700px;
+}
+
+.tarjeta-siembra__subtitulo {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 24px 0 12px;
+}
+
+.formulario-siembra__fila {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.formulario-siembra__fila--dos {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.campo__etiqueta {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--negro-texto);
+  margin-bottom: 8px;
+}
+
+.campo__entrada {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--gris-borde);
+  border-radius: 10px;
+  background: var(--gris-claro);
+  font-size: 14px;
+  color: var(--negro-texto);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.campo__entrada::placeholder {
+  color: #9a9a94;
+}
+
+.campo__entrada:focus {
+  border-color: var(--verde-medio);
+}
+
+/* Tabla de costos */
+.tabla-costos {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 12px;
+}
+
+.tabla-costos th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--gris-texto);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--gris-borde);
+}
+
+.tabla-costos td {
+  padding: 10px 8px 10px 0;
+  font-size: 14px;
+  border-bottom: 1px solid var(--gris-borde);
+}
+
+.tabla-costos td:first-child {
+  font-weight: 600;
+}
+
+.enlace-agregar-costo {
+  display: block;
+  background: none;
+  border: none;
+  color: var(--verde-medio);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 12px 0 20px;
+}
+
+.enlace-agregar-costo:hover {
+  text-decoration: underline;
+}
+
+/* Estado de sincronización */
+.estado-sincronizacion {
+  display: inline-block;
+  background: var(--rojo-fondo);
+  color: var(--rojo-texto);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+/* Botón */
+.boton {
+  display: block;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 14px 26px;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.boton--principal {
+  background: var(--verde-medio);
+  color: var(--blanco);
+}
+
+.boton--principal:hover {
+  background: var(--verde-boton-hover);
+}
+
+.boton:active {
+  transform: translateY(1px);
+}
+
+/* Responsive */
+@media (max-width: 760px) {
+  .formulario-siembra__fila,
+  .formulario-siembra__fila--dos {
+    grid-template-columns: 1fr;
+  }
+  .tabla-costos {
+    display: block;
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .aplicacion {
+    flex-direction: column;
+  }
+  .barra-lateral {
+    width: 100%;
+    flex-direction: row;
+    padding: 12px 20px;
+  }
+  .barra-lateral__nav {
+    flex-direction: row;
+  }
+  .contenido {
+    padding: 20px;
+  }
+  .tarjeta-siembra {
+    padding: 20px;
+  }
+}

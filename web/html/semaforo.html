@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgroWatchOut — Lote 2 — Trigo</title>
+  <link rel="stylesheet" href="../css/semaforo.css">
+</head>
+<body>
+
+  <div class="aplicacion">
+
+    <!-- Barra lateral (misma que el resto de la app) -->
+    <aside class="barra-lateral">
+      <span class="barra-lateral__logo"></span>
+
+      <nav class="barra-lateral__nav">
+        <a href="dashboard_mi_campo.html" class="barra-lateral__icono barra-lateral__icono--activo" data-vista="panel" aria-label="Panel">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>
+        </a>
+        <!-- Conectado provisionalmente al semáforo del Lote 2 -->
+        <a href="semaforo.html" class="barra-lateral__icono" data-vista="lotes" aria-label="Lotes">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
+        </a>
+        <a href="perfil.html" class="barra-lateral__icono" data-vista="perfil" aria-label="Perfil">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.2"/><path d="M4.5 20c1.6-3.6 5-5 7.5-5s5.9 1.4 7.5 5"/></svg>
+        </a>
+      </nav>
+
+      <a href="configuracion_de_campos.html" class="barra-lateral__avatar" aria-label="Agregar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </a>
+    </aside>
+
+    <!-- Contenido principal -->
+    <div class="contenido">
+
+      <a href="dashboard_mi_campo.html" class="enlace-volver">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Volver a mis lotes
+      </a>
+
+      <header class="encabezado-lote">
+        <div>
+          <h1 class="encabezado-lote__titulo">Lote 2 — Trigo</h1>
+          <p class="encabezado-lote__subtitulo">Campaña 25/26 · 85 ha · Actualizado hoy vía granos.ar</p>
+        </div>
+        <div class="encabezado-lote__acciones">
+          <button class="encabezado-lote__campana" aria-label="Notificaciones">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 1.5 5.5h-15S6 14 6 10Z"/><path d="M10 18a2 2 0 0 0 4 0"/></svg>
+          </button>
+          <span class="encabezado-lote__avatar" aria-hidden="true"></span>
+        </div>
+      </header>
+
+      <span class="insignia-clave">⭐ Pantalla clave para el productor</span>
+
+      <div class="tarjeta-semaforo">
+
+        <div class="semaforo-gauge">
+          <svg viewBox="0 0 220 130" class="semaforo-gauge__svg">
+            <path d="M 20 110 A 90 90 0 0 1 70 27" fill="none" stroke="#d1583f" stroke-width="18" stroke-linecap="round"/>
+            <path d="M 70 27 A 90 90 0 0 1 150 27" fill="none" stroke="#e0a83c" stroke-width="18" stroke-linecap="round"/>
+            <path d="M 150 27 A 90 90 0 0 1 200 110" fill="none" stroke="#4f9d63" stroke-width="18" stroke-linecap="round"/>
+            <g transform="rotate(103 110 110)">
+              <line x1="110" y1="110" x2="110" y2="34" stroke="#1a1a1a" stroke-width="4" stroke-linecap="round"/>
+            </g>
+            <circle cx="110" cy="110" r="7" fill="#1a1a1a"/>
+          </svg>
+
+          <strong class="semaforo-gauge__valor">73%</strong>
+          <span class="semaforo-gauge__etiqueta">Rentabilidad proyectada</span>
+
+          <strong class="semaforo-gauge__valor semaforo-gauge__valor--secundario">28 qq/ha</strong>
+          <span class="semaforo-gauge__etiqueta">Rinde de indiferencia</span>
+        </div>
+
+        <div class="grafico-margen">
+          <h2 class="grafico-margen__titulo">Evolución del margen proyectado</h2>
+
+          <svg viewBox="0 0 760 240" class="grafico-margen__svg" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="gradienteMargen" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#4f9d63" stop-opacity="0.35"/>
+                <stop offset="100%" stop-color="#4f9d63" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+
+            <line x1="0" y1="60" x2="760" y2="60" class="grafico-margen__linea-guia"/>
+            <line x1="0" y1="140" x2="760" y2="140" class="grafico-margen__linea-guia"/>
+
+            <path class="grafico-margen__area" d="M0,180 L95,150 L190,160 L285,165 L380,95 L475,80 L570,100 L665,40 L760,15
+              L760,240 L0,240 Z" fill="url(#gradienteMargen)"/>
+
+            <polyline class="grafico-margen__linea" fill="none" points="0,180 95,150 190,160 285,165 380,95 475,80 570,100 665,40 760,15"/>
+          </svg>
+
+          <div class="grafico-margen__meses">
+            <span>Sep</span>
+            <span>Oct</span>
+            <span>Nov</span>
+            <span>Dic</span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>
