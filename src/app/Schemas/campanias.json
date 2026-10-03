@@ -1,0 +1,12 @@
+{
+  "type": "object",
+  "required": ["nombre", "fecha_inicio", "fecha_fin"],
+  "properties": {
+    "nombre": { "type": "string", "minLength": 1, "maxLength": 30 },
+    "fecha_inicio": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
+    "fecha_fin": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" }
+  }
+}
