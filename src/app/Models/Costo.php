@@ -64,4 +64,43 @@ final class Costo
 
         return (int) Database::connection()->lastInsertId();
     }
+
+        public static function actualizar(
+        int $id,
+        string $categoria,
+        string $descripcion,
+        float $cantidad,
+        string $unidad,
+        float $precioUnitario,
+        string $moneda,
+        string $fecha
+    ): bool {
+        $stmt = Database::connection()->prepare(
+            'UPDATE costos
+             SET categoria = :categoria, descripcion = :descripcion, cantidad = :cantidad,
+                 unidad = :unidad, precio_unitario = :precioUnitario, moneda = :moneda,
+                 fecha = :fecha, updated_at = NOW()
+             WHERE id = :id'
+        );
+        $stmt->execute([
+            'categoria'      => $categoria,
+            'descripcion'    => $descripcion,
+            'cantidad'       => $cantidad,
+            'unidad'         => $unidad,
+            'precioUnitario' => $precioUnitario,
+            'moneda'         => $moneda,
+            'fecha'          => $fecha,
+            'id'             => $id,
+        ]);
+
+        return $stmt->rowCount() > 0;
+    }
+
+    public static function eliminar(int $id): bool
+    {
+        $stmt = Database::connection()->prepare('DELETE FROM costos WHERE id = :id');
+        $stmt->execute(['id' => $id]);
+
+        return $stmt->rowCount() > 0;
+    }
 }   
