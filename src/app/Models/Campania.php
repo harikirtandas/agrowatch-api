@@ -47,4 +47,22 @@ final class Campania
      
         return (int) Database::connection()->lastInsertId();
     }
+
+    public static function actualizar(int $id, string $nombre, string $fechaInicio, string $fechaFin, bool $cerrada): bool
+    {
+        $stmt = Database::connection()->prepare(
+        'UPDATE campanias
+         SET nombre = :nombre, fecha_inicio = :fechaInicio, fecha_fin = :fechaFin, cerrada = :cerrada,
+         updated_at = NOW()
+         WHERE id = :id');
+        $stmt->execute([
+        'id'          => $id,
+        'nombre'      => $nombre,
+        'fechaInicio' => $fechaInicio,
+        'fechaFin'    => $fechaFin,
+        'cerrada'     => $cerrada ? 1 : 0
+        ]);
+
+        return $stmt->rowCount() > 0;
+    }
 }

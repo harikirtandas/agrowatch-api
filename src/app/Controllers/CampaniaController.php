@@ -51,6 +51,26 @@ final class CampaniaController extends Controller
 
         $this->creado(Campania::buscar($id), "/api/campanias/{$id}");
     }
+
+    // PUT /api/campanias/{id}   { "nombre", "fecha_inicio", "fecha_fin", "cerrada" }
+    // Reemplazo completo: el cliente manda el estado entero de la campania,
+    // incluido "cerrada" (cerrar una campania = PUT con "cerrada": true).
+    // Se busca ANTES con buscar() para poder devolver 404 si no existe. Las
+    // campanias no se filtran por usuario, asi que no hay chequeo de pertenencia.
+    public function update(int $id): void
+    {
+    Auth::usuarioActual($this->request);
+
+    if (Campania::buscar($id) === null) {       
+        throw new ApiException(404, 'Campania no encontrada.');
+    }
+
+    [$nombre, $fechaInicio, $fechaFin, $cerrada] = $this->validarCuerpoActualizar();
+
+    Campania::actualizar($id, $nombre, $fechaInicio, $fechaFin, $cerrada);
+
+    $this->json(Campania::buscar($id));
+    }
     /**
     * Lee el body, normaliza (trim del nombre), valida contra el schema y
     * devuelve [nombre, fecha_inicio, fecha_fin] listo para Campania::crear().
@@ -66,5 +86,22 @@ final class CampaniaController extends Controller
         Validator::validar('campanias', $datos);
 
         return [$datos['nombre'], $datos['fecha_inicio'], $datos['fecha_fin']];
+    }
+    /**
+     * Igual que validarCuerpo() pero para el PUT: valida contra el schema
+     * campanias.update (que ademas exige "cerrada") y devuelve
+     * [nombre, fecha_inicio, fecha_fin, cerrada] listo para Campania::actualizar().
+     */
+    private function validarCuerpoActualizar(): array
+    {
+        $datos = $this->request->json();
+
+        if (array_key_exists('nombre', $datos)) {
+            $datos['nombre'] = trim((string) $datos['nombre']);
+        }
+
+        Validator::validar('campanias.update', $datos);   // ← otro schema
+
+        return [$datos['nombre'], $datos['fecha_inicio'], $datos['fecha_fin'], $datos['cerrada']];
     }
 }   
