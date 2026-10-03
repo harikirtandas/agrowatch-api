@@ -18,7 +18,7 @@ final class Campania
 
         return $stmt->fetchAll();
     }
-    
+
     public static function buscar(int $id): ?array
     {
         $stmt = Database::connection()->prepare(
@@ -31,5 +31,20 @@ final class Campania
         $fila = $stmt->fetch();
 
         return $fila === false ? null : $fila;
+    }
+        
+     public static function crear(string $nombre, string $fechaInicio, string $fechaFin): int
+     {
+        $stmt = Database::connection()->prepare(
+        'INSERT INTO campanias (nombre, fecha_inicio, fecha_fin, created_at, updated_at)
+         VALUES (:nombre, :fechaInicio, :fechaFin, NOW(), NOW())');
+
+        $stmt->execute([
+        'nombre'      => $nombre,
+        'fechaInicio' => $fechaInicio,
+        'fechaFin'    => $fechaFin,
+    ]);
+     
+        return (int) Database::connection()->lastInsertId();
     }
 }
