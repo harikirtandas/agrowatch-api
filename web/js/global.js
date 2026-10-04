@@ -11,7 +11,7 @@ const formatoNumero = (n, decimales = 0) =>
     n === null || Number.isNaN(n) ? '-' : n.toLocaleString('es-ES', { minimumFractionDigits: decimales });
 
 // Escapamos texto antes de meterlo en innerHTML para evitar inyecciones de código.
-const escapar(texto) {
+function escapar(texto) {
     const div = document.createElement('div');
     div.textContent = texto ?? '';
     return div.innerHTML;
