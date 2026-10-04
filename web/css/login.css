@@ -123,3 +123,11 @@ body {
 .enlace:hover {
   text-decoration: underline;
 }
+
+.mensaje-error {
+  color: #d1583f; margin-top: 12px; font-size: 14px;
+}
+
+.campo__entrada--error {
+  border-color: #d1583f
+}
