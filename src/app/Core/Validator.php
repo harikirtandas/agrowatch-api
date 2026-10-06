@@ -101,6 +101,10 @@ final class Validator
         return match ($error->keyword()) {
             'minLength' => 'Requerido.',
             'maxLength' => "Maximo {$args['max']} caracteres.",
+            'exclusiveMinimum' => "Tiene que ser mayor que {$args['min']}.",
+            'minimum' => "Tiene que ser como minimo {$args['min']}.",
+            'maximum' => "Tiene que ser como maximo {$args['max']}.",
+            'exclusiveMaximum' => "Tiene que ser menor que {$args['max']}.",
             'pattern' => 'Formato invalido.',
             'type' => match ($tipo) {
                 'string' => 'Tiene que ser texto.',
