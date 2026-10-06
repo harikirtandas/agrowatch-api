@@ -8,10 +8,10 @@
         { "type": "string", "pattern": "^[0-9]+$" }
       ]
     },
-    "nombre": { "type": "string", "minLength": 1 },
-    "ha_totales": { "type": "number" },
-    "ha_efectivas": { "type": "number" },
-    "lat": { "type": ["number", "null"] },
-    "lng": { "type": ["number", "null"] }
+    "nombre": { "type": "string", "minLength": 1, "maxLength": 60 },
+    "ha_totales": { "type": "number", "exclusiveMinimum": 0, "maximum": 99999999.99 },
+    "ha_efectivas": { "type": "number", "exclusiveMinimum": 0, "maximum": 99999999.99 },
+    "lat": { "type": ["number", "null"], "minimum": -90, "maximum": 90 },
+    "lng": { "type": ["number", "null"], "minimum": -180, "maximum": 180 }
   }
 }
