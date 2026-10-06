@@ -188,7 +188,7 @@ final class SiembraController extends Controller
         }
 
         if ($codigoMysql === 1062) {
-            return new ApiException(409, 'Ya existe una siembra de ese cultivo en ese lote y campania.');
+            return new ApiException(409, 'Ya existe una siembra con ese cultivo para este lote en esta campana.');
         }
 
         return $e;
