@@ -239,3 +239,25 @@ body {
     padding: 0 8px;
   }
 }
+
+.mapa-selector {
+  height: 280px;
+  border-radius: 12px;
+  margin: 12px 0;
+  z-index: 0;
+}
+
+.enlace-mi-ubicacion,
+.ayuda-mapa {
+  font-size: 13px;
+}
+
+.mensaje-error {
+  color: #d1583f; 
+  margin-top: 12px; 
+  font-size: 14px; 
+}
+
+.campo__entrada--error { 
+  border-color: #d1583f; 
+}
