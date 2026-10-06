@@ -8,7 +8,7 @@ const valor = (id) =>
 const num = (v) => (v === null || v === undefined || v === '' ? null : Number(v));
 
 const formatoNumero = (n, decimales = 0) =>
-    n === null || Number.isNaN(n) ? '-' : n.toLocaleString('es-ES', { minimumFractionDigits: decimales });
+    n === null || Number.isNaN(n) ? '-' : n.toLocaleString('es-AR', { maximumFractionDigits: decimales });
 
 // Escapamos texto antes de meterlo en innerHTML para evitar inyecciones de código.
 function escapar(texto) {
@@ -21,7 +21,7 @@ function escapar(texto) {
 //haySesion() solo dice si hay un token, no si el token es valido.
 async function usuarioLogueado() {
     if (!API.haySesion()) {
-        window.location.href = '/login.html';
+        window.location.href = 'login.html';
         return null;
     }
     try {
@@ -29,7 +29,8 @@ async function usuarioLogueado() {
         return usuario;
     } catch (error) {
         if (error.status === 401) {
-            window.location.href = '/login.html';
+            await API.logout();
+            window.location.href = 'login.html';
             return null;
         }
         throw error;
@@ -57,9 +58,9 @@ function mostrarError(form, error, campos = {}){
         caja.textContent = Object.entries(error.errores).map(([campo, mensaje]) => {
             const input = campos[campo] ? document.getElementById(campos[campo]) : null;
             input?.classList.add('campo__entrada--error');
-            return `${input?.labels?.[0].textContent ?? campo}: ${mensaje}`;
+            return `${input?.labels?.[0]?.textContent ?? campo}: ${mensaje}`;
         }).join(' . ');
     } else {
-        caja.textContent = error.mensaje;
+        caja.textContent = error.message;
     }
 }
