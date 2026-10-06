@@ -385,3 +385,21 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+.fila--ubicando {
+  outline: 2px solid #4f9d63;
+}
+
+.tabla-lotes .campo__entrada {
+  width: 100%;
+  min-width: 70px;
+  padding: 6px 8px;
+}
+
+.boton-quitar {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #d1583f;
+  font-size: 16px;
+}

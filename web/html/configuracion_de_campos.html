@@ -5,7 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AgroWatchOut — Configurar establecimiento</title>
   <link rel="stylesheet" href="../css/configuracion_de_campos.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 </head>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="../js/config.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/global.js"></script>
+<script src="../js/mapa.js"></script>
+<script src="../js/configuracion.js"></script>
+
 <body>
 
   <div class="aplicacion">
@@ -54,7 +63,7 @@
 
       <div class="tarjeta-config">
 
-        <form class="formulario-config" action="procesar-campo.php" method="POST">
+        <form class="formulario-config">
 
           <div class="campos-establecimiento">
             <div class="campo">
@@ -72,11 +81,14 @@
             <div class="campo">
               <label for="ubicacion" class="campo__etiqueta">Ubica tu campo en el mapa</label>
               <div class="campo__con-icono">
-                <input type="text" id="ubicacion" name="ubicacion" class="campo__entrada" placeholder="Seleccionar ubicación">
+                <input type="text" id="ubicacion" name="ubicacion" class="campo__entrada" placeholder="Seleccionar ubicación" readonly>
                 <svg class="campo__icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.2 7-11.5a7 7 0 1 0-14 0C5 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.3"/></svg>
               </div>
             </div>
           </div>
+
+          <p id="ayudaMapa" class="ayuda-mapa">Hacé clic en el mapa para ubicar el establecimiento</p>
+          <div id="mapaCampo" class="mapa-selector"></div>
 
           <h2 class="tarjeta-config__subtitulo">Lotes / parcelas</h2>
 
@@ -86,20 +98,11 @@
                 <th>Lote</th>
                 <th>Ha totales</th>
                 <th>Ha efectivas</th>
+                <th>Ubicación</th>
+                <th></th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td>Lote 2</td>
-                <td>90 ha</td>
-                <td>85 ha</td>
-              </tr>
-              <tr>
-                <td>Lote 4</td>
-                <td>64 ha</td>
-                <td>60 ha</td>
-              </tr>
-            </tbody>
+            <tbody id="cuerpoLotes"></tbody>
           </table>
 
           <button type="button" class="enlace-agregar-lote">+ Agregar lote</button>
