@@ -51,4 +51,40 @@ final class Cotizacion
 
         return (int) Database::connection()->lastInsertId();
     }
+    
+    /**
+     * La cotizacion mas reciente de un cultivo con fecha <= :hoy, o null si no
+     * hay ninguna. NO busca la fecha exacta a proposito: no hay precio cargado
+     * todos los dias (fin de semana, feriado, o un dia sin datos), asi que vale
+     * la ultima conocida hasta esa fecha.
+     *
+     * El `id DESC` desempata si hay dos mercados cargados el mismo dia: gana la
+     * ultima fila insertada. No filtra por moneda: devuelve `moneda` y el
+     * controller convierte si viene en ARS.
+     *
+     * Devuelve exactamente las 4 columnas del contrato (campo
+     * `cotizacion_vigente` de GET /api/siembras/{id}/margen), para no filtrar
+     * campos de mas a la respuesta. `precio` viaja como string (DECIMAL con
+     * EMULATE_PREPARES en false) -- no se castea aca, lo usa el Service.
+     *
+     * null significa "no hay ninguna cargada"; el controller lo traduce al 422
+     * "No hay cotizacion cargada para este cultivo." del contrato.
+     *
+     * @return array<string, mixed>|null
+     */
+    public static function vigente(int $cultivoId, string $hoy): ?array
+    {
+        $stmt = Database::connection()->prepare(
+            'SELECT precio, moneda, fecha, mercado
+             FROM cotizaciones
+             WHERE cultivo_id = :cultivoId AND fecha <= :hoy
+             ORDER BY fecha DESC, id DESC
+             LIMIT 1'
+        );
+        $stmt->execute(['cultivoId' => $cultivoId, 'hoy' => $hoy]);
+
+        $fila = $stmt->fetch();
+
+        return $fila === false ? null : $fila;
+    }
 }

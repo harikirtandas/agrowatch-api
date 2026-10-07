@@ -12,11 +12,7 @@ use App\Core\Database;
 // chequear si una fecha+tipo ya esta cargada ANTES de insertar (el UNIQUE de
 // la tabla no alcanza solo porque el sync quiere reportar "ya_existian" en la
 // respuesta, no solo evitar el error) e insertar la que falte.
-//
-// OJO: el metodo que el calculo de margen va a necesitar ("el tipo de cambio
-// vigente para tal fecha") todavia no esta aca -- eso es parte del Modelo que
-// arma Marcos en la Fase 2 (ver planning/roadmap.txt), este archivo solo
-// cubre lo que le hace falta al Sync de la Fase 3.
+
 final class TipoCambio
 {
     public static function existeEnFecha(string $fecha, string $tipo): bool
@@ -39,4 +35,23 @@ final class TipoCambio
 
         return (int) Database::connection()->lastInsertId();
     }
+
+    
+// El margen usa oficialHasta(): el dolar oficial vigente a una fecha, para
+// convertir a ARS los costos cargados en USD (ver SiembraController::margen()).
+public static function oficialHasta(string $fecha): ?array
+{
+    $stmt = Database::connection()->prepare(
+        'SELECT valor, fecha
+        FROM tipos_cambio
+        WHERE tipo = :tipo AND fecha <= :fecha
+        ORDER BY fecha DESC
+        LIMIT 1'
+    );
+    $stmt->execute(['tipo' => 'oficial', 'fecha' => $fecha]);
+
+    $fila = $stmt->fetch();
+
+    return $fila === false ? null : $fila;
+}
 }
