@@ -90,6 +90,8 @@ $router->delete('/api/notas/{id:\d+}', 'NotaController@destroy');
 // -- dominio real: AgroWatchOut (ver README, seccion "API AgroWatchOut" para
 // los contratos JSON de cada uno). Controllers/Models todavia no existen: se
 // van implementando en orden, esta tabla ya deja el mapeo final. --
+$router->post('/api/usuarios', 'UsuarioController@store');
+
 $router->get('/api/establecimientos', 'EstablecimientoController@index');
 $router->post('/api/establecimientos', 'EstablecimientoController@store');
 $router->get('/api/establecimientos/{id:\d+}', 'EstablecimientoController@show');
