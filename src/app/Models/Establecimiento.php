@@ -97,11 +97,9 @@ final class Establecimiento
 
     /**
      * Actualiza por id, sin volver a filtrar por usuario/rol aca adentro.
-     * OJO, esto es distinto de como esta escrito Nota::actualizar() (que
-     * repite el filtro "AND usuario_id = :uid" en el UPDATE como defensa
-     * extra). Aca el chequeo de "es tuyo Y sos dueno" ya lo hizo el
-     * controller ANTES de llamar a este metodo (con buscarDeUsuario() +
-     * comparar el campo `rol`), asi que repetirlo en el UPDATE seria
+     * El chequeo de "es tuyo Y sos dueno" ya lo hizo el controller ANTES de
+     * llamar a este metodo (con buscarDeUsuario() + comparar el campo
+     * `rol`), asi que repetirlo en el UPDATE seria
      * redundante -- pero repetirlo es una defensa valida contra el dia que
      * alguien agregue una ruta nueva y se olvide de chequear antes de
      * escribir. Discutido en el README de esta carpeta: las dos formas son

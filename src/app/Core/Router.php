@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Core;
 
 // router minimo propio, sin librerias externas. soporta parametros dinamicos
-// en el path con sintaxis de llaves: /notas/{id} o /notas/{id:\d+} (constraint
+// en el path con sintaxis de llaves: /establecimientos/{id} o /establecimientos/{id:\d+} (constraint
 // opcional despues de los dos puntos; sin constraint el default es [^/]+, es
 // decir cualquier cosa menos una barra, para no cruzar segmentos del path).
 //
