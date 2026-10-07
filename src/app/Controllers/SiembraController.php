@@ -7,12 +7,29 @@ namespace App\Controllers;
 use App\Core\ApiException;
 use App\Core\Auth;
 use App\Core\Controller;
-use App\Core\Validator;  
+use App\Core\Validator;
+use App\Models\Costo;
+use App\Models\Cotizacion;
+use App\Models\Cultivo;
 use App\Models\Siembra;
+use App\Models\TipoCambio;
+use App\Services\CalculoException;
+use App\Services\CalculoMargen;
 use PDOException;
 
 final class SiembraController extends Controller
 {
+    // #region  ====> constantes <=========
+    // Retencion que se descuenta al precio. Hoy es 0: el precio de pizarra ya
+    // es neto de retencion (ver contrato, GET /api/siembras/{id}/margen).
+    // cultivos.retencion_pct se usara cuando haya un precio FOB.
+    private const RETENCION_APLICADA = '0.00';
+
+    private const ZONA_HORARIA = 'America/Argentina/Buenos_Aires';
+    // #endregion
+
+    // #region --> los distintos  metodos HTTP(CRUD) <----
+
     // GET /api/siembras?campania_id=&lote_id=
     // Los dos filtros son opcionales y combinables. Las siembras son
     // compartidas por todos los usuarios logueados (ver Siembra.php), asi que
@@ -84,7 +101,47 @@ final class SiembraController extends Controller
 
         $this->sinContenido();
     }
+    // #endregion
 
+    // #region ====> margen()
+    
+    // GET /api/siembras/{id}/margen
+    // Solo orquesta: lee con los Models, convierte monedas y delega TODAS las
+    // cuentas en CalculoMargen. No guarda nada. Un unico try: cualquier
+    // CalculoException, venga de donde venga, sale como 422; las ApiException
+    // propias (404/422) lo atraviesan sin tocarse.
+    public function margen(int $id): void
+    {
+        Auth::usuarioActual($this->request);
+
+        $siembra = $this->siembraOError($id);
+        $cultivoId = (int) $siembra['cultivo_id'];
+        $cultivo = Cultivo::porId($cultivoId);
+        $hoy = $this->hoy();
+        $cotizacion = $this->cotizacionOError($cultivoId, $hoy);
+
+        try {
+            $precioUsd = $this->precioEnUsd($cotizacion);
+            $tcHoy = $this->tipoCambioOficialOError($hoy);
+            $detalle = $this->detalleCostos(Costo::porSiembra($id));
+            $resultado = CalculoMargen::calcular(
+                $siembra['ha_sembradas'],
+                $siembra['rinde_esperado'],
+                $cultivo['unidad'],
+                $precioUsd,
+                self::RETENCION_APLICADA,
+                array_column($detalle, 'importe_usd')
+            );
+            $respuesta = $this->armarRespuesta($siembra, $cultivo, $cotizacion, $tcHoy, $detalle, $resultado);
+        } catch (CalculoException $e) {
+            throw new ApiException(422, $e->getMessage(), previa: $e);
+        }
+
+        $this->json($respuesta);
+    }
+    // #endregion
+
+    // #region ----> Funciones privadas <------
     /**
      * Lee un filtro entero opcional de la query string.
      * No vino o vino vacio -> null (filtro no aplicado).
@@ -193,4 +250,180 @@ final class SiembraController extends Controller
 
         return $e;
     }
+    // #endregion
+
+    // #region ====> Auxiliares de margen() <======
+    
+    /** Fecha de hoy en Argentina (AAAA-MM-DD). margen() la pide una sola vez. */
+    private function hoy(): string
+    {
+        return (new \DateTimeImmutable('now', new \DateTimeZone(self::ZONA_HORARIA)))->format('Y-m-d');
+    }
+
+    /**
+     * La cotizacion vigente del cultivo o corta con 422.
+     *
+     * @return array<string, mixed>
+     */
+    private function cotizacionOError(int $cultivoId, string $hoy): array
+    {
+        $cotizacion = Cotizacion::vigente($cultivoId, $hoy);
+
+        if ($cotizacion === null) {
+            throw new ApiException(422, 'No hay cotizacion cargada para este cultivo.');
+        }
+
+        return $cotizacion;
+    }
+
+    /**
+     * El dolar oficial vigente a una fecha o corta con 422. Un solo lugar para
+     * el mensaje: lo usan el precio, los costos en pesos y los campos *_ars.
+     *
+     * @return array<string, mixed>
+     */
+    private function tipoCambioOficialOError(string $fecha): array
+    {
+        $tc = TipoCambio::oficialHasta($fecha);
+
+        if ($tc === null) {
+            throw new ApiException(422, 'No hay tipo de cambio oficial cargado para esta fecha.');
+        }
+
+        return $tc;
+    }
+
+    /**
+     * Precio de la cotizacion en USD: si ya viene en USD se usa tal cual; si
+     * viene en pesos se pasa a USD con el dolar de la fecha de la cotizacion.
+     *
+     * @param array<string, mixed> $cotizacion
+     */
+    private function precioEnUsd(array $cotizacion): string
+    {
+        return match ($cotizacion['moneda']) {
+            'USD' => $cotizacion['precio'],
+            'ARS' => CalculoMargen::aUsd(
+                $cotizacion['precio'],
+                $this->tipoCambioOficialOError($cotizacion['fecha'])['valor']
+            ),
+            default => throw new CalculoException('Moneda desconocida.'),
+        };
+    }
+
+    /**
+     * Arma detalle_costos: una linea por costo, del mas viejo al mas nuevo (por
+     * id). Cada costo en pesos usa el dolar oficial de SU fecha; como varios
+     * costos comparten fecha, cada fecha se consulta una sola vez.
+     *
+     * @param list<array<string, mixed>> $costos
+     * @return list<array<string, mixed>>
+     */
+    private function detalleCostos(array $costos): array
+    {
+        usort($costos, fn (array $a, array $b): int => $a['id'] <=> $b['id']);
+
+        $tcPorFecha = [];
+        $detalle = [];
+
+        foreach ($costos as $costo) {
+            $tc = null;
+            if ($costo['moneda'] === 'ARS') {
+                $tcPorFecha[$costo['fecha']] ??= $this->tipoCambioOficialOError($costo['fecha']);
+                $tc = $tcPorFecha[$costo['fecha']];
+            }
+            $detalle[] = $this->lineaDetalle($costo, $tc);
+        }
+
+        return $detalle;
+    }
+
+    /**
+     * Una linea de detalle_costos. La cuenta la hace CalculoMargen.
+     *
+     * @param array<string, mixed> $costo
+     * @param array<string, mixed>|null $tc dolar de la fecha del costo; null si el costo esta en USD
+     * @return array<string, mixed>
+     */
+    private function lineaDetalle(array $costo, ?array $tc): array
+    {
+        $linea = CalculoMargen::convertirCosto(
+            $costo['cantidad'],
+            $costo['precio_unitario'],
+            $costo['moneda'],
+            $tc['valor'] ?? null
+        );
+
+        return [
+            'id' => $costo['id'],
+            'categoria' => $costo['categoria'],
+            'moneda' => $costo['moneda'],
+            'importe_original' => $linea['importe_original'],
+            'tipo_cambio' => $tc === null ? null : ['valor' => $tc['valor'], 'fecha' => $tc['fecha']],
+            'importe_usd' => $linea['importe_usd'],
+        ];
+    }
+
+    /**
+     * El JSON del contrato. No calcula nada: junta lo que ya viene calculado.
+     *
+     * @param array<string, mixed> $siembra
+     * @param array<string, mixed> $cultivo
+     * @param array<string, mixed> $cotizacion
+     * @param array<string, mixed> $tcHoy
+     * @param list<array<string, mixed>> $detalle
+     * @param array<string, mixed> $resultado salida de CalculoMargen::calcular()
+     * @return array<string, mixed>
+     */
+    private function armarRespuesta(
+        array $siembra,
+        array $cultivo,
+        array $cotizacion,
+        array $tcHoy,
+        array $detalle,
+        array $resultado
+    ): array {
+        return [
+            'siembra_id' => $siembra['id'],
+            'ha_sembradas' => $siembra['ha_sembradas'],
+            'moneda_calculo' => 'USD',
+            'cotizacion_vigente' => [
+                'precio' => $cotizacion['precio'],
+                'moneda' => $cotizacion['moneda'],
+                'fecha' => $cotizacion['fecha'],
+                'mercado' => $cotizacion['mercado'],
+            ],
+            'retencion_aplicada_pct' => self::RETENCION_APLICADA,
+            'precio_neto_usd' => ['por_unidad' => $resultado['precio_neto'], 'unidad' => $cultivo['unidad']],
+            'tipo_cambio_usado' => ['tipo' => 'oficial', 'valor' => $tcHoy['valor'], 'fecha' => $tcHoy['fecha']],
+            'costo_total_usd' => $resultado['costo_total'],
+            'costo_por_ha_usd' => $resultado['costo_ha'],
+            'ingreso_esperado_usd' => $resultado['ingreso'],
+            'margen_bruto_usd' => $resultado['margen'],
+            'margen_pct' => $resultado['margen_pct'],
+            'rinde_indiferencia_kg_ha' => $resultado['rinde_indiferencia'],
+            'semaforo' => $resultado['semaforo'],
+            ...$this->importesEnPesos($resultado, $tcHoy['valor']),
+            'detalle_costos' => $detalle,
+        ];
+    }
+
+    /**
+     * Los cuatro campos *_ars del contrato, solo para mostrar: el importe en
+     * USD ya calculado por el dolar oficial de hoy.
+     *
+     * @param array<string, mixed> $resultado
+     * @return array<string, string>
+     */
+    private function importesEnPesos(array $resultado, string $tc): array
+    {
+        return [
+            'costo_total_ars' => CalculoMargen::aPesos($resultado['costo_total'], $tc),
+            'costo_por_ha_ars' => CalculoMargen::aPesos($resultado['costo_ha'], $tc),
+            'ingreso_esperado_ars' => CalculoMargen::aPesos($resultado['ingreso'], $tc),
+            'margen_bruto_ars' => CalculoMargen::aPesos($resultado['margen'], $tc),
+        ];
+    }
+
+    // #endregion
 }
