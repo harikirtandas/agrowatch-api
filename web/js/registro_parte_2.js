@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const form = document.querySelector('.formulario-registro');
     const inputUbicacion = document.getElementById('ubicacion');
+    const contenedorMapa = document.getElementById('contenedorMapa');
     let ubicacion = null;
 
     const selector = Mapa.selectorPunto('mapaUbicacion', {
@@ -15,6 +16,14 @@ document.addEventListener('DOMContentLoaded', () => {
             inputUbicacion.value = `${punto.lat}, ${punto.lng}`;
         },
     });
+
+    function mostrarMapa(visible = true) {
+        contenedorMapa.hidden = !visible;
+        inputUbicacion.setAttribute('aria-expanded', visible);
+        if (visible) selector.mapa.invalidateSize();
+    }
+
+    inputUbicacion.addEventListener('click', () => mostrarMapa(contenedorMapa.hidden));
 
     document.getElementById('botonMiUbicacion').addEventListener('click', async () => {
         try {

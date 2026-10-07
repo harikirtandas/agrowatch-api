@@ -7,12 +7,7 @@
   <link rel="stylesheet" href="../css/creacion_de_usuario_partes.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 </head>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="../js/config.js"></script>
-<script src="../js/api.js"></script>
-<script src="../js/global.js"></script>
-<script src="../js/mapa.js"></script>
-<script src="../js/registro_parte_2.js"></script>
+
 
 <body>
 
@@ -27,36 +22,41 @@
         <span class="progreso__etiqueta">Información del Establecimiento</span>
       </div>
 
-      <!-- method="POST" evita que los datos del formulario viajen en la URL -->
       <form class="formulario-registro">
 
         <div class="formulario-registro__fila">
           <div class="campo">
             <label for="establecimiento" class="campo__etiqueta">Nombre del establecimiento</label>
-            <input type="text" id="establecimiento" name="establecimiento" class="campo__entrada">
+            <input type="text" id="establecimiento" name="establecimiento" class="campo__entrada" maxlength="100">
           </div>
           <div class="campo">
             <label for="provincia" class="campo__etiqueta">Provincia</label>
-            <input type="text" id="provincia" name="provincia" class="campo__entrada">
+            <input type="text" id="provincia" name="provincia" class="campo__entrada" maxlength="60">
           </div>
         </div>
 
         <div class="formulario-registro__fila">
           <div class="campo">
             <label for="localidad" class="campo__etiqueta">Localidad</label>
-            <input type="text" id="localidad" name="localidad" class="campo__entrada">
+            <input type="text" id="localidad" name="localidad" class="campo__entrada" maxlength="100">
           </div>
           <div class="campo">
             <label for="ubicacion" class="campo__etiqueta">Ubica tu establecimiento en el mapa</label>
             <div class="campo__con-icono">
-              <input type="text" id="ubicacion" name="ubicacion" class="campo__entrada" placeholder="Seleccionar ubicación" readonly>
+              <input type="text" id="ubicacion" name="ubicacion" class="campo__entrada" placeholder="Seleccionar ubicación" readonly aria-expanded="false">
               <svg class="campo__icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.2 7-11.5a7 7 0 1 0-14 0C5 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.3"/></svg>
             </div>
           </div>
         </div>
-
-        <div id="mapaUbicacion" class="mapa-selector"></div>
-        <button type="button" id="botonMiUbicacion" class="enlace-mi-ubicacion"> Usar mi ubicación actual </button>
+        
+        <div id="contenedorMapa" class="contenedor-mapa" hidden>
+          <p class="ayuda-mapa">Hacé clic en el mapa para marcar tu establecimiento, o usá tu ubicación actual.</p>
+          <div id="mapaUbicacion" class="mapa-selector"></div>
+          <button type="button" id="botonMiUbicacion" class="boton-mi-ubicacion">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+            Usar mi ubicación actual 
+          </button>
+        </div>
 
         <button type="submit" name="accion" value="completar" class="boton boton--principal">Finalizar</button>
         <button type="submit" name="accion" value="omitir" formnovalidate class="boton boton--secundario">Omitir y Finalizar</button>
@@ -69,6 +69,12 @@
 
     </div>
   </main>
-
+  
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="../js/config.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/global.js"></script>
+<script src="../js/mapa.js"></script>
+<script src="../js/registro_parte_2.js"></script>
 </body>
 </html>

@@ -386,20 +386,113 @@ body {
   }
 }
 
-.fila--ubicando {
-  outline: 2px solid #4f9d63;
+.mensaje-error {
+  color: #d1583f;
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+.campo__entrada--error {
+  border-color: #d1583f;
+}
+
+#ubicacion {
+  cursor: pointer;
+}
+
+.contenedor-mapa {
+  margin-top: 20px;
+}
+
+.ayuda-mapa {
+  font-size: 13px;
+  color: var(--gris-texto);
+  margin-bottom: 8px;
+}
+
+.mapa-selector {
+  height: 340px;
+  border-radius: 12px;
+  border: 1px solid var(--gris-borde);
+  z-index: 0;
+}
+
+.tabla-lotes th,
+.tabla-lotes td {
+  padding-right: 12px;
+}
+
+.tabla-lotes th:last-child,
+.tabla-lotes td:last-child {
+  padding-right: 0;
+  width: 40px;
+  text-align: center;
 }
 
 .tabla-lotes .campo__entrada {
-  width: 100%;
   min-width: 70px;
-  padding: 6px 8px;
+  padding: 9px 12px;
+}
+
+.fila--ubicando td {
+  background: #eef5ef;
+}
+
+.boton-ubicar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--gris-borde);
+  border-radius: 20px;
+  padding: 8px 14px;
+  background: var(--blanco);
+  color: var(--verde-medio);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.boton-ubicar svg {
+  width: 15px;
+  height: 15px;
+}
+
+.boton-ubicar:hover {
+  border-color: var(--verde-medio);
+}
+
+.fila--ubicando .boton-ubicar {
+  background: var(--verde-medio);
+  border-color: var(--verde-medio);
+  color: var(--blanco);
+}
+
+.boton-ubicar--ubicado {
+  background: var(--amarillo-chip);
+  border-color: transparent;
+  color: var(--amarillo-chip-texto);
+}
+
+.boton-ubicar:disabled,
+.boton-quitar:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .boton-quitar {
   background: none;
   border: none;
-  cursor: pointer;
-  color: #d1583f;
+  font-family: inherit;
   font-size: 16px;
+  padding: 6px;
+  border-radius: 8px;
+  color: #d1583f;
+  cursor: pointer;
+}
+
+.boton-quitar:hover:not(:disabled) {
+  background: rgba(209, 88, 63, 0.08);
 }

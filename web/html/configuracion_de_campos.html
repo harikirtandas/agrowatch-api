@@ -8,13 +8,6 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 </head>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="../js/config.js"></script>
-<script src="../js/api.js"></script>
-<script src="../js/global.js"></script>
-<script src="../js/mapa.js"></script>
-<script src="../js/configuracion.js"></script>
-
 <body>
 
   <div class="aplicacion">
@@ -68,27 +61,30 @@
           <div class="campos-establecimiento">
             <div class="campo">
               <label for="nombreEstablecimiento" class="campo__etiqueta">Nombre del establecimiento</label>
-              <input type="text" id="nombreEstablecimiento" name="nombreEstablecimiento" class="campo__entrada" placeholder="Ej. Las carmelitas">
+              <input type="text" id="nombreEstablecimiento" name="nombreEstablecimiento" class="campo__entrada" maxlength="100" placeholder="Ej. Las carmelitas">
             </div>
             <div class="campo">
               <label for="provincia" class="campo__etiqueta">Provincia</label>
-              <input type="text" id="provincia" name="provincia" class="campo__entrada" placeholder="Ej. Buenos Aires">
+              <input type="text" id="provincia" name="provincia" class="campo__entrada" maxlength="60" placeholder="Ej. Buenos Aires">
             </div>
             <div class="campo">
               <label for="localidad" class="campo__etiqueta">Localidad</label>
-              <input type="text" id="localidad" name="localidad" class="campo__entrada" placeholder="Ej. Tres Arroyos">
+              <input type="text" id="localidad" name="localidad" class="campo__entrada" maxlength="100" placeholder="Ej. Tres Arroyos">
             </div>
             <div class="campo">
               <label for="ubicacion" class="campo__etiqueta">Ubica tu campo en el mapa</label>
               <div class="campo__con-icono">
-                <input type="text" id="ubicacion" name="ubicacion" class="campo__entrada" placeholder="Seleccionar ubicación" readonly>
+                <input type="text" id="ubicacion" name="ubicacion" class="campo__entrada" placeholder="Seleccionar ubicación" readonly aria-expanded="false">
                 <svg class="campo__icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.2 7-11.5a7 7 0 1 0-14 0C5 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.3"/></svg>
               </div>
             </div>
           </div>
 
-          <p id="ayudaMapa" class="ayuda-mapa">Hacé clic en el mapa para ubicar el establecimiento</p>
-          <div id="mapaCampo" class="mapa-selector"></div>
+          <div id="contenedorMapa" class="contenedor-mapa" hidden>
+            <p id="ayudaMapa" class="ayuda-mapa">Hacé clic en el mapa para ubicar el establecimiento</p>
+            <div id="mapaCampo" class="mapa-selector"></div>
+          </div>
+          
 
           <h2 class="tarjeta-config__subtitulo">Lotes / parcelas</h2>
 
@@ -129,6 +125,12 @@
       </div>
     </div>
   </div>
-
+  
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="../js/config.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/global.js"></script>
+<script src="../js/mapa.js"></script>
+<script src="../js/configuracion.js"></script>
 </body>
 </html>

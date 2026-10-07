@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     //el mapa arranca oculto y se despliega desde el input
     function mostrarMapa(visible = true){
         contenedorMapa.hidden = !visible;
-        inputUbicacion.setAttribute('aria.expanded', visible);
+        inputUbicacion.setAttribute('aria-expanded', visible);
         if (visible) mapa.invalidateSize();
     }
     inputUbicacion.addEventListener('click', () => mostrarMapa(contenedorMapa.hidden));

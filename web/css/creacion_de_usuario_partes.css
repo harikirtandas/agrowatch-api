@@ -261,3 +261,50 @@ body {
 .campo__entrada--error { 
   border-color: #d1583f; 
 }
+
+#ubicacion {
+  cursor: pointer;
+}
+
+.contenedor-mapa {
+  margin: 4px 0 24px;
+}
+
+.ayuda-mapa {
+  font-size: 13px;
+  color: var(--gris-etiqueta);
+  margin-bottom: 8px;
+}
+
+.mapa-selector {
+  height: 280px;
+  border-radius: var(--radio);
+  border: 1px solid var(--gris-borde);
+  z-index: 0;
+}
+
+.boton-mi-ubicacion {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  border: 1px solid var(--gris-borde);
+  border-radius: 20px;
+  padding: 8px 14px;
+  background: var(--blanco);
+  color: var(--verde-boton);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.boton-mi-ubicacion svg {
+  width: 15px;
+  height: 15px;
+}
+
+.boton-mi-ubicacion:hover {
+  border-color: var(--verde-boton);
+}
