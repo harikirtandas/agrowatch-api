@@ -1,0 +1,13 @@
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # / -> la landing real, sin mostrar /html/ en la URL
+    RewriteRule ^$ html/landing.html [L]
+
+    # cualquier /algo.html en la raiz se sirve desde html/algo.html,
+    # transparente (la URL no cambia, nunca se ve "/html/")
+    RewriteCond %{DOCUMENT_ROOT}/html/$1 -f
+    RewriteRule ^([a-zA-Z0-9_-]+\.html)$ html/$1 [L]
+</IfModule>
