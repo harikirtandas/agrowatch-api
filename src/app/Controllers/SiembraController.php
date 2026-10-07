@@ -11,6 +11,7 @@ use App\Core\Validator;
 use App\Models\Costo;
 use App\Models\Cotizacion;
 use App\Models\Cultivo;
+use App\Models\Lote;
 use App\Models\Siembra;
 use App\Models\TipoCambio;
 use App\Services\CalculoException;
@@ -30,35 +31,44 @@ final class SiembraController extends Controller
 
     // #region --> los distintos  metodos HTTP(CRUD) <----
 
+    /** @return array<string, mixed> usuario autenticado (sin password_hash) */
+    private function usuario(): array
+    {
+        return Auth::usuarioActual($this->request);
+    }
+
     // GET /api/siembras?campania_id=&lote_id=
-    // Los dos filtros son opcionales y combinables. Las siembras son
-    // compartidas por todos los usuarios logueados (ver Siembra.php), asi que
-    // se llama al guard pero NO se guarda el id del usuario.
+    // Los dos filtros son opcionales y combinables. Las siembras cuelgan de
+    // un lote con dueno: se listan solo las del usuario autenticado.
     public function index(): void
     {
-        Auth::usuarioActual($this->request);
+        $uid = (int) $this->usuario()['id'];
 
         $campaniaId = $this->filtroEntero('campania_id');
         $loteId = $this->filtroEntero('lote_id');
 
-        $this->json(Siembra::listar($campaniaId, $loteId));
+        $this->json(Siembra::listar($campaniaId, $loteId, $uid));
     }
 
     // GET /api/siembras/{id}
     public function show(int $id): void
     {
-        Auth::usuarioActual($this->request);
+        $uid = (int) $this->usuario()['id'];
 
-        $this->json($this->siembraOError($id));
+        $this->json($this->siembraOError($id, $uid));
     }
 
     // POST /api/siembras
     // { "campania_id", "lote_id", "cultivo_id", "ha_sembradas", "fecha_siembra", "variedad"?, "rinde_esperado"? }
+    // El lote_id tiene que ser de un establecimiento del usuario -- se chequea
+    // ANTES de insertar, si no cualquiera podria colgarle una siembra a un
+    // lote ajeno solo adivinando su id (mismo criterio que LoteController::store()).
     public function store(): void
     {
-        Auth::usuarioActual($this->request);
-
+        $uid = (int) $this->usuario()['id'];
         $valores = $this->validarCuerpo();
+
+        $this->loteOError($valores[1], $uid);
 
         try {
             $id = Siembra::crear(...$valores);
@@ -66,20 +76,26 @@ final class SiembraController extends Controller
             throw $this->traducirErrorBD($e);
         }
 
-        $this->creado(Siembra::buscar($id), "/api/siembras/{$id}");
+        $this->creado(Siembra::buscarDeUsuario($id, $uid), "/api/siembras/{$id}");
     }
 
     // PUT/api/siembras/{id}
     // Reemplazo completo: el cliente manda siempre los cinco obligatorios.
     // Se busca ANTES con siembraOError() porque actualizar() devuelve
     // rowCount() > 0, y MySQL cuenta 0 filas si los valores no cambiaron:
-    // no sirve para detectar el 404.
+    // no sirve para detectar el 404. Si el lote_id cambia, el lote NUEVO
+    // tambien se valida -- si no, un usuario podria "mudar" una siembra a un
+    // lote ajeno.
     public function update(int $id): void
     {
-        Auth::usuarioActual($this->request);
+        $uid = (int) $this->usuario()['id'];
 
-        $this->siembraOError($id);
+        $siembra = $this->siembraOError($id, $uid);
         $valores = $this->validarCuerpo();
+
+        if ($valores[1] !== (int) $siembra['lote_id']) {
+            $this->loteOError($valores[1], $uid);
+        }
 
         try {
             Siembra::actualizar($id, ...$valores);
@@ -87,16 +103,16 @@ final class SiembraController extends Controller
            throw $this->traducirErrorBD($e);
         }
 
-        $this->json(Siembra::buscar($id));
+        $this->json(Siembra::buscarDeUsuario($id, $uid));
     }
 
     // DELETE /api/siembras/{id}
     // Ojo: los costos de la siembra se borran en cascada (fk_costos_siembra).
     public function destroy(int $id): void
     {
-        Auth::usuarioActual($this->request);
+        $uid = (int) $this->usuario()['id'];
 
-        $this->siembraOError($id);
+        $this->siembraOError($id, $uid);
         Siembra::eliminar($id);
 
         $this->sinContenido();
@@ -112,9 +128,9 @@ final class SiembraController extends Controller
     // propias (404/422) lo atraviesan sin tocarse.
     public function margen(int $id): void
     {
-        Auth::usuarioActual($this->request);
+        $uid = (int) $this->usuario()['id'];
 
-        $siembra = $this->siembraOError($id);
+        $siembra = $this->siembraOError($id, $uid);
         $cultivoId = (int) $siembra['cultivo_id'];
         $cultivo = Cultivo::porId($cultivoId);
         $hoy = $this->hoy();
@@ -162,19 +178,31 @@ final class SiembraController extends Controller
     }
 
     /**
-     * Busca la siembra o corta con 404. La usan show, update y destroy.
+     * Busca la siembra (scopeada al usuario) o corta con 404. La usan show,
+     * update, destroy y margen.
      *
      * @return array<string, mixed>
      */
-    private function siembraOError(int $id): array
+    private function siembraOError(int $id, int $usuarioId): array
     {
-        $siembra = Siembra::buscar($id);
+        $siembra = Siembra::buscarDeUsuario($id, $usuarioId);
 
         if ($siembra === null) {
             throw new ApiException(404, 'Siembra no encontrada.');
         }
 
         return $siembra;
+    }
+
+    /**
+     * Confirma que el lote sea del usuario o corta con 404. La usan store
+     * (lote_id nuevo) y update (si el lote_id cambia).
+     */
+    private function loteOError(int $loteId, int $usuarioId): void
+    {
+        if (Lote::buscarDeUsuario($loteId, $usuarioId) === null) {
+            throw new ApiException(404, 'Lote no encontrado.');
+        }
     }
 
     /**
