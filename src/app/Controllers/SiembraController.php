@@ -195,13 +195,19 @@ final class SiembraController extends Controller
     }
 
     /**
-     * Confirma que el lote sea del usuario o corta con 404. La usan store
+     * Confirma que el lote sea del usuario o corta con 422 -- mismo status y
+     * mismo mensaje tanto si el lote no existe como si es de otro usuario
+     * (no se distingue, ni en el codigo ni en el texto: no hay que revelar
+     * que un id "existe pero no es tuyo"). Mantiene el contrato original de
+     * POST /api/siembras, donde una referencia invalida ya daba 422 (ver
+     * traducirErrorBD) -- esto solo adelanta el chequeo de lote_id para que
+     * tambien cubra la pertenencia, no solo la existencia. La usan store
      * (lote_id nuevo) y update (si el lote_id cambia).
      */
     private function loteOError(int $loteId, int $usuarioId): void
     {
         if (Lote::buscarDeUsuario($loteId, $usuarioId) === null) {
-            throw new ApiException(404, 'Lote no encontrado.');
+            throw ApiException::validacion(['lote_id' => 'No existe.']);
         }
     }
 
