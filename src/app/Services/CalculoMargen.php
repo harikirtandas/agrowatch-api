@@ -6,8 +6,8 @@ namespace App\Services;
 
 // Calculo del margen bruto de una siembra. Puro: sin base de datos ni HTTP.
 //
-// Todo numero entra y sale como string decimal (PDO devuelve los DECIMAL asi) y se opera SOLO con bcmath, nunca con float: un margen de exactamente 20%
-// con float puede caer del lado equivocado del semaforo.
+// Todo numero entra y sale como string decimal (PDO devuelve los DECIMAL asi) y se opera SOLO con bcmath, 
+// nunca con float: un margen de exactamente 20% con float puede caer del lado equivocado del semaforo.
 //
 // Dos cosas de bcmath que hay que tener presentes:
 //  - TRUNCA, no redondea: el redondeo a centavos va aparte (redondear()).
