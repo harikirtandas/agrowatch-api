@@ -28,22 +28,22 @@
         <div class="formulario-registro__fila">
           <div class="campo">
             <label for="nombre" class="campo__etiqueta">Nombre</label>
-            <input type="text" id="nombre" name="nombre" class="campo__entrada" required>
+            <input type="text" id="nombre" name="nombre" class="campo__entrada" maxlength="60" required>
           </div>
           <div class="campo">
             <label for="apellido" class="campo__etiqueta">Apellido</label>
-            <input type="text" id="apellido" name="apellido" class="campo__entrada" required>
+            <input type="text" id="apellido" name="apellido" class="campo__entrada" maxlength="60" required>
           </div>
         </div>
 
         <div class="formulario-registro__fila">
           <div class="campo">
             <label for="email" class="campo__etiqueta">Email</label>
-            <input type="email" id="email" name="email" class="campo__entrada" required>
+            <input type="email" id="email" name="email" class="campo__entrada" max="120" required>
           </div>
           <div class="campo">
             <label for="contrasena" class="campo__etiqueta">Contraseña</label>
-            <input type="password" id="contrasena" name="contrasena" class="campo__entrada" required>
+            <input type="password" id="contrasena" name="contrasena" class="campo__entrada" minlength="6" maxlength="72" required>
           </div>
         </div>
 
