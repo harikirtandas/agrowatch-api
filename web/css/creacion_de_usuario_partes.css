@@ -240,18 +240,6 @@ body {
   }
 }
 
-.mapa-selector {
-  height: 280px;
-  border-radius: 12px;
-  margin: 12px 0;
-  z-index: 0;
-}
-
-.enlace-mi-ubicacion,
-.ayuda-mapa {
-  font-size: 13px;
-}
-
 .mensaje-error {
   color: #d1583f; 
   margin-top: 12px; 
