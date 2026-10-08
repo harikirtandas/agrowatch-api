@@ -15,26 +15,27 @@ use App\Core\Database;
 // (SiembraController), no de este archivo -- mismo criterio que el resto de
 // los Modelos de esta capa (ver planning/00-flujo-guiado-establecimientos/README.md).
 //
-// A diferencia de Establecimiento/Lote, las siembras NO estan filtradas por
-// usuario: el contrato (README raiz, seccion "Siembras") no pide chequeo de
-// pertenencia, mismo criterio que Campanias -- son compartidas por todos los
-// usuarios logueados. Por eso no hay JOIN con usuario_establecimiento aca.
+// A diferencia de Campanias/Cultivos (catalogos/calendario compartidos), las
+// siembras SI estan filtradas por usuario: cuelgan de un lote, que cuelga de
+// un establecimiento con dueno. El chequeo de pertenencia es el mismo JOIN
+// doble que usa Lote (lotes -> establecimientos -> usuario_establecimiento),
+// subiendo un escalon mas porque Siembra no tiene establecimiento_id propio.
 final class Siembra
 {
     /**
-     * Todas las siembras, opcionalmente filtradas por campania y/o lote
-     * (los dos filtros son opcionales y combinables, ver README raiz). Trae
-     * los nombres de cultivo/lote/campania embebidos via JOIN porque el
-     * contrato de GET los pide como campos de solo lectura
+     * Todas las siembras DEL USUARIO, opcionalmente filtradas por campania
+     * y/o lote (los dos filtros son opcionales y combinables, ver README
+     * raiz). Trae los nombres de cultivo/lote/campania embebidos via JOIN
+     * porque el contrato de GET los pide como campos de solo lectura
      * (cultivo_nombre/lote_nombre/campania_nombre) -- no se guardan en
      * `siembras`, se resuelven en cada lectura.
      *
      * @return list<array<string, mixed>>
      */
-    public static function listar(?int $campaniaId, ?int $loteId): array
+    public static function listar(?int $campaniaId, ?int $loteId, int $usuarioId): array
     {
-        $condiciones = [];
-        $parametros = [];
+        $condiciones = ['ue.usuario_id = :usuarioId'];
+        $parametros = ['usuarioId' => $usuarioId];
 
         if ($campaniaId !== null) {
             $condiciones[] = 's.campania_id = :campaniaId';
@@ -45,7 +46,7 @@ final class Siembra
             $parametros['loteId'] = $loteId;
         }
 
-        $where = $condiciones === [] ? '' : ('WHERE ' . implode(' AND ', $condiciones));
+        $where = 'WHERE ' . implode(' AND ', $condiciones);
 
         $stmt = Database::connection()->prepare(self::selectConNombres() . " {$where} ORDER BY s.id DESC");
         $stmt->execute($parametros);
@@ -54,14 +55,20 @@ final class Siembra
     }
 
     /**
-     * Una siembra puntual, con los mismos nombres embebidos que listar().
+     * Una siembra puntual, con los mismos nombres embebidos que listar(),
+     * pero SOLO si el usuario tiene vinculo con el establecimiento del lote
+     * al que pertenece. Si no existe o es de un establecimiento ajeno,
+     * devuelve null en los dos casos -- misma convencion anti-enumeracion
+     * que Lote::buscarDeUsuario()/Establecimiento::buscarDeUsuario().
      *
      * @return array<string, mixed>|null
      */
-    public static function buscar(int $id): ?array
+    public static function buscarDeUsuario(int $id, int $usuarioId): ?array
     {
-        $stmt = Database::connection()->prepare(self::selectConNombres() . ' WHERE s.id = :id');
-        $stmt->execute(['id' => $id]);
+        $stmt = Database::connection()->prepare(
+            self::selectConNombres() . ' WHERE s.id = :id AND ue.usuario_id = :usuarioId'
+        );
+        $stmt->execute(['id' => $id, 'usuarioId' => $usuarioId]);
 
         $fila = $stmt->fetch();
 
@@ -69,8 +76,9 @@ final class Siembra
     }
 
     /**
-     * SELECT base compartido por listar()/buscar() -- un solo lugar para el
-     * triple JOIN, para no repetirlo dos veces si mañana cambia una columna.
+     * SELECT base compartido por listar()/buscarDeUsuario() -- un solo lugar
+     * para el JOIN (nombres + pertenencia), para no repetirlo si mañana
+     * cambia una columna.
      */
     private static function selectConNombres(): string
     {
@@ -81,7 +89,9 @@ final class Siembra
                  FROM siembras s
                  INNER JOIN cultivos c ON c.id = s.cultivo_id
                  INNER JOIN lotes l ON l.id = s.lote_id
-                 INNER JOIN campanias cam ON cam.id = s.campania_id';
+                 INNER JOIN campanias cam ON cam.id = s.campania_id
+                 INNER JOIN establecimientos est ON est.id = l.establecimiento_id
+                 INNER JOIN usuario_establecimiento ue ON ue.establecimiento_id = est.id';
     }
 
     /**

@@ -13,7 +13,7 @@ use Throwable;
 // { "error": { "status": ..., "mensaje": ..., "errores": {...} } }.
 //
 // Los controladores tiran esto en vez de armar la respuesta de error a mano:
-//   throw new ApiException(404, 'Nota no encontrada.');
+//   throw new ApiException(404, 'Establecimiento no encontrado.');
 //   throw ApiException::validacion(['email' => 'Formato invalido']);
 final class ApiException extends RuntimeException
 {

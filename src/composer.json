@@ -4,6 +4,7 @@
     "type": "project",
     "require": {
         "php": ">=8.2",
+        "ext-bcmath": "*",
         "opis/json-schema": "^2.6"
     },
     "autoload": {

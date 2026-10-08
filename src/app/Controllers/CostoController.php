@@ -13,71 +13,77 @@ use App\Models\Siembra;
 
 final class CostoController extends Controller
 {
+    /** @return array<string, mixed> usuario autenticado (sin password_hash) */
+    private function usuario(): array
+    {
+        return Auth::usuarioActual($this->request);
+    }
+
     // ====>>>>>>>>>> GET /api/siembras/{id}/costos ==========================
     // Aca el {id} de la URL es el de la SIEMBRA. Lista vacia [] tambien es 200.
     public function index(int $siembraId): void
     {
-        Auth::usuarioActual($this->request);
-        $this->siembraOError($siembraId); 
+        $uid = (int) $this->usuario()['id'];
+        $this->siembraOError($siembraId, $uid);
         $this->json(Costo::porSiembra($siembraId));
     }
 
     //========================== POST /api/siembras/{id}/costos ==========================
     // { "categoria", "descripcion", "cantidad", "unidad", "precio_unitario", "moneda", "fecha" }
-    // Se comprueba la siembra ANTES de validar el body: si el padre de la URL no existe, no tiene sentido mirar el resto. 
+    // Se comprueba la siembra ANTES de validar el body: si el padre de la URL no existe, no tiene sentido mirar el resto.
     // No hay try/catch: la tabla costos no tiene UNIQUE y su unica FK (siembra_id) ya se chequeo arriba.
     public function store(int $siembraId): void
     {
-        Auth::usuarioActual($this->request);
+        $uid = (int) $this->usuario()['id'];
 
-        $this->siembraOError($siembraId);
+        $this->siembraOError($siembraId, $uid);
         $valores = $this->validarCuerpo();
         $id = Costo::crear($siembraId, ...$valores);
 
-        $this-> creado(Costo::buscar($id), "/api/costos/{$id}");
+        $this-> creado(Costo::buscarDeUsuario($id, $uid), "/api/costos/{$id}");
     }
 
     // ========================== PUT /api/costos/{id} ==========================
-    // Aca el {id} de la URL es el del COSTO. Reemplazo completo: el cliente manda siempre los siete campos. 
-    // Se busca ANTES con costoOError() porque actualizar() devuelve rowCount() > 0, 
+    // Aca el {id} de la URL es el del COSTO. Reemplazo completo: el cliente manda siempre los siete campos.
+    // Se busca ANTES con costoOError() porque actualizar() devuelve rowCount() > 0,
     // y MySQL cuenta 0 filas si los valores no cambiaron: no sirve para detectar el 404.
     public function update(int $costoId): void
     {
-        Auth::usuarioActual($this->request);
+        $uid = (int) $this->usuario()['id'];
 
-        $this->costoOError($costoId);
+        $this->costoOError($costoId, $uid);
         $valores = $this->validarCuerpo();
 
         Costo::actualizar($costoId, ...$valores);
 
-        $this->json(Costo::buscar($costoId));
+        $this->json(Costo::buscarDeUsuario($costoId, $uid));
     }
 
     //  ========================== DELETE /api/costos/{id}  ==========================
 
     public function destroy(int $costoId): void
     {
-        Auth::usuarioActual($this->request);
+        $uid = (int) $this->usuario()['id'];
 
-        $this->costoOError($costoId);
+        $this->costoOError($costoId, $uid);
         Costo::eliminar($costoId);
 
         $this->sinContenido();
     }
 
-    //  ==========================  Metodo Privados(propios)  ========================== 
-    private function siembraOError(int $siembraId): array
+    //  ==========================  Metodo Privados(propios)  ==========================
+    private function siembraOError(int $siembraId, int $usuarioId): array
     {
-        $siembra = Siembra::buscar($siembraId);
+        $siembra = Siembra::buscarDeUsuario($siembraId, $usuarioId);
         if ($siembra === null){
             throw new ApiException(404, 'Siembra no encontrada.');
         }
         return $siembra;
     }
 
-    private function costoOError(int $costoId): array
+    private function costoOError(int $costoId, int $usuarioId): array
     {
-        $costo = Costo::buscar($costoId);
+        $costo = Costo::buscarDeUsuario($costoId, $usuarioId);
         if ($costo === null){
             throw new ApiException (404, 'Costo no encontrado.');
         }

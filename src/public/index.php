@@ -71,25 +71,16 @@ set_exception_handler(function (Throwable $e) use ($config): void {
 // ---------------------------------------------------------------------------
 $router = new Router();
 
-// -- slice demo, descartable --
-$router->get('/api/ping', 'PingController@ping');
-$router->get('/api/health/db', 'PingController@db');
-
+// -- auth: infraestructura compartida, la usan los controllers del dominio real --
 $router->post('/api/auth/login', 'AuthController@login');
 $router->post('/api/auth/logout', 'AuthController@logout');
 $router->get('/api/auth/me', 'AuthController@me');
 
-$router->get('/api/notas', 'NotaController@index');
-$router->post('/api/notas', 'NotaController@store');
-$router->get('/api/notas/{id:\d+}', 'NotaController@show');
-$router->put('/api/notas/{id:\d+}', 'NotaController@update');
-$router->patch('/api/notas/{id:\d+}', 'NotaController@update');
-$router->delete('/api/notas/{id:\d+}', 'NotaController@destroy');
-// -- fin slice demo --
-
 // -- dominio real: AgroWatchOut (ver README, seccion "API AgroWatchOut" para
 // los contratos JSON de cada uno). Controllers/Models todavia no existen: se
 // van implementando en orden, esta tabla ya deja el mapeo final. --
+$router->post('/api/usuarios', 'UsuarioController@store');
+
 $router->get('/api/establecimientos', 'EstablecimientoController@index');
 $router->post('/api/establecimientos', 'EstablecimientoController@store');
 $router->get('/api/establecimientos/{id:\d+}', 'EstablecimientoController@show');
