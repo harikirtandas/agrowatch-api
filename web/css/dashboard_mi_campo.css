@@ -263,6 +263,11 @@ body {
   padding: 6px 14px;
   font-size: 13px;
   cursor: pointer;
+  font-family: inherit;
+}
+
+.mapa-lotes__establecimiento option {
+  color:var(--negro-texto);
 }
 
 .mapa-lotes__leyenda {
@@ -295,28 +300,30 @@ body {
   border-radius: 14px;
   overflow: hidden;
   height: 480px;
-  cursor: grab;
   background: #dfe8d8;
+  z-index: 0;
+}
+
+.mapa-lotes__leaflet {
+  width: 100%;
+  height: 100%;
+}
+
+.mapa-etiqueta {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.mapa-etiqueta::before {
+  display: none;
 }
 
 .mapa-lotes__lienzo--arrastrando {
   cursor: grabbing;
-}
-
-.mapa-lotes__svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-  transform-origin: 0 0;
-  touch-action: none;
-  user-select: none;
-}
-
-.lote {
-  stroke: #ffffff;
-  stroke-width: 4;
-  cursor: pointer;
-  transition: filter 0.15s ease, opacity 0.15s ease;
 }
 
 .lote:hover {
@@ -335,10 +342,6 @@ body {
   stroke-width: 7;
 }
 
-.marcador {
-  cursor: pointer;
-}
-
 .marcador__circulo {
   stroke: #ffffff;
   stroke-width: 4;
@@ -352,15 +355,6 @@ body {
   font-size: 26px;
   font-weight: 700;
   fill: var(--blanco);
-}
-
-.mapa-lotes__zoom {
-  position: absolute;
-  right: 34px;
-  bottom: 34px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
 }
 
 .mapa-lotes__zoom button {
@@ -390,6 +384,7 @@ body {
   padding: 18px 20px;
   min-width: 220px;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
+  z-index: 500;
 }
 
 .tarjeta-flotante__titulo {

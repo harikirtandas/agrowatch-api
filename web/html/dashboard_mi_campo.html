@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AgroWatchOut — Mi campo</title>
   <link rel="stylesheet" href="../css/dashboard_mi_campo.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
 </head>
 <body>
 
@@ -36,8 +38,8 @@
 
       <header class="encabezado-panel">
         <div>
-          <h1 class="encabezado-panel__saludo">¡Buen día, Juan!</h1>
-          <p class="encabezado-panel__fecha">Lunes 8 de septiembre — así está tu campo hoy</p>
+          <h1 class="encabezado-panel__saludo">-</h1>
+          <p class="encabezado-panel__fecha">-</p>
         </div>
         <div class="encabezado-panel__acciones">
           <input type="search" class="encabezado-panel__buscador" placeholder="Buscar lote, cultivo...">
@@ -51,20 +53,20 @@
       <section class="tarjetas-resumen">
         <div class="tarjeta-resumen">
           <span class="tarjeta-resumen__etiqueta">Hectáreas totales</span>
-          <strong class="tarjeta-resumen__valor">185 ha</strong>
+          <strong id="resumenHectareas" class="tarjeta-resumen__valor">-</strong>
         </div>
         <div class="tarjeta-resumen">
           <span class="tarjeta-resumen__etiqueta">Rinde de indiferencia prom.</span>
-          <strong class="tarjeta-resumen__valor">29 qq/ha</strong>
+          <strong id="resumenRinde" class="tarjeta-resumen__valor">-</strong>
         </div>
         <div class="tarjeta-resumen">
           <span class="tarjeta-resumen__etiqueta">Margen proyectado prom.</span>
-          <strong class="tarjeta-resumen__valor">$134k /ha</strong>
-          <span class="tarjeta-resumen__cambio tarjeta-resumen__cambio--positivo">▲ 4% vs. semana pasada</span>
+          <strong id="resumenMargen" class="tarjeta-resumen__valor">-</strong>
+          <span class="tarjeta-resumen__cambio tarjeta-resumen__cambio--positivo" hidden>▲ 4% vs. semana pasada</span>
         </div>
         <div class="tarjeta-resumen">
           <span class="tarjeta-resumen__etiqueta">Lotes en alerta</span>
-          <strong class="tarjeta-resumen__valor tarjeta-resumen__valor--alerta">1 de 3</strong>
+          <strong id="resumenAlerta" class="tarjeta-resumen__valor tarjeta-resumen__valor--alerta">-</strong>
         </div>
       </section>
 
@@ -74,7 +76,7 @@
         <div class="mapa-lotes" id="mapaLotes">
           <div class="mapa-lotes__encabezado">
             <h2 class="mapa-lotes__titulo">Mapa de lotes</h2>
-            <button class="mapa-lotes__establecimiento">🏡 Ea. Las Marías <span aria-hidden="true">▾</span></button>
+            <select id="selectorEstablecimiento" class="mapa-lotes__establecimiento" aria-label="Establecimiento"></select>
             <div class="mapa-lotes__leyenda">
               <span class="leyenda-item"><i class="punto punto--bien"></i>Bien</span>
               <span class="leyenda-item"><i class="punto punto--ajustado"></i>Ajustado</span>
@@ -82,43 +84,8 @@
             </div>
           </div>
 
-          <div class="mapa-lotes__lienzo" id="lienzoMapa">
-            <svg id="svgMapa" class="mapa-lotes__svg" viewBox="0 0 1000 700" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <linearGradient id="gradienteFondo" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#eef2ea"/>
-                  <stop offset="100%" stop-color="#9bb890"/>
-                </linearGradient>
-              </defs>
-
-              <rect x="0" y="0" width="1000" height="700" fill="url(#gradienteFondo)"/>
-
-              <polygon class="lote lote--bien" data-lote="2"
-                points="40,40 480,20 430,300 150,340 20,180"></polygon>
-              <polygon class="lote lote--ajustado" data-lote="4"
-                points="480,260 760,220 860,460 480,560 260,340"></polygon>
-              <polygon class="lote lote--alerta" data-lote="7"
-                points="780,480 980,360 980,660 560,600"></polygon>
-
-              <g class="marcador" data-lote="2" transform="translate(250,190)">
-                <circle r="26" class="marcador__circulo marcador__circulo--bien"></circle>
-                <text class="marcador__texto" text-anchor="middle" dy="8">2</text>
-              </g>
-              <g class="marcador" data-lote="4" transform="translate(620,380)">
-                <circle r="26" class="marcador__circulo marcador__circulo--ajustado"></circle>
-                <text class="marcador__texto" text-anchor="middle" dy="8">4</text>
-              </g>
-              <g class="marcador" data-lote="7" transform="translate(830,540)">
-                <circle r="26" class="marcador__circulo marcador__circulo--alerta"></circle>
-                <text class="marcador__texto" text-anchor="middle" dy="8">7</text>
-              </g>
-            </svg>
-          </div>
-
-          <div class="mapa-lotes__zoom">
-            <button type="button" data-zoom="in" aria-label="Acercar">+</button>
-            <button type="button" data-zoom="out" aria-label="Alejar">−</button>
-            <button type="button" data-zoom="reset" aria-label="Restablecer vista">⤾</button>
+          <div class="mapa-lotes__lienzo">
+            <div id="mapaLeaflet" class="mapa-lotes__leaflet"></div>
           </div>
 
           <div class="tarjeta-flotante" id="tarjetaFlotante" hidden>
@@ -169,49 +136,26 @@
 
           <div class="tarjeta-info">
             <h2 class="tarjeta-info__titulo">Semáforo — resumen</h2>
-            <p class="tarjeta-info__texto">3 lotes activos</p>
+            <p id="semaforoTexto" class="tarjeta-info__texto">-</p>
             <div class="semaforo">
               <div class="semaforo__dona" aria-hidden="true"></div>
-              <ul class="semaforo__lista">
-                <li><i class="punto punto--bien"></i>1 en verde</li>
-                <li><i class="punto punto--ajustado"></i>1 ajustado</li>
-                <li><i class="punto punto--alerta"></i>1 en alerta</li>
-              </ul>
+              <ul class="semaforo__lista"></ul>
             </div>
           </div>
         </aside>
       </section>
 
-      <section class="lista-lotes">
-        <a href="datos_de_siembra.html" class="tarjeta-lote" data-lote="2">
-          <i class="punto punto--bien"></i>
-          <span class="tarjeta-lote__texto">
-            <strong>Lote 2 — Trigo</strong>
-            <span>85 ha · 28 qq/ha</span>
-          </span>
-          <span class="tarjeta-lote__flecha" aria-hidden="true">›</span>
-        </a>
-        <a href="datos_de_siembra.html" class="tarjeta-lote" data-lote="4">
-          <i class="punto punto--ajustado"></i>
-          <span class="tarjeta-lote__texto">
-            <strong>Lote 4 — Cebada</strong>
-            <span>60 ha · 31 qq/ha</span>
-          </span>
-          <span class="tarjeta-lote__flecha" aria-hidden="true">›</span>
-        </a>
-        <a href="datos_de_siembra.html" class="tarjeta-lote" data-lote="7">
-          <i class="punto punto--alerta"></i>
-          <span class="tarjeta-lote__texto">
-            <strong>Lote 7 — Trigo</strong>
-            <span>40 ha · 34 qq/ha</span>
-          </span>
-          <span class="tarjeta-lote__flecha" aria-hidden="true">›</span>
-        </a>
-      </section>
+      <section id="listaLotes" class="lista-lotes"></section>
 
     </div>
   </div>
 
-  <script src=""></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/global.js"></script>
+  <script src="../js/mapa.js"></script>
+  <script src="../js/sincronizacion.js"></script> <!-- opcional, después del paso 8 -->
+  <script src="../js/dashboard.js"></script>
 </body>
 </html>
