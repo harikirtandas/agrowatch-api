@@ -7,15 +7,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     const ayudaMapa = document.getElementById('ayudaMapa');
     const contenedorMapa = document.getElementById('contenedorMapa');
 
+    // modo edicion para establecimiento
+    const establecimientoId = num(new URLSearchParams(window.location.search).get('establecimiento'));
 
     const mapa = Mapa.crearMapa('mapaCampo');
+
+    // encuadre de mapa, mientras esta oculto mide 0px.
+    let encuadrePendiente = null;
+
+    function encuadrar(puntos) {
+        if (puntos.length === 1) mapa.setView(puntos[0], Mapa.ZOOM_CERCA);
+        else if (puntos.length > 1) mapa.fitBounds(puntos, {padding: [40, 40] });
+    }
 
     //el mapa arranca oculto y se despliega desde el input
     function mostrarMapa(visible = true){
         contenedorMapa.hidden = !visible;
         inputUbicacion.setAttribute('aria-expanded', visible);
-        if (visible) mapa.invalidateSize();
+        if (!visible) return;
+        mapa.invalidateSize();
+        if (encuadrePendiente) {
+            encuadrar(encuadrePendiente);
+            encuadrePendiente = null;
+        }
     }
+
     inputUbicacion.addEventListener('click', () => mostrarMapa(contenedorMapa.hidden));
 
     let ubicacionEstablecimiento = null;
@@ -23,10 +39,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // cada lote tiene fila, lat, lng, marcador, guardado
     const lotes = [];
+    //ids de lotes que ya estan guardados y se quitaron en pantalla
+    const lotesBorrados = new Set();
+
     let objetivo = null;
 
     //Si el establecimineto se creó pero falló un lote, se guarda acá para evitar duplicados.
-    let establecimientoCreado = null;
+    let establecimiento = null;
+
+    let datosOriginales = null;
 
     mapa.on('click', (e) => {
         const lat = Mapa.redondear(e.latlng.lat)
@@ -43,6 +64,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const nombreLote = (lote) => lote.fila.querySelector('[name="loteNombre"]').value.trim();
+
+    // lo que se manda a la API por cada lote
+    const leerLote = (lote) => ({
+        nombre: nombreLote(lote),
+        ha_totales: Number(lote.fila.querySelector('[name="loteHaTotales"]').value),
+        ha_efectivas: Number(lote.fila.querySelector('[name="loteHaEfectivas"]').value),
+        lat: lote.lat,
+        lng: lote.lng,
+    });
+
+    // solo los campos que guarda el back (lat/lng todavía no)
+    const camposEstablecimiento = () => ({
+        nombre: valor('nombreEstablecimiento'),
+        provincia: valor('provincia'),
+        localidad: valor('localidad'),
+    });
 
     function ubicarLote(lote, lat, lng) {
         lote.lat = lat;
@@ -67,7 +104,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    function agregarLote() {
+    function agregarLote(datos = null) {
         const fila = document.createElement('tr');
         fila.innerHTML = `<td><input type="text" name="loteNombre" class="campo__entrada" maxlength="60" placeholder="Ej. Lote 1" required></td>
             <td><input type="number" name="loteHaTotales" class="campo__entrada" min="0.01" step="0.01" placeholder="Ej. 90" required></td>
@@ -80,11 +117,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             </td>
             <td><button type="button" class="boton-quitar" aria-label="Quitar lote">✕</button></td>`;
 
-        const lote = { fila, lat: null, lng: null, marcador: null, guardado: false};
+        const lote = { id: datos?.id ?? null, fila, lat: null, lng: null, marcador: null, original: null};
         lotes.push(lote);
 
         fila.querySelector('.boton-ubicar').addEventListener('click', () => cambiarObjetivo(lote));
         fila.querySelector('.boton-quitar').addEventListener('click', () => {
+            if (lote.id !== null) {
+                if (!confirm(`¿Quitar "${nombreLote(lote)}"? Se va a borrar al guardar.`)) return;
+                lotesBorrados.add(lote.id);
+            }
             lote.marcador?.remove();
             fila.remove();
             lotes.splice(lotes.indexOf(lote), 1);
@@ -92,10 +133,47 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         cuerpoLotes.append(fila);
-        fila.querySelector('input').focus();
+        if (datos) {
+            fila.querySelector('[name="loteNombre"]').value = datos.nombre;
+            fila.querySelector('[name="loteHaTotales"]').value = num(datos.ha_totales);
+            fila.querySelector('[name="loteHaEfectivas"]').value = num(datos.ha_efectivas);
+            if (num(datos.lat) !== null) ubicarLote(lote, num(datos.lat), num(datos.lng));
+            lote.original = JSON.stringify(leerLote(lote));
+        } else {
+                fila.querySelector('input').focus();
+        }
     }
-    document.querySelector('.enlace-agregar-lote').addEventListener('click', agregarLote);
-    agregarLote(); //Arranca con una fila vacía.
+    document.querySelector('.enlace-agregar-lote').addEventListener('click', () => agregarLote());
+
+    if (establecimientoId) {
+        try {
+            const [guardado, lotesGuardados] = await Promise.all([ API.get(`/establecimientos/${establecimientoId}`),
+                API.get(`/lotes?establecimiento_id=${establecimientoId}`),
+            ]);
+            establecimiento = guardado;
+
+            document.getElementById('nombreEstablecimiento').value = guardado.nombre;
+            document.getElementById('provincia').value = guardado.provincia;
+            document.getElementById('localidad').value = guardado.localidad;
+            datosOriginales = JSON.stringify(camposEstablecimiento());
+
+            if (num(guardado.lat) !== null) ubicarEstablecimiento(num(guardado.lat), num(guardado.lng));
+
+            document.querySelector('.encabezado-config__titulo').textContent = 'Editar establecimiento';
+            document.querySelector('.encabezado-config__subtitulo').textContent = 'Agregá, editá o quitá lotes de este campo';
+
+            form.querySelector('button[type="submit"]').textContent = 'Guardar cambios';
+
+            lotesGuardados.forEach((l) => agregarLote(l));
+            if (lotesGuardados.length === 0) agregarLote();
+            encuadrePendiente = lotes.filter((l) => l.lat !== null).map((l) => [l.lat, l.lng]);
+            } catch (error) {
+                mostrarError(form, error);
+                return;
+        }
+    } else {
+        agregarLote();
+    }
 
     // chips de cultivos: solo visual, la api no tiene donde guardarlos todavía.
     document.querySelectorAll('.chip').forEach((chip) => {
@@ -108,43 +186,66 @@ document.addEventListener('DOMContentLoaded', async () => {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         mostrarError(form, null);
+        cuerpoLotes.querySelectorAll('.fila--error').forEach((f) => f.classList.remove('fila--error'));
         const boton = e.submitter;
         boton.disabled = true;
 
         try {
-            if (!establecimientoCreado) {
-                establecimientoCreado = await API.post('/establecimientos', {
-                    nombre: valor('nombreEstablecimiento'),
-                    provincia: valor('provincia'),
-                    localidad: valor('localidad'),
-                    lat: ubicacionEstablecimiento?.lat ?? null,
-                    lng: ubicacionEstablecimiento?. lng ?? null,
-                });
+            const datosEstablecimiento = {
+                ...camposEstablecimiento(),
+                lat: ubicacionEstablecimiento?.lat ?? null,
+                lng: ubicacionEstablecimiento?.lng ?? null,
+            };
+            if (!establecimiento) {
+                establecimiento = await API.post('/establecimientos', datosEstablecimiento);
+                datosOriginales = JSON.stringify(camposEstablecimiento());
+            } else if (JSON.stringify(camposEstablecimiento()) !== datosOriginales) {
+                establecimiento = await API.put(`/establecimientos/${establecimiento.id}`, datosEstablecimiento);
+                datosOriginales = JSON.stringify(camposEstablecimiento());
+            }
+
+            for (const id of [...lotesBorrados]) {
+                try {
+                    await API.del(`/lotes/${id}`);
+                } catch (error) {
+                    if (error.status !== 404) throw error;
+                }
+                lotesBorrados.delete(id);
             }
 
             // para saber exactamente cuál falló.
-            for (const lote of lotes.filter((l) => !l.guardado)) {
-                await API.post('/lotes', {
-                    establecimiento_id: establecimientoCreado.id,
-                    nombre: nombreLote(lote),
-                    ha_totales: Number(lote.fila.querySelector('[name="loteHaTotales"]').value),
-                    ha_efectivas: Number(lote.fila.querySelector('[name="loteHaEfectivas"]').value),
-                    lat: lote.lat,
-                    lng: lote.lng,
-                });
-                lote.guardado = true;
-                lote.fila.querySelectorAll('input, button').forEach((el) => { el.disabled = true; });
+            for (const lote of lotes) {
+                const datos = leerLote(lote);
+                const comoJson = JSON.stringify(datos);
+                if (lote.id !== null && comoJson === lote.original) continue;
+
+                try {
+                    if (lote.id === null) {
+                        const creado = await API.post('/lotes', { establecimiento_id: establecimiento.id, ...datos});
+                        lote.id = creado.id;
+                    } else {
+                        await API.put(`/lotes/${lote.id}`, datos);
+                    }
+                } catch (error) {
+                    error.lote = lote;
+                    throw error;
+                }
+                lote.original = comoJson;
             }
 
-            localStorage.setItem('establecimientoActual', establecimientoCreado.id);
+            localStorage.setItem('establecimientoActual', establecimiento.id);
             window.location.href = 'dashboard_mi_campo.html';
             } catch (error) {
-                if (establecimientoCreado) {
-                    error.message = `El establecimiento ya se guardó, pero falló un lote: ${error.message}. Corregilo y volvé a guardar.`;
+                if (error.lote) {
+                    error.lote.fila.classList.add('fila--error');
+                    const detalle = error.errores ? 
+                        Object.entries(error.errores).map(([campo, mensaje]) => `${campo}: ${mensaje}`).join(' · ') : error.message;
+                    mostrarError(form, new Error(`No se pudo guardar el lote "${nombreLote(error.lote) || 'sin nombre'}": ${detalle} Corregilo y volvé a guardar.`));
+                } else {
+                    mostrarError(form, error, { nombre: 'nombreEstablecimiento', provincia: 'provincia', localidad: 'localidad'});
                 }
-                mostrarError (form, error, {nombre: 'nombreEstablecimiento', provincia: 'provincia', localidad: 'localidad'});
-                } finally {
-                    boton.disabled = false;
+            } finally {
+                boton.disabled = false;
         }
-    })
+    });
 });

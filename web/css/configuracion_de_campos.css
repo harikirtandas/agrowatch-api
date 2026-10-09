@@ -332,6 +332,8 @@ body {
   height: 14px;
 }
 
+.chip:not(.chip--seleccionado) .chip__check { display: none; }
+
 /* Botones */
 .boton {
   border: none;
@@ -494,5 +496,9 @@ body {
 }
 
 .boton-quitar:hover:not(:disabled) {
+  background: rgba(209, 88, 63, 0.08);
+}
+
+.tabla-lotes tr.fila--error td {
   background: rgba(209, 88, 63, 0.08);
 }
