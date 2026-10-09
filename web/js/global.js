@@ -59,7 +59,7 @@ function mostrarError(form, error, campos = {}){
             const input = campos[campo] ? document.getElementById(campos[campo]) : null;
             input?.classList.add('campo__entrada--error');
             return `${input?.labels?.[0]?.textContent ?? campo}: ${mensaje}`;
-        }).join(' . ');
+        }).join(' · ');
     } else {
         caja.textContent = error.message;
     }
