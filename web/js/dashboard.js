@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const mapa = Mapa.crearMapa('mapaLeaflet');
     const capaLotes = L.layerGroup().addTo(mapa);
     const tarjeta = document.getElementById('tarjetaFlotante');
-    mapa.on('click', () => { tarjeta.hideen = true;});
+    mapa.on('click', () => { tarjeta.hidden = true;});
 
     // Datos que no dependen del establecimiento
     const [establecimientos, campanias] = await Promise.all([
@@ -50,6 +50,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         cargarEstablecimiento(Number(selector.value));
     });
 
+    // Si el nombre no tiene numero, usa las 2 primeras letras.
+    const etiquetaLote = (lote) => lote.nombre.match(/\d+/)?.[0] ?? lote.nombre.slice(0, 2);
+    const rindeQq = (margen) => (margen ? num(margen.rinde_indiferencia_kg_ha) / 100 : null );
+
     let cargaActual = 0;
 
     await cargarEstablecimiento(Number(selector.value));
@@ -57,6 +61,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function cargarEstablecimiento(id) {
         const estaCarga = ++cargaActual;
         tarjeta.hidden = true;
+        
+        const urlEditar = `configuracion_de_campos.html?establecimiento=${id}`;
+        document.getElementById('editarEstablecimiento').href = urlEditar;
 
         const establecimiento = establecimientos.find((e) => e.id === id);
         const [lotes, siembras] = await Promise.all([
@@ -82,13 +89,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (estaCarga !== cargaActual) return;
 
         dibujarMapa(filas, establecimiento);
-        dibujarLista(filas);
+        dibujarLista(filas, urlEditar);
         dibujarResumen(filas);
     }
 
-    // Si el nombre no tiene numero, usa las 2 primeras letras.
-    const etiquetaLote = (lote) => lote.nombre.match(/\d+/)?.[0] ?? lote.nombre.slice(0, 2);
-    const rindeQq = (margen) => (margen ? num(margen.rinde_indiferencia_kg_ha) / 100 : null );
 
     function dibujarMapa(filas, establecimiento) {
         capaLotes.clearLayers();
@@ -123,10 +127,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         tarjeta.hidden = false;
     }
 
-    function dibujarLista(filas) {
+    function dibujarLista(filas, urlEditar) {
         const lista = document.getElementById('listaLotes');
         if (filas.length === 0) {
-            lista.innerHTML = '<p>Este establecimiento todavía no tiene lotes. <a href="configuracion_de_campos.html">Agregar lotes</a></p>';
+            lista.innerHTML = `<p>Este establecimiento todavía no tiene lotes. <a href="${urlEditar}">Agregar lotes</a></p>`;
             return;
         }
 
@@ -157,7 +161,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const hectareas = filas.reduce((total, f) => total + num(f.lote.ha_totales), 0);
         const rinde = promedio(conMargen.map((f) => rindeQq(f.margen)));
         // Margen por hectarea en pesos
-        const margenHa = promedio(conMargen.map((f) => num(f.margen_bruto_ars) / num(f.margen.ha_sembradas)));
+        const margenHa = promedio(conMargen.map((f) => num(f.margen.margen_bruto_ars) / num(f.margen.ha_sembradas)));
         const cuenta = (estado) => filas.filter((f) => f.estado === estado).length;
 
         document.getElementById('resumenHectareas').textContent = `${formatoNumero(hectareas, 1)} ha`;
@@ -168,7 +172,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         document.getElementById('resumenAlerta').textContent = `${cuenta('rojo')} de ${filas.length}`;
 
-        document.getElementById('semaforoTexto').textContent = `${filas.length} lotes activos`;
+        document.getElementById('semaforoTexto').textContent = `${filas.length} ${filas.length === 1 ? 'lote activo' : 'lotes activos'}`;
 
         document.getElementById('semaforoLista').innerHTML = `<li><i class="punto punto--bien"></i>${cuenta('verde')} en verde</li>
             <li><i class="punto punto--ajustado"></i>${cuenta('amarillo')} ajustado</li>
