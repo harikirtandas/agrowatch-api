@@ -41,7 +41,7 @@
       <header class="encabezado-perfil">
         <div>
           <h1 class="encabezado-perfil__titulo">Mi perfil</h1>
-          <p class="encabezado-perfil__subtitulo">Datos personales y del establecimiento</p>
+          <p class="encabezado-perfil__subtitulo">Tus datos, tu establecimiento y las campañas</p>
         </div>
         <div class="encabezado-perfil__acciones">
           <button class="encabezado-perfil__campana" aria-label="Notificaciones">
@@ -52,66 +52,81 @@
       </header>
 
       <div class="tarjeta-perfil">
-        <form class="formulario-perfil" action="procesar-perfil.php" method="POST">
-
-          <div class="formulario-perfil__foto">
-            <span class="foto-perfil" aria-hidden="true"></span>
-            <button type="button" class="enlace-cambiar-foto">Cambiar foto</button>
+        <h2 class="tarjeta-perfil__titulo">Mis datos</h2>
+        <p class="tarjeta-perfil__subtitulo">Por ahora no se pueden editar desde la app</p>
+        <div class="formulario-perfil__campos">
+          <div class="campo">
+            <label for="nombre" class="campo__etiqueta">Nombre</label>
+            <input type="text" id="nombre" class="campo__entrada" readonly>
           </div>
+          <div class="campo">
+            <label for="apellido" class="campo__etiqueta">Apellido</label>
+            <input type="text" id="apellido" class="campo__entrada" readonly>
+          </div>
+          <div class="campo">
+            <label for="email" class="campo__etiqueta">Email</label>
+            <input type="email" id="email" class="campo__entrada" readonly>
+          </div>
+        </div>
+      </div>
 
-          <div class="formulario-perfil__campos">
-            <div class="campo">
-              <label for="nombre" class="campo__etiqueta">Nombre</label>
-              <input type="text" id="nombre" name="nombre" class="campo__entrada" value="Juan">
-            </div>
-            <div class="campo">
-              <label for="apellido" class="campo__etiqueta">Apellido</label>
-              <input type="text" id="apellido" name="apellido" class="campo__entrada" value="Pérez">
-            </div>
-            <div class="campo">
-              <label for="email" class="campo__etiqueta">Email</label>
-              <input type="email" id="email" name="email" class="campo__entrada" value="juan@ejemplo.com">
-            </div>
-            <div class="campo">
-              <label for="establecimiento" class="campo__etiqueta">Nombre del establecimiento</label>
-              <input type="text" id="establecimiento" name="establecimiento" class="campo__entrada" value="Ea. Las Marías">
-            </div>
-            <div class="campo">
-              <label for="provincia" class="campo__etiqueta">Provincia</label>
-              <input type="text" id="provincia" name="provincia" class="campo__entrada" value="Buenos Aires">
-            </div>
-            <div class="campo">
-              <label for="localidad" class="campo__etiqueta">Localidad</label>
-              <input type="text" id="localidad" name="localidad" class="campo__entrada" value="Bolívar">
-            </div>
-
+      <div class="tarjeta-perfil">
+        <h2 class="tarjeta-perfil__titulo">Establecimiento</h2>
+        <p class="tarjeta-perfil__subtitulo">El mismo que está elegido en el panel</p>
+        <form id="formEstablecimiento" class="formulario-perfil__campos">
+          <div class="campo">
+            <label for="selectorEstablecimientoPerfil" class="campo__etiqueta">Establecimiento</label>
+            <select id="selectorEstablecimientoPerfil" class="campo__entrada"></select>
+          </div>
+          <div class="campo">
+            <label for="establecimiento" class="campo__etiqueta">Nombre del establecimiento</label>
+            <input type="text" id="establecimiento" class="campo__entrada" maxlength="100" required>
+          </div>
+          <div class="campo">
+            <label for="provincia" class="campo__etiqueta">Provincia</label>
+            <input type="text" id="provincia" class="campo__entrada" maxlength="60" required>
+          </div>
+          <div class="campo">
+            <label for="localidad" class="campo__etiqueta">Localidad</label>
+            <input type="text" id="localidad" class="campo__entrada" maxlength="100" required>
+          </div>
+          <div class="acciones-perfil">
             <button type="submit" class="boton boton--principal">Guardar cambios</button>
+            <a id="editarLotes" class="enlace-perfil" href="configuracion_de_campos.html">Editar los lotes de este campo</a>
           </div>
         </form>
       </div>
 
-      <div class="tarjeta-perfil tarjeta-perfil--accesos">
-        <h2 class="tarjeta-perfil__titulo">Personas con acceso a este establecimiento</h2>
-        <p class="tarjeta-perfil__subtitulo">El dueño puede compartir el campo con un asesor, sin duplicar datos</p>
-
-        <ul class="lista-accesos">
-          <li class="lista-accesos__item">
-            <span class="lista-accesos__foto" aria-hidden="true"></span>
-            <span class="lista-accesos__nombre">Juan Pérez</span>
-            <span class="etiqueta-rol etiqueta-rol--dueno">Dueño</span>
-          </li>
-          <li class="lista-accesos__item">
-            <span class="lista-accesos__foto" aria-hidden="true"></span>
-            <span class="lista-accesos__nombre">María Insaurralde</span>
-            <span class="etiqueta-rol etiqueta-rol--asesor">Asesora</span>
-          </li>
-        </ul>
-
-        <button type="button" class="enlace-invitar">+ Invitar a un asesor</button>
+      <div class="tarjeta-perfil">
+        <h2 class="tarjeta-perfil__titulo">Campañas</h2>
+        <p class="tarjeta-perfil__subtitulo">Son compartidas por todos los usuarios: cerrar o crear una afecta a todos</p>
+        <ul id="listaCampanias" class="lista-campanias"></ul>
+        <form id="formCampania" class="formulario-campania">
+          <div class="campo">
+            <label for="campaniaNombre" class="campo__etiqueta">Nombre</label>
+            <input type="text" id="campaniaNombre" class="campo__entrada" maxlength="30" placeholder="Ej. 2027/28" required>
+          </div>
+          <div class="campo">
+            <label for="campaniaInicio" class="campo__etiqueta">Inicio</label>
+            <input type="date" id="campaniaInicio" class="campo__entrada" required>
+          </div>
+          <div class="campo">
+            <label for="campaniaFin" class="campo__etiqueta">Fin</label>
+            <input type="date" id="campaniaFin" class="campo__entrada" required>
+          </div>
+          <button type="submit" class="boton boton--principal">Crear campaña</button>
+        </form>
       </div>
+
+      <button type="button" class="boton boton--salir" data-cerrar-sesion>Cerrar sesión</button>
 
     </div>
   </div>
+
+<script src="../js/config.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/global.js"></script>
+<script src="../js/perfil.js"></script>
 
 </body>
 </html>

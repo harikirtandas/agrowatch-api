@@ -348,6 +348,137 @@ body {
   color: #f0b5a8; 
 }
 
+.mensaje-error { 
+  color: #d1583f; 
+  margin-top: 12px; 
+  font-size: 14px; 
+}
+
+.mensaje-ok { 
+  color: var(--verde-medio); 
+  margin-top: 12px; 
+  font-size: 14px; 
+}
+
+.campo__entrada--error { 
+  border-color: #d1583f; 
+}
+
+.campo__entrada[readonly] { 
+  background: #f2f1ec; 
+  color: var(--gris-texto); 
+  cursor: default; 
+}
+
+.formulario-perfil__campos .acciones-perfil,
+.formulario-perfil__campos .mensaje-error,
+.formulario-perfil__campos .mensaje-ok,
+.formulario-perfil__campos > p { 
+  grid-column: 1 / -1; 
+}
+
+.acciones-perfil { 
+  display: flex; 
+  align-items: center; 
+  gap: 20px; 
+  flex-wrap: wrap; 
+}
+
+.enlace-perfil { 
+  color: var(--verde-medio); 
+  font-weight: 600; 
+  font-size: 14px; 
+  text-decoration: none; 
+}
+
+.enlace-perfil:hover { 
+  text-decoration: underline; 
+}
+
+.boton--salir {
+  background: none;
+  border: 1px solid #d1583f;
+  color: #d1583f;
+  font-family: inherit;
+}
+.boton--salir:hover { 
+  background: rgba(209, 88, 63, 0.08); 
+}
+
+.lista-campanias { 
+  list-style: none; 
+  margin: 0 0 20px; 
+  padding: 0; 
+}
+
+.lista-campanias__item {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--gris-borde);
+}
+
+.lista-campanias__nombre { 
+  font-weight: 600; 
+}
+
+.lista-campanias__fechas { 
+  color: var(--gris-texto); 
+  font-size: 13px; 
+}
+.lista-campanias__vacia { 
+  color: var(--gris-texto); 
+  padding: 12px 0; 
+}
+
+.lista-campanias .etiqueta-rol { 
+  margin-left: 0; 
+}
+
+.boton-campania {
+  border: 1px solid var(--gris-borde);
+  border-radius: 20px;
+  padding: 6px 12px;
+  background: var(--blanco);
+  color: var(--verde-medio);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.boton-campania:hover { 
+  border-color: var(--verde-medio); 
+}
+
+.boton-quitar {
+  background: none;
+  border: none;
+  border-radius: 8px;
+  padding: 6px;
+  color: #d1583f;
+  font-family: inherit;
+  font-size: 16px;
+  cursor: pointer;
+}
+.boton-quitar:hover { 
+  background: rgba(209, 88, 63, 0.08); 
+}
+
+.formulario-campania {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.formulario-campania .mensaje-error,
+.formulario-campania .mensaje-ok { 
+  grid-column: 1 / -1; 
+}
+
 
 /* Responsive */
 @media (max-width: 760px) {
@@ -376,5 +507,11 @@ body {
   }
   .tarjeta-perfil {
     padding: 20px;
+  }
+  .lista-campanias__item { 
+    grid-template-columns: 1fr auto; 
+  }
+  .formulario-campania { 
+    grid-template-columns: 1fr; 
   }
 }
