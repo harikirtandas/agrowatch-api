@@ -332,6 +332,37 @@ body {
   color: #f0b5a8; 
 }
 
+.tabla-costos .campo__entrada { 
+  width: 100%; 
+  min-width: 70px; 
+  padding: 6px 8px; 
+}
+
+.tabla-costos tr.fila--error td { 
+  background: rgba(209, 88, 63, 0.08); 
+}
+
+.boton-quitar { 
+  background: none; 
+  border: none; 
+  cursor: pointer; 
+  color: #d1583f; 
+  font-size: 16px; 
+}
+
+.mensaje-error { 
+  color: #d1583f; 
+  margin-top: 12px; 
+  font-size: 14px; 
+}
+
+.campo__entrada--error { 
+  border-color: #d1583f; 
+}
+
+.estado-sincronizacion[hidden] { 
+  display: none; 
+}
 
 /* Responsive */
 @media (max-width: 760px) {
