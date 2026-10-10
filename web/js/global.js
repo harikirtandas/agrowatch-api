@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       boton.disabled = true;
       await API.logout();
-      ['establecimientoActual', 'enviosPendientes', 'enviosFallidos'].forEach((clave) => localStorage.removeItem(clave));
+      ['establecimientoActual','ultimaSiembra', 'enviosPendientes', 'enviosFallidos'].forEach((clave) => localStorage.removeItem(clave));
       window.location.href = 'login.html';
     });
   });

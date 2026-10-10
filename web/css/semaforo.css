@@ -286,6 +286,97 @@ body {
   color: #f0b5a8; 
 }
 
+.aviso-semaforo {
+  background: var(--blanco, #fff);
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-top: 16px;
+}
+.aviso-semaforo p { 
+  margin-bottom: 12px;
+}
+
+.aviso-semaforo a { 
+  color: var(--verde-medio); 
+  font-weight: 600; 
+}
+
+.semaforo-gauge__estado { 
+  font-weight: 700; 
+  margin: 4px 0 12px; 
+}
+
+.semaforo-gauge__estado--verde { 
+  color: #4f9d63; 
+}
+
+.semaforo-gauge__estado--amarillo {
+  color: #b8860b; 
+}
+.semaforo-gauge__estado--rojo {
+  color: #d1583f; 
+}
+
+.detalle-margen { 
+  display: grid; 
+  gap: 10px; 
+  margin: 8px 0 18px; 
+}
+
+.detalle-margen div { 
+  display: flex; 
+  justify-content: space-between; 
+  gap: 16px; 
+  border-bottom: 1px solid #e2e2dc; 
+  padding-bottom: 8px; 
+}
+
+.detalle-margen dt {
+  color: var(--gris-texto); 
+}
+
+.detalle-margen dd {
+  font-weight: 600; 
+  text-align: right; 
+}
+
+.enlace-editar-siembra { 
+  color: var(--verde-medio); 
+  font-weight: 600; 
+  text-decoration: none; 
+}
+
+.enlace-editar-siembra:hover { 
+  text-decoration: underline; 
+}
+
+.cambio-siembra {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--gris-texto);
+}
+.cambio-siembra[hidden] { 
+  display: none; 
+}
+
+.cambio-siembra__select {
+  border: 1px solid var(--gris-borde, #e2e2dc);
+  border-radius: 20px;
+  padding: 6px 12px;
+  background: var(--blanco, #fff);
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--negro-texto);
+  cursor: pointer;
+}
+
+.tarjeta-semaforo[hidden] { 
+  display: none; 
+}
+
 /* Responsive */
 @media (max-width: 860px) {
   .tarjeta-semaforo {
