@@ -619,6 +619,18 @@ body {
   font-size: 18px;
 }
 
+.barra-lateral__salir {
+  border: none;
+  background: transparent; 
+  cursor: pointer; 
+  font-family: inherit; 
+}
+
+.barra-lateral__salir:hover { 
+  color: #f0b5a8; 
+}
+
+
 /* Responsive */
 @media (max-width: 1080px) {
   .panel-principal {

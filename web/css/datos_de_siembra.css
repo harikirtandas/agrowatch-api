@@ -321,6 +321,18 @@ body {
   transform: translateY(1px);
 }
 
+.barra-lateral__salir {
+  border: none;
+  background: transparent; 
+  cursor: pointer; 
+  font-family: inherit; 
+}
+
+.barra-lateral__salir:hover { 
+  color: #f0b5a8; 
+}
+
+
 /* Responsive */
 @media (max-width: 760px) {
   .formulario-siembra__fila,

@@ -64,3 +64,26 @@ function mostrarError(form, error, campos = {}){
         caja.textContent = error.message;
     }
 }
+
+// Botones "Cerrar sesión": cualquier elemento con el atributo data-cerrar-sesion.
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('[data-cerrar-sesion]').forEach((boton) => {
+    boton.addEventListener('click', async () => {
+      // Siembras guardadas sin señal que todavía no subieron (sincronizacion.js)
+      let pendientes = 0;
+      try {
+        pendientes = JSON.parse(localStorage.getItem('enviosPendientes') ?? '[]').length;
+      } catch {
+        pendientes = 0;
+      }
+      if (pendientes > 0 && !confirm(`Hay ${pendientes} siembra(s) guardada(s) sin señal que todavía no se sincronizaron. Si cerrás sesión se pierden. ¿Cerrar igual?`)) {
+        return;
+      }
+
+      boton.disabled = true;
+      await API.logout();
+      ['establecimientoActual', 'enviosPendientes', 'enviosFallidos'].forEach((clave) => localStorage.removeItem(clave));
+      window.location.href = 'login.html';
+    });
+  });
+});
