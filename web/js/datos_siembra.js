@@ -117,6 +117,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  // ---- Eliminar siembra (solo en modo edición) ----
+    const botonEliminar = document.getElementById('botonEliminarSiembra');
+    botonEliminar.hidden = siembraId === null;
+    botonEliminar.addEventListener('click', async () => {
+    if (!confirm('¿Eliminar esta siembra y todos sus costos? No se puede deshacer.')) return;
+    botonEliminar.disabled = true;
+    try {
+        await API.del(`/siembras/${siembraId}`); // los costos se borran en cascada
+        window.location.href = 'dashboard_mi_campo.html';
+    } catch (error) {
+        mostrarError(form, error);
+        botonEliminar.disabled = false;
+    }
+});
+
   // Al elegir un lote, si las hectáreas están vacías, se sugieren las efectivas.
   function completarHectareas() {
     const lote = lotes.find((l) => l.id === Number(selLote.value));
@@ -232,6 +247,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       siembraId = envio.siembraId;
       // Si recarga la página, abre en modo edición en vez de crear otra.
       history.replaceState(null, '', `?siembra=${siembraId}`);
+      botonEliminar.hidden = false;
     }
     for (const op of envio.costos.filter((o) => o.hecho)) {
       if (op.accion === 'borrar') {

@@ -364,6 +364,21 @@ body {
   display: none; 
 }
 
+.boton[hidden] { 
+  display: none; 
+}
+
+.boton--peligro {
+  background: none;
+  border: 1px solid #d1583f;
+  color: #d1583f;
+  margin-top: 12px;
+}
+
+.boton--peligro:hover { 
+  background: rgba(209, 88, 63, 0.08); 
+}
+
 /* Responsive */
 @media (max-width: 760px) {
   .formulario-siembra__fila,
