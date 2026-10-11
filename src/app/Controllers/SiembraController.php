@@ -132,7 +132,7 @@ final class SiembraController extends Controller
 
         $siembra = $this->siembraOError($id, $uid);
         $cultivoId = (int) $siembra['cultivo_id'];
-        $cultivo = Cultivo::porId($cultivoId);
+        $cultivo = $this->cultivoOError($cultivoId);
         $hoy = $this->hoy();
         $cotizacion = $this->cotizacionOError($cultivoId, $hoy);
 
@@ -292,6 +292,27 @@ final class SiembraController extends Controller
     private function hoy(): string
     {
         return (new \DateTimeImmutable('now', new \DateTimeZone(self::ZONA_HORARIA)))->format('Y-m-d');
+    }
+
+    /**
+     * El cultivo de la siembra o corta con 404. cultivo_id viene de una FK
+     * (fk_siembras_cultivo, sin ON DELETE CASCADE) asi que en la practica
+     * siempre existe -- pero margen() es el unico lugar del metodo que leia
+     * el resultado de un Model sin pasar por un *OError(), rompiendo el
+     * patron defensivo del resto (siembraOError/cotizacionOError/
+     * tipoCambioOficialOError). Este guard lo deja consistente.
+     *
+     * @return array<string, mixed>
+     */
+    private function cultivoOError(int $id): array
+    {
+        $cultivo = Cultivo::porId($id);
+
+        if ($cultivo === null) {
+            throw new ApiException(404, 'Cultivo no encontrado.');
+        }
+
+        return $cultivo;
     }
 
     /**

@@ -49,9 +49,9 @@ final class EstablecimientoController extends Controller
     public function store(): void
     {
         $uid = (int) $this->usuario()['id'];
-        [$nombre, $localidad, $provincia] = $this->validarCuerpo();
+        [$nombre, $localidad, $provincia, $lat, $lng] = $this->validarCuerpo();
 
-        $id = Establecimiento::crear($nombre, $localidad, $provincia);
+        $id = Establecimiento::crear($nombre, $localidad, $provincia, $lat, $lng);
         Establecimiento::vincularUsuario($id, $uid, 'dueno');
 
         // se relee de la base (en vez de armar el array a mano con los
@@ -83,8 +83,8 @@ final class EstablecimientoController extends Controller
             throw new ApiException(403, 'Solo el dueno puede modificar este establecimiento.');
         }
 
-        [$nombre, $localidad, $provincia] = $this->validarCuerpo();
-        Establecimiento::actualizar($id, $nombre, $localidad, $provincia);
+        [$nombre, $localidad, $provincia, $lat, $lng] = $this->validarCuerpo();
+        Establecimiento::actualizar($id, $nombre, $localidad, $provincia, $lat, $lng);
 
         $this->json(Establecimiento::buscarDeUsuario($id, $uid));
     }
@@ -107,7 +107,8 @@ final class EstablecimientoController extends Controller
     }
 
     /**
-     * @return array{0: string, 1: string, 2: string} [nombre, localidad, provincia]
+     * @return array{0: string, 1: string, 2: string, 3: ?float, 4: ?float}
+     *         [nombre, localidad, provincia, lat, lng]
      */
     private function validarCuerpo(): array
     {
@@ -120,6 +121,12 @@ final class EstablecimientoController extends Controller
 
         Validator::validar('establecimientos', $datos);
 
-        return [$datos['nombre'], $datos['localidad'], $datos['provincia']];
+        return [
+            $datos['nombre'],
+            $datos['localidad'],
+            $datos['provincia'],
+            isset($datos['lat']) ? (float) $datos['lat'] : null,
+            isset($datos['lng']) ? (float) $datos['lng'] : null,
+        ];
     }
 }

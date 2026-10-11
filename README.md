@@ -204,7 +204,7 @@ si se llegaran a anidar más sub-recursos), igual que ya exige el Router.
 [
   {
     "id": 1, "nombre": "La Esperanza", "localidad": "Coronel Suarez",
-    "provincia": "Buenos Aires", "rol": "dueno",
+    "provincia": "Buenos Aires", "lat": "-37.4525000", "lng": "-61.9333000", "rol": "dueno",
     "created_at": "2026-09-21 10:00:00", "updated_at": "2026-09-21 10:00:00"
   }
 ]
@@ -213,21 +213,23 @@ si se llegaran a anidar más sub-recursos), igual que ya exige el Router.
 `POST /api/establecimientos`
 
 ```json
-// request
-{ "nombre": "La Esperanza", "localidad": "Coronel Suarez", "provincia": "Buenos Aires" }
+// request ("lat"/"lng" opcionales, null si no se manda)
+{ "nombre": "La Esperanza", "localidad": "Coronel Suarez", "provincia": "Buenos Aires", "lat": -37.4525, "lng": -61.9333 }
 
 // 201 + Location: /api/establecimientos/1
 {
   "id": 1, "nombre": "La Esperanza", "localidad": "Coronel Suarez",
-  "provincia": "Buenos Aires", "rol": "dueno",
+  "provincia": "Buenos Aires", "lat": "-37.4525000", "lng": "-61.9333000", "rol": "dueno",
   "created_at": "2026-09-21 10:00:00", "updated_at": "2026-09-21 10:00:00"
 }
 
-// 422 (falta un campo)
+// 422 (falta un campo, o lat/lng fuera de rango: lat [-90,90], lng [-180,180])
 { "error": { "status": 422, "mensaje": "Datos invalidos.", "errores": { "nombre": "Requerido" } } }
 ```
 
-`GET/PUT /api/establecimientos/{id}` devuelven la misma forma. `DELETE` -> 204.
+`GET/PUT /api/establecimientos/{id}` devuelven la misma forma. `PUT` es
+reemplazo completo igual que el resto de la API: si no se manda `lat`/`lng`,
+quedan en `null` (no se conserva el valor anterior). `DELETE` -> 204.
 `404` si el establecimiento no existe o el usuario no tiene fila en
 `usuario_establecimiento` para ese id (no se distingue de "no existe": no hay
 que filtrar si el establecimiento existe pero es ajeno).
@@ -366,33 +368,45 @@ cascada los `costos` de esa siembra.
 
 ### Margen (calculado, no persiste nada)
 
-`GET /api/siembras/1/margen` -> 200
+`GET /api/siembras/5/margen` -> 200 (respuesta real, no de ejemplo —
+`SiembraController::armarRespuesta()`/`importesEnPesos()`)
 
 ```json
 {
-  "siembra_id": 1,
-  "ha_sembradas": "78.00",
-  "costo_total_ars": "8235000.00",
-  "costo_por_ha_ars": "105576.92",
-  "cotizacion_vigente": { "precio": "380.50", "moneda": "USD", "fecha": "2026-09-20", "mercado": "Chicago" },
-  "tipo_cambio_usado": { "tipo": "oficial", "valor": "1050.0000", "fecha": "2026-09-20" },
-  "precio_neto_retencion_ars": { "por_unidad": "0.00", "nota": "precio x (1 - retencion_pct/100), convertido a ARS con el tipo de cambio" },
-  "rinde_indiferencia_kg_ha": "2450.30",
-  "ingreso_esperado_ars": "12480000.00",
-  "margen_bruto_ars": "4245000.00",
+  "siembra_id": 5,
+  "ha_sembradas": "90.00",
+  "moneda_calculo": "USD",
+  "cotizacion_vigente": { "precio": "371.35", "moneda": "USD", "fecha": "2026-10-08", "mercado": "pizarra_rosario" },
+  "retencion_aplicada_pct": "0.00",
+  "precio_neto_usd": { "por_unidad": "371.35", "unidad": "tn" },
+  "tipo_cambio_usado": { "tipo": "oficial", "valor": "1535.0000", "fecha": "2026-10-09" },
+  "costo_total_usd": "4871.36",
+  "costo_por_ha_usd": "54.13",
+  "ingreso_esperado_usd": "106948.80",
+  "margen_bruto_usd": "102077.44",
+  "margen_pct": "0.9544",
+  "rinde_indiferencia_kg_ha": "145.8",
   "semaforo": "verde",
+  "costo_total_ars": "7477537.60",
+  "costo_por_ha_ars": "83089.55",
+  "ingreso_esperado_ars": "164166408.00",
+  "margen_bruto_ars": "156688870.40",
   "detalle_costos": [
-    { "id": 1, "categoria": "semilla", "moneda": "ARS", "importe_original": "90000.00", "importe_ars": "90000.00" }
+    { "id": 2, "categoria": "semilla", "moneda": "USD", "importe_original": "2250.00", "tipo_cambio": null, "importe_usd": "2250.00" },
+    { "id": 3, "categoria": "labor", "moneda": "ARS", "importe_original": "4050000.00", "tipo_cambio": { "valor": "1545.0000", "fecha": "2026-09-30" }, "importe_usd": "2621.36" }
   ]
 }
 ```
 
-`semaforo` sale de `margen_bruto_ars / ingreso_esperado_ars`: `verde` si
-`>= 0.20`, `amarillo` si está entre `0` y `0.20`, `rojo` si `<= 0` (umbrales a
-ajustar durante la implementación, no son parte fija del contrato). `422` si
-no hay ninguna fila en `cotizaciones` con `fecha <= hoy` para el cultivo de la
-siembra (`{ "error": { "status": 422, "mensaje": "No hay cotizacion cargada para este cultivo." } }`),
-o si falta el `tipo_cambio` correspondiente a alguna fecha de costo en USD.
+El cálculo interno (`CalculoMargen`) es siempre en USD — los campos `*_ars`
+son solo para mostrar, convertidos al dólar oficial de hoy (`tipo_cambio_usado`).
+`semaforo` sale de `margen_bruto_usd / ingreso_esperado_usd`: `verde` si
+`>= 0.20` (`CalculoMargen::UMBRAL_VERDE`), `rojo` si `<= 0`, `amarillo` en
+cualquier otro caso. `422` si no hay ninguna fila en `cotizaciones` con
+`fecha <= hoy` para el cultivo de la siembra
+(`{ "error": { "status": 422, "mensaje": "No hay cotizacion cargada para este cultivo." } }`),
+o si falta el `tipo_cambio` oficial correspondiente a alguna fecha (la de
+hoy, o la de un costo en ARS).
 
 ### Sync de cotizaciones (integración cloud)
 

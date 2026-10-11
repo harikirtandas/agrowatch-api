@@ -20,7 +20,7 @@ final class Establecimiento
     public static function delUsuario(int $usuarioId): array
     {
         $stmt = Database::connection()->prepare(
-            'SELECT e.id, e.nombre, e.localidad, e.provincia, ue.rol,
+            'SELECT e.id, e.nombre, e.localidad, e.provincia, e.lat, e.lng, ue.rol,
                     e.created_at, e.updated_at
              FROM establecimientos e
              INNER JOIN usuario_establecimiento ue ON ue.establecimiento_id = e.id
@@ -46,7 +46,7 @@ final class Establecimiento
     public static function buscarDeUsuario(int $id, int $usuarioId): ?array
     {
         $stmt = Database::connection()->prepare(
-            'SELECT e.id, e.nombre, e.localidad, e.provincia, ue.rol,
+            'SELECT e.id, e.nombre, e.localidad, e.provincia, e.lat, e.lng, ue.rol,
                     e.created_at, e.updated_at
              FROM establecimientos e
              INNER JOIN usuario_establecimiento ue ON ue.establecimiento_id = e.id
@@ -67,13 +67,24 @@ final class Establecimiento
      * dia de manana alguien necesita crear un establecimiento sin vincular a
      * nadie todavia (ej. un alta administrativa), el metodo ya existe suelto.
      */
-    public static function crear(string $nombre, string $localidad, string $provincia): int
-    {
+    public static function crear(
+        string $nombre,
+        string $localidad,
+        string $provincia,
+        ?float $lat,
+        ?float $lng
+    ): int {
         $stmt = Database::connection()->prepare(
-            'INSERT INTO establecimientos (nombre, localidad, provincia, created_at, updated_at)
-             VALUES (:nombre, :localidad, :provincia, NOW(), NOW())'
+            'INSERT INTO establecimientos (nombre, localidad, provincia, lat, lng, created_at, updated_at)
+             VALUES (:nombre, :localidad, :provincia, :lat, :lng, NOW(), NOW())'
         );
-        $stmt->execute(['nombre' => $nombre, 'localidad' => $localidad, 'provincia' => $provincia]);
+        $stmt->execute([
+            'nombre' => $nombre,
+            'localidad' => $localidad,
+            'provincia' => $provincia,
+            'lat' => $lat,
+            'lng' => $lng,
+        ]);
 
         return (int) Database::connection()->lastInsertId();
     }
@@ -105,14 +116,28 @@ final class Establecimiento
      * escribir. Discutido en el README de esta carpeta: las dos formas son
      * correctas, lo importante es elegir UNA por feature y no mezclarlas.
      */
-    public static function actualizar(int $id, string $nombre, string $localidad, string $provincia): bool
-    {
+    public static function actualizar(
+        int $id,
+        string $nombre,
+        string $localidad,
+        string $provincia,
+        ?float $lat,
+        ?float $lng
+    ): bool {
         $stmt = Database::connection()->prepare(
             'UPDATE establecimientos
-             SET nombre = :nombre, localidad = :localidad, provincia = :provincia, updated_at = NOW()
+             SET nombre = :nombre, localidad = :localidad, provincia = :provincia,
+                 lat = :lat, lng = :lng, updated_at = NOW()
              WHERE id = :id'
         );
-        $stmt->execute(['nombre' => $nombre, 'localidad' => $localidad, 'provincia' => $provincia, 'id' => $id]);
+        $stmt->execute([
+            'nombre' => $nombre,
+            'localidad' => $localidad,
+            'provincia' => $provincia,
+            'lat' => $lat,
+            'lng' => $lng,
+            'id' => $id,
+        ]);
 
         return $stmt->rowCount() > 0;
     }

@@ -74,11 +74,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         lng: lote.lng,
     });
 
-    // solo los campos que guarda el back (lat/lng todavía no)
+    // los campos que guarda el back -- incluye lat/lng para que mover el pin
+    // sin tocar nombre/provincia/localidad igual se detecte como "cambio" y
+    // dispare el PUT (si no, el pin nuevo se pierde en el guardado).
     const camposEstablecimiento = () => ({
         nombre: valor('nombreEstablecimiento'),
         provincia: valor('provincia'),
         localidad: valor('localidad'),
+        lat: ubicacionEstablecimiento?.lat ?? null,
+        lng: ubicacionEstablecimiento?.lng ?? null,
     });
 
     function ubicarLote(lote, lat, lng) {
@@ -155,9 +159,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('nombreEstablecimiento').value = guardado.nombre;
             document.getElementById('provincia').value = guardado.provincia;
             document.getElementById('localidad').value = guardado.localidad;
-            datosOriginales = JSON.stringify(camposEstablecimiento());
 
+            // ubicarEstablecimiento() ANTES de la foto de "como estaba": camposEstablecimiento()
+            // ya incluye lat/lng, asi que la foto tiene que tomarse con ubicacionEstablecimiento
+            // ya seteada -- si no, cualquier establecimiento con ubicacion guardada se verfa
+            // "sucio" (null -> valor real) sin que el usuario haya tocado nada.
             if (num(guardado.lat) !== null) ubicarEstablecimiento(num(guardado.lat), num(guardado.lng));
+            datosOriginales = JSON.stringify(camposEstablecimiento());
 
             document.querySelector('.encabezado-config__titulo').textContent = 'Editar establecimiento';
             document.querySelector('.encabezado-config__subtitulo').textContent = 'Agregá, editá o quitá lotes de este campo';

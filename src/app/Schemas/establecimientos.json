@@ -4,6 +4,8 @@
   "properties": {
     "nombre": { "type": "string", "minLength": 1, "maxLength": 100 },
     "localidad": { "type": "string", "minLength": 1, "maxLength": 100 },
-    "provincia": { "type": "string", "minLength": 1, "maxLength": 60 }
+    "provincia": { "type": "string", "minLength": 1, "maxLength": 60 },
+    "lat": { "type": ["number", "null"], "minimum": -90, "maximum": 90 },
+    "lng": { "type": ["number", "null"], "minimum": -180, "maximum": 180 }
   }
 }
