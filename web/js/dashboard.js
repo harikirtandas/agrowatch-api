@@ -73,6 +73,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     let cargaActual = 0;
 
+    // Trae el dólar del día de dolarapi.com (una vez por día). Si falla, se sigue con el último guardado.
+    const hoyIso = new Date().toISOString().slice(0, 10);
+    if (localStorage.getItem('ultimoSync') !== hoyIso) {
+        try {
+             await API.post('/sync/cotizaciones');
+             localStorage.setItem('ultimoSync', hoyIso);
+        } catch { /* 502: la API externa no respondió */ }
+    }
+
     await cargarEstablecimiento(Number(selector.value));
 
     async function cargarEstablecimiento(id) {
