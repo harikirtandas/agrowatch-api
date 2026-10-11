@@ -126,6 +126,11 @@ body {
   margin-top: 18px;
 }
 
+.tarjeta-registro__nota a {
+  color: var(--verde-progreso);
+  font-weight: 600;
+}
+
 /* Formulario */
 .formulario-registro__fila {
   display: flex;

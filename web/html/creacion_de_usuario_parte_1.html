@@ -17,12 +17,11 @@
       <div class="progreso">
         <span class="progreso__punto progreso__punto--activo"></span>
         <span class="progreso__linea progreso__linea--activa"></span>
-        <span class="progreso__etiqueta">Información del usuario</span>
-        <span class="progreso__linea progreso__linea--activa"></span>
-        <span class="progreso__punto progreso__punto--activo"></span>
+        <span class="progreso__etiqueta">Paso 1 de 2 · Tus datos</span>
+        <span class="progreso__linea"></span>
+        <span class="progreso__punto"></span>
       </div>
 
-      <!-- method="POST" evita que los datos del formulario viajen en la URL -->
       <form class="formulario-registro">
 
         <div class="formulario-registro__fila">
@@ -39,7 +38,7 @@
         <div class="formulario-registro__fila">
           <div class="campo">
             <label for="email" class="campo__etiqueta">Email</label>
-            <input type="email" id="email" name="email" class="campo__entrada" max="120" required>
+            <input type="email" id="email" name="email" class="campo__entrada" maxlength="120" required>
           </div>
           <div class="campo">
             <label for="contrasena" class="campo__etiqueta">Contraseña</label>
@@ -50,6 +49,10 @@
         <button type="submit" class="boton boton--principal">Siguiente</button>
 
       </form>
+
+      <p class="tarjeta-registro__nota">¿Ya tenés cuenta? 
+        <a href="login.html">Iniciá sesión</a>
+      </p>
 
     </div>
   </main>

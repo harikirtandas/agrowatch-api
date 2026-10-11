@@ -17,18 +17,18 @@
       <span class="barra-lateral__logo"></span>
 
       <nav class="barra-lateral__nav">
-        <a href="dashboard_mi_campo.html" class="barra-lateral__icono" data-vista="panel" aria-label="Panel">
+        <a href="dashboard_mi_campo.html" class="barra-lateral__icono" data-vista="panel" aria-label="Panel" title="Panel">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>
         </a>
-        <a href="semaforo.html" class="barra-lateral__icono" data-vista="lotes" aria-label="Lotes">
+        <a href="semaforo.html" class="barra-lateral__icono" data-vista="lotes" aria-label="Lotes" title="Semáforo de mis lotes">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
         </a>
-        <a href="perfil.html" class="barra-lateral__icono" data-vista="perfil" aria-label="Perfil">
+        <a href="perfil.html" class="barra-lateral__icono" data-vista="perfil" aria-label="Perfil" title="Mi perfil">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.2"/><path d="M4.5 20c1.6-3.6 5-5 7.5-5s5.9 1.4 7.5 5"/></svg>
         </a>
       </nav>
 
-      <a href="configuracion_de_campos.html" class="barra-lateral__avatar barra-lateral__avatar--activo" aria-label="Agregar">
+      <a href="configuracion_de_campos.html" class="barra-lateral__avatar barra-lateral__avatar--activo" aria-label="Agregar" title="Nuevo establecimiento">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       </a>
 
@@ -48,13 +48,7 @@
       <header class="encabezado-config">
         <div>
           <h1 class="encabezado-config__titulo">Configurar establecimiento</h1>
-          <p class="encabezado-config__subtitulo">Se usa la misma pantalla para campo propio o arrendado</p>
-        </div>
-        <div class="encabezado-config__acciones">
-          <button class="encabezado-config__campana" aria-label="Notificaciones">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 1.5 5.5h-15S6 14 6 10Z"/><path d="M10 18a2 2 0 0 0 4 0"/></svg>
-          </button>
-          <span class="encabezado-config__perfil" aria-hidden="true"></span>
+          <p class="encabezado-config__subtitulo">Cargá tus lotes y ubicalos en el mapa</p>
         </div>
       </header>
 
@@ -76,7 +70,7 @@
               <input type="text" id="localidad" name="localidad" class="campo__entrada" maxlength="100" placeholder="Ej. Tres Arroyos">
             </div>
             <div class="campo">
-              <label for="ubicacion" class="campo__etiqueta">Ubica tu campo en el mapa</label>
+              <label for="ubicacion" class="campo__etiqueta">Ubicación del campo (de referencia, no se guarda)</label>
               <div class="campo__con-icono">
                 <input type="text" id="ubicacion" name="ubicacion" class="campo__entrada" placeholder="Seleccionar ubicación" readonly aria-expanded="false">
                 <svg class="campo__icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.2 7-11.5a7 7 0 1 0-14 0C5 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.3"/></svg>
@@ -85,7 +79,7 @@
           </div>
 
           <div id="contenedorMapa" class="contenedor-mapa" hidden>
-            <p id="ayudaMapa" class="ayuda-mapa">Hacé clic en el mapa para ubicar el establecimiento</p>
+            <p id="ayudaMapa" class="ayuda-mapa">Tocá "Ubicar" en un lote para guardar su ubicación (la del establecimiento es solo de referencia)</p>
             <div id="mapaCampo" class="mapa-selector"></div>
           </div>
           
@@ -106,27 +100,6 @@
           </table>
 
           <button type="button" class="enlace-agregar-lote">+ Agregar lote</button>
-
-          <h2 class="tarjeta-config__subtitulo">Cultivos habituales</h2>
-
-          <div class="chips-cultivos">
-            <button type="button" class="chip chip--seleccionado" data-cultivo="trigo">
-              <svg class="chip__check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-              Trigo
-            </button>
-            <button type="button" class="chip chip--seleccionado" data-cultivo="cebada">
-              <svg class="chip__check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-              Cebada
-            </button>
-            <button type="button" class="chip" data-cultivo="girasol">
-              <svg class="chip__check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-              Girasol
-            </button>
-            <button type="button" class="chip" data-cultivo="soja">
-              <svg class="chip__check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-              Soja
-            </button>
-          </div>
 
           <button type="submit" class="boton boton--principal">Guardar campo</button>
           <button type="button" id="botonEliminarEstablecimiento" class="boton boton--peligro" hidden>Eliminar establecimiento</button>

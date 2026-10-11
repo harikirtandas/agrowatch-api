@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         lotes.forEach((l) => l.fila.classList.toggle('fila--ubicando', l === lote));
         ayudaMapa.textContent = lote
         ? `Hacé clic en el mapa para ubicar "${nombreLote(lote) || 'el lote'}"`
-        : 'Hacé clic en el mapa para ubicar el establecimiento';
+        : 'Tocá "Ubicar" en un lote para guardar su ubicación (la del establecimiento es solo de referencia)';
         if (lote) {
             mostrarMapa();
             contenedorMapa.scrollIntoView({ behavior: 'smooth', block: 'center'})
@@ -193,14 +193,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else {
         agregarLote();
     }
-
-    // chips de cultivos: solo visual, la api no tiene donde guardarlos todavía.
-    document.querySelectorAll('.chip').forEach((chip) => {
-        chip.addEventListener('click', () => {
-            const seleccionado = chip.classList.toggle('chip--seleccionado');
-            chip.setAttribute('aria-pressed', seleccionado);
-        });
-    });
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();

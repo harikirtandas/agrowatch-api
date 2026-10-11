@@ -299,40 +299,6 @@ body {
   text-decoration: underline;
 }
 
-/* Chips de cultivos */
-.chips-cultivos {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 28px;
-}
-
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border: none;
-  border-radius: 20px;
-  padding: 8px 16px;
-  font-size: 14px;
-  font-weight: 600;
-  background: var(--gris-claro);
-  color: var(--negro-texto);
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-}
-
-.chip--seleccionado {
-  background: var(--amarillo-chip);
-  color: var(--amarillo-chip-texto);
-}
-
-.chip__check {
-  width: 14px;
-  height: 14px;
-}
-
-.chip:not(.chip--seleccionado) .chip__check { display: none; }
 
 /* Botones */
 .boton {
@@ -523,4 +489,9 @@ body {
 
 .barra-lateral__salir:hover { 
   color: #f0b5a8; 
+}
+
+.enlace-agregar-lote {
+  display: block;
+  margin-bottom: 24px;
 }
