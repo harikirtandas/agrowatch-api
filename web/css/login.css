@@ -131,3 +131,10 @@ body {
 .campo__entrada--error {
   border-color: #d1583f
 }
+
+.enlace--secundario { 
+  display: block; 
+  margin-top: 10px; 
+  color: var(--gris-texto, #6b7268); 
+  font-weight: 400; 
+}
