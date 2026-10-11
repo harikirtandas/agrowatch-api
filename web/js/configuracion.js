@@ -164,6 +164,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             form.querySelector('button[type="submit"]').textContent = 'Guardar cambios';
 
+            // Borrar el establecimiento (solo en modo edición). Se borran también sus lotes (cascada).
+            const botonEliminar = document.getElementById('botonEliminarEstablecimiento');
+            botonEliminar.hidden = false;
+            botonEliminar.addEventListener('click', async () => {
+                if (!confirm(`¿Eliminar "${guardado.nombre}" y todos sus lotes? No se puede deshacer.`)) return;
+                botonEliminar.disabled = true;
+                try {
+                    await API.del(`/establecimientos/${guardado.id}`);
+                    // Si era el elegido en el panel, se olvida: el dashboard elige otro (o manda a crear uno).
+                    if (localStorage.getItem('establecimientoActual') === String(guardado.id)) {
+                localStorage.removeItem('establecimientoActual');
+                }
+                window.location.href = 'dashboard_mi_campo.html';
+                } catch (error) {
+                mostrarError(form, error);
+                botonEliminar.disabled = false;
+                }
+            });
+
             lotesGuardados.forEach((l) => agregarLote(l));
             if (lotesGuardados.length === 0) agregarLote();
             encuadrePendiente = lotes.filter((l) => l.lat !== null).map((l) => [l.lat, l.lng]);

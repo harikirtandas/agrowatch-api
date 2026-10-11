@@ -495,6 +495,17 @@ body {
   cursor: pointer;
 }
 
+.boton--peligro {
+  background: none;
+  border: 1px solid #d1583f;
+  color: #d1583f;
+  margin-left: 12px;
+}
+
+.boton--peligro:hover { 
+  background: rgba(209, 88, 63, 0.08); 
+}
+
 .boton-quitar:hover:not(:disabled) {
   background: rgba(209, 88, 63, 0.08);
 }
