@@ -377,6 +377,11 @@ body {
   display: none; 
 }
 
+.enlace-otra-siembra { 
+  display: inline-block; 
+  margin-left: 20px; 
+}
+
 /* Responsive */
 @media (max-width: 860px) {
   .tarjeta-semaforo {

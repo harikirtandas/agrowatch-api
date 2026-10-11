@@ -89,6 +89,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   // La próxima vez que se entre desde la barra lateral, se abre esta.
   localStorage.setItem('ultimaSiembra', siembraId);
 
+  document.getElementById('otraSiembra').href = `datos_de_siembra.html?lote=${siembra.lote_id}`;
+
   // ---- Selector "Ver otro lote" ----
   // Si la siembra es de otro establecimiento (ej. llegaste por un link), se agrega igual.
   if (!opciones.some((s) => s.id === siembra.id)) opciones.unshift(siembra);

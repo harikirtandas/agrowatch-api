@@ -91,6 +91,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       inputRinde.value = siembra.rinde_esperado === null ? '' : num(siembra.rinde_esperado) / KG_POR_QQ;
 
       document.querySelector('.encabezado-siembra__titulo').textContent = 'Editar siembra';
+      form.querySelector('button[type="submit"]').textContent = 'Guardar y ver proyección';
       document.querySelector('.encabezado-siembra__subtitulo').textContent =
         `${siembra.lote_nombre} — ${siembra.cultivo_nombre} · Campaña ${siembra.campania_nombre}`;
 
