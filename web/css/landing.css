@@ -44,8 +44,8 @@ body {
 .encabezado__logo {
   width: 36px;
   height: 36px;
-  border-radius: 10px;
-  background: var(--amarillo-logo);
+  border-radius: 50%;
+  background: url('../img/logo-aw.svg') center / cover no-repeat;
   display: inline-block;
 }
 

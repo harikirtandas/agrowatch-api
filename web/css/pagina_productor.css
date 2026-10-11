@@ -51,8 +51,8 @@ body {
 .tarjeta-productor__logo {
   width: 32px;
   height: 32px;
-  border-radius: 9px;
-  background: var(--amarillo-logo);
+  border-radius: 50%;
+  background: url('../img/logo-aw.svg') center / cover no-repeat;
   display: inline-block;
 }
 
