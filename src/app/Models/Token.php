@@ -32,7 +32,7 @@ final class Token
     public static function usuarioValido(string $token): ?array
     {
         $stmt = Database::connection()->prepare(
-            'SELECT u.id, u.nombre, u.email, u.password_hash, u.created_at, u.updated_at
+            'SELECT u.id, u.nombre, u.apellido, u.email, u.password_hash, u.created_at, u.updated_at
              FROM tokens t
              JOIN usuarios u ON u.id = t.usuario_id
              WHERE t.token = :token AND t.expira_en > NOW()'
