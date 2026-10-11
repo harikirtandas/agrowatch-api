@@ -630,6 +630,30 @@ body {
   color: #f0b5a8; 
 }
 
+select.etiqueta-lote { 
+  font-family: inherit; 
+}
+
+.etiqueta-lote[hidden] {
+  display: none; 
+}
+
+.punto--sin-dato { 
+  background: #9aa0a6; 
+}
+
+.encabezado-panel .mapa-lotes__establecimiento,
+.encabezado-panel .mapa-lotes__editar {
+  background: var(--blanco);
+  color: var(--negro-texto);
+  border: 1px solid var(--gris-borde);
+  font-size: 14px;
+  padding: 8px 14px;
+}
+
+.encabezado-panel .mapa-lotes__editar:hover { 
+  background: var(--fondo-app); 
+}
 
 /* Responsive */
 @media (max-width: 1080px) {

@@ -17,18 +17,18 @@
       <span class="barra-lateral__logo"></span>
 
       <nav class="barra-lateral__nav">
-        <a href="dashboard_mi_campo.html" class="barra-lateral__icono barra-lateral__icono--activo" data-vista="panel" aria-label="Panel">
+        <a href="dashboard_mi_campo.html" class="barra-lateral__icono barra-lateral__icono--activo" data-vista="panel" aria-label="Panel" title="Panel">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>
         </a>
-        <a href="semaforo.html" class="barra-lateral__icono" data-vista="lotes" aria-label="Lotes">
+        <a href="semaforo.html" class="barra-lateral__icono" data-vista="lotes" aria-label="Lotes" title="Semáforo de mis lotes">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
         </a>
-        <a href="perfil.html" class="barra-lateral__icono" data-vista="perfil" aria-label="Perfil">
+        <a href="perfil.html" class="barra-lateral__icono" data-vista="perfil" aria-label="Perfil" title="Mi perfil">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.2"/><path d="M4.5 20c1.6-3.6 5-5 7.5-5s5.9 1.4 7.5 5"/></svg>
         </a>
       </nav>
 
-      <a href="configuracion_de_campos.html" class="barra-lateral__avatar" aria-label="Agregar">
+      <a href="configuracion_de_campos.html" class="barra-lateral__avatar" aria-label="Agregar" title="Nuevo establecimiento">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       </a>
       
@@ -46,11 +46,8 @@
           <p class="encabezado-panel__fecha">-</p>
         </div>
         <div class="encabezado-panel__acciones">
-          <input type="search" class="encabezado-panel__buscador" placeholder="Buscar lote, cultivo...">
-          <button class="encabezado-panel__campana" aria-label="Notificaciones">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 1.5 5.5h-15S6 14 6 10Z"/><path d="M10 18a2 2 0 0 0 4 0"/></svg>
-          </button>
-          <span class="encabezado-panel__perfil" aria-hidden="true"></span>
+          <select id="selectorEstablecimiento" class="mapa-lotes__establecimiento" aria-label="Establecimiento"></select>
+          <a id="editarEstablecimiento" class="mapa-lotes__editar" href="configuracion_de_campos.html">Editar campo</a>
         </div>
       </header>
 
@@ -60,11 +57,11 @@
           <strong id="resumenHectareas" class="tarjeta-resumen__valor">-</strong>
         </div>
         <div class="tarjeta-resumen">
-          <span class="tarjeta-resumen__etiqueta">Rinde de indiferencia prom.</span>
-          <strong id="resumenRinde" class="tarjeta-resumen__valor">-</strong>
+          <span class="tarjeta-resumen__etiqueta">Lotes sembrados</span>
+          <strong id="resumenSembrados" class="tarjeta-resumen__valor">-</strong>
         </div>
         <div class="tarjeta-resumen">
-          <span class="tarjeta-resumen__etiqueta">Margen proyectado prom.</span>
+          <span class="tarjeta-resumen__etiqueta">Margen por ha sembrada</span>
           <strong id="resumenMargen" class="tarjeta-resumen__valor">-</strong>
           <span class="tarjeta-resumen__cambio tarjeta-resumen__cambio--positivo" hidden>▲ 4% vs. semana pasada</span>
         </div>
@@ -80,12 +77,11 @@
         <div class="mapa-lotes" id="mapaLotes">
           <div class="mapa-lotes__encabezado">
             <h2 class="mapa-lotes__titulo">Mapa de lotes</h2>
-            <select id="selectorEstablecimiento" class="mapa-lotes__establecimiento" aria-label="Establecimiento"></select>
-            <a id="editarEstablecimiento" class="mapa-lotes__editar" href="configuracion_de_campos.html">Editar campo</a>
             <div class="mapa-lotes__leyenda">
               <span class="leyenda-item"><i class="punto punto--bien"></i>Bien</span>
               <span class="leyenda-item"><i class="punto punto--ajustado"></i>Ajustado</span>
               <span class="leyenda-item"><i class="punto punto--alerta"></i>Alerta</span>
+              <span class="leyenda-item"><i class="punto punto--sin-dato"></i>Sin datos</span>
             </div>
           </div>
 
@@ -106,36 +102,20 @@
 
           <div class="tarjeta-info">
             <h2 class="tarjeta-info__titulo">Cotización de hoy</h2>
-            <p class="tarjeta-info__fuente">Vía granos.ar</p>
-            <div class="cotizacion-fila">
-              <span>Trigo</span>
-              <strong>$220,7</strong>
-              <span class="cambio cambio--positivo">▲ 0,4%</span>
+            <p class="tarjeta-info__fuente">La que usa el cálculo del margen</p>
+            <div id="listaCotizaciones">
+              <p class="tarjeta-info__texto">-</p>
             </div>
-            <div class="cotizacion-fila">
-              <span>Cebada</span>
-              <strong>Manual</strong>
-            </div>
-            <p class="tarjeta-info__actualizado">Actualizado hoy 09:14</p>
           </div>
 
           <div class="tarjeta-info">
             <div class="tarjeta-info__encabezado">
               <h2 class="tarjeta-info__titulo">Clima</h2>
-              <button class="etiqueta-lote">Lote 2 <span aria-hidden="true">▾</span></button>
+              <select id="selectorClima" class="etiqueta-lote" aria-label="Lote para el pronóstico" hidden></select>
             </div>
-            <p class="tarjeta-info__texto">Cada lote tiene su propia ubicación — el pronóstico es por lote, no por establecimiento</p>
-            <div class="clima-actual">
-              <span class="clima-actual__temperatura">21°</span>
-              <div>
-                <strong>Parcialmente nublado</strong>
-                <p>Máx 24° · Mín 12°</p>
-              </div>
-            </div>
-            <div class="clima-datos">
-              <div><strong>60%</strong><span>Lluvia jue.</span></div>
-              <div><strong>58%</strong><span>Humedad</span></div>
-              <div><strong>14 km/h</strong><span>Viento</span></div>
+            <p class="tarjeta-info__texto">El pronóstico es por lote: cada uno tiene su ubicación</p>
+            <div id="climaContenido">
+              <p class="tarjeta-info__texto">-</p>
             </div>
           </div>
 

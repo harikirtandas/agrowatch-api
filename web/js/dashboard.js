@@ -5,12 +5,29 @@ const ESTADOS = {
     rojo: { clase: 'alerta', texto: 'Alerta'},
 };
 
+const fechaCorta = (iso) => iso.split('-').reverse().join('/')
+
+function textoClima(codigo) {
+    if (codigo === 0) return 'Despejado';
+    if (codigo <= 2) return 'Parcialmente nublado';
+    if (codigo === 3) return 'Nublado';
+    if (codigo <= 48) return 'Niebla';
+    if (codigo <= 57) return 'Llovizna';
+    if (codigo <= 67) return 'Lluvia';
+    if (codigo <= 77) return 'Nieve';
+    if (codigo <= 82) return 'Chaparrones';
+    if (codigo <= 86) return 'Nieve';
+    return 'Tormenta';
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     const usuario = await usuarioLogueado();
     if (!usuario) return;
 
     // Encabezado
-    document.querySelector('.encabezado-panel__saludo').textContent = `¡Buen día, ${usuario.nombre}!`;
+    const hora = new Date().getHours();
+    const saludo = hora < 13 ? 'Buen día' : hora < 20 ? 'Buenas tardes' : 'Buenas noches';
+    document.querySelector('.encabezado-panel__saludo').textContent = `¡${saludo}, ${usuario.nombre}!`;
     const hoy = new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long'});
     document.querySelector('.encabezado-panel__fecha').textContent =  `${hoy.charAt(0).toUpperCase()}${hoy.slice(1)} — así está tu campo hoy`;
 
@@ -91,6 +108,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         dibujarMapa(filas, establecimiento);
         dibujarLista(filas, urlEditar);
         dibujarResumen(filas);
+        dibujarCotizaciones(filas);
+        dibujarClima(filas);
     }
 
 
@@ -141,7 +160,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             const ha = `${formatoNumero(num(lote.ha_totales), 1)} ha`;
             const detalle = margen ? `${ha} · ${formatoNumero(rindeQq(margen), 1)} qq/ha` : (motivo ? `${ha} · ${motivo}` : ha);
-            const clasePunto = ESTADOS[estado] ? `punto--${ESTADOS[estado].clase}` : '';
+            const clasePunto = ESTADOS[estado] ? `punto--${ESTADOS[estado].clase}` : 'punto--sin-dato';
 
             return `<a href="${destino}" class="tarjeta-lote" data-lote="${lote.id}">
                 <i class="punto ${clasePunto}"></i>
@@ -155,27 +174,134 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function dibujarResumen(filas) {
-        const promedio = (valores) => (valores.length ? valores.reduce ((a, b) => a + b, 0) / valores.length : null);
+        const conSiembra = filas.filter((f) => f.siembra);
         const conMargen = filas.filter((f) => f.margen);
+        const cuenta = (estado) => filas.filter((f) => f.estado === estado).length;
+        const verdes = cuenta('verde');
+        const amarillos = cuenta('amarillo');
+        const rojos = cuenta('rojo');
+        const sinDatos = filas.length - verdes - amarillos - rojos;
 
         const hectareas = filas.reduce((total, f) => total + num(f.lote.ha_totales), 0);
-        const rinde = promedio(conMargen.map((f) => rindeQq(f.margen)));
-        // Margen por hectarea en pesos
-        const margenHa = promedio(conMargen.map((f) => num(f.margen.margen_bruto_ars) / num(f.margen.ha_sembradas)));
-        const cuenta = (estado) => filas.filter((f) => f.estado === estado).length;
+
+        // Margen por hectárea PONDERADO: total de margen ÷ total de hectáreas sembradas.
+        // (Un promedio simple haría pesar igual un lote de 10 ha que uno de 500.)
+        const margenTotal = conMargen.reduce((total, f) => total + num(f.margen.margen_bruto_ars), 0);
+        const haSembradas = conMargen.reduce((total, f) => total + num(f.margen.ha_sembradas), 0);
+        const margenHa = haSembradas > 0 ? margenTotal / haSembradas : null;
 
         document.getElementById('resumenHectareas').textContent = `${formatoNumero(hectareas, 1)} ha`;
-        
-        document.getElementById('resumenRinde').textContent = rinde === null ? '-' : `${formatoNumero(rinde, 1)} qq/ha`;
+        document.getElementById('resumenSembrados').textContent = `${conSiembra.length} de ${filas.length}`;
+        document.getElementById('resumenMargen').textContent =
+            margenHa === null ? '-' : `$${formatoNumero(margenHa / 1000)}k /ha`;
+        document.getElementById('resumenAlerta').textContent = `${rojos} de ${filas.length}`;
 
-        document.getElementById('resumenMargen').textContent = margenHa === null ? '-' : `$${formatoNumero(margenHa / 1000)}k /ha`;
+        document.getElementById('semaforoTexto').textContent =
+            `${filas.length} ${filas.length === 1 ? 'lote' : 'lotes'} · ${conSiembra.length} sembrado${conSiembra.length === 1 ? '' : 's'}`;
+        document.getElementById('semaforoLista').innerHTML = `
+            <li><i class="punto punto--bien"></i>${verdes} en verde</li>
+            <li><i class="punto punto--ajustado"></i>${amarillos} ajustado</li>
+            <li><i class="punto punto--alerta"></i>${rojos} en alerta</li>
+            <li><i class="punto punto--sin-dato"></i>${sinDatos} sin datos</li>`;
 
-        document.getElementById('resumenAlerta').textContent = `${cuenta('rojo')} de ${filas.length}`;
+        // Dona: cada color ocupa una porción proporcional a su cantidad de lotes.
+        // conic-gradient(color desde hasta, ...) arma la torta en grados (0 a 360).
+        const dona = document.querySelector('.semaforo__dona');
+        if (filas.length === 0) {
+            dona.style.background = '#c9cfc9';
+            return;
+        }
+        let desde = 0;
+        const porcion = (color, cantidad) => {
+            const hasta = desde + (cantidad / filas.length) * 360;
+            const tramo = `${color} ${desde}deg ${hasta}deg`;
+            desde = hasta;
+            return tramo;
+        };
+        dona.style.background = `conic-gradient(${[
+            porcion('var(--bien)', verdes),
+            porcion('var(--ajustado)', amarillos),
+            porcion('var(--alerta)', rojos),
+            porcion('#c9cfc9', sinDatos),
+        ].join(', ')})`;
+    }
 
-        document.getElementById('semaforoTexto').textContent = `${filas.length} ${filas.length === 1 ? 'lote activo' : 'lotes activos'}`;
+    function dibujarCotizaciones(filas) {
+        const contenedor = document.getElementById('listaCotizaciones');
+        const porCultivo = new Map();
+        for (const f of filas) {
+            if (f.margen && !porCultivo.has(f.siembra.cultivo_nombre)) {
+                porCultivo.set(f.siembra.cultivo_nombre, f.margen);
+            }
+        }
 
-        document.getElementById('semaforoLista').innerHTML = `<li><i class="punto punto--bien"></i>${cuenta('verde')} en verde</li>
-            <li><i class="punto punto--ajustado"></i>${cuenta('amarillo')} ajustado</li>
-            <li><i class="punto punto--alerta"></i>${cuenta('rojo')} en alerta</li>`;
+        if (porCultivo.size === 0) {
+            contenedor.innerHTML = '<p class="tarjeta-info__texto">Se muestra cuando haya siembras con el margen calculado.</p>';
+            return;
+        }
+
+        contenedor.innerHTML = [...porCultivo].map(([cultivo, m]) => {
+            const c = m.cotizacion_vigente;
+            return `
+                <div class="cotizacion-fila">
+                    <span>${escapar(cultivo)}</span>
+                    <strong>${c.moneda} ${formatoNumero(num(c.precio), 2)} / ${m.precio_neto_usd.unidad}</strong>
+                </div>
+                <p class="tarjeta-info__actualizado">${escapar(c.mercado)} · ${fechaCorta(c.fecha)}</p>`;
+        }).join('');
+    }
+
+    function dibujarClima(filas) {
+        const selectorClima = document.getElementById('selectorClima');
+        const contenido = document.getElementById('climaContenido');
+        const ubicados = filas.filter((f) => num(f.lote.lat) !== null);
+
+        if (ubicados.length === 0) {
+            selectorClima.hidden = true;
+            contenido.innerHTML = '<p class="tarjeta-info__texto">Ningún lote tiene ubicación. Ubicalos en "Editar campo".</p>';
+            return;
+        }
+
+        selectorClima.innerHTML = ubicados.map((f) => `<option value="${f.lote.id}">${escapar(f.lote.nombre)}</option>`).join('');
+        selectorClima.hidden = false;
+        selectorClima.onchange = () => {
+            pedirClima(ubicados.find((f) => String(f.lote.id) === selectorClima.value).lote);
+        };
+        pedirClima(ubicados[0].lote);
+    }
+
+    async function pedirClima(lote) {
+        const contenido = document.getElementById('climaContenido');
+        contenido.innerHTML = '<p class="tarjeta-info__texto">Cargando pronóstico...</p>';
+        const url = 'https://api.open-meteo.com/v1/forecast'
+            + `?latitude=${num(lote.lat)}&longitude=${num(lote.lng)}`
+            + '&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code'
+            + '&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max'
+            + '&timezone=America%2FArgentina%2FBuenos_Aires&forecast_days=3';
+        try {
+            const respuesta = await fetch(url);
+            if (!respuesta.ok) throw new Error();
+            const d = await respuesta.json();
+
+            const lluvias = d.daily.precipitation_probability_max;
+            const i = lluvias.indexOf(Math.max(...lluvias));
+            const dia = new Date(`${d.daily.time[i]}T12:00`).toLocaleDateString('es-AR', { weekday: 'short' });
+
+            contenido.innerHTML = `
+                <div class="clima-actual">
+                    <span class="clima-actual__temperatura">${Math.round(d.current.temperature_2m)}°</span>
+                    <div>
+                        <strong>${textoClima(d.current.weather_code)}</strong>
+                        <p>Máx ${Math.round(d.daily.temperature_2m_max[0])}° · Mín ${Math.round(d.daily.temperature_2m_min[0])}°</p>
+                    </div>
+                </div>
+                <div class="clima-datos">
+                    <div><strong>${lluvias[i]}%</strong><span>Lluvia ${dia}</span></div>
+                    <div><strong>${d.current.relative_humidity_2m}%</strong><span>Humedad</span></div>
+                    <div><strong>${Math.round(d.current.wind_speed_10m)} km/h</strong><span>Viento</span></div>
+                </div>`;
+        } catch {
+            contenido.innerHTML = '<p class="tarjeta-info__texto">No se pudo cargar el pronóstico.</p>';
+        }
     }
 });
