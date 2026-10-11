@@ -595,7 +595,11 @@ Reglas:
 
 - `Auth::login($email, $password)` valida contra `usuarios.password_hash`
   (`password_verify`), inserta un token aleatorio de 64 hex en `tokens` con
-  vencimiento (`token_ttl_horas`, default 7 dias) y lo devuelve.
+  vencimiento (`token_ttl_horas`, default 2 horas) y lo devuelve. Vencimiento
+  absoluto desde el login, calculado en UTC (no en la zona horaria de PHP) a
+  proposito: `expira_en` se compara contra `NOW()` de MySQL, que corre en UTC
+  (`time_zone=SYSTEM`) — calcularlo en otra zona horaria deja el token vencido
+  antes de terminar de crearse.
 - En cada request protegida: `Auth::usuarioActual($this->request)` resuelve el
   header `Authorization: Bearer <token>` o corta con 401.
 - `Auth::logout($request)` borra la fila del token.
@@ -630,7 +634,7 @@ DB_USERNAME=app
 DB_PASSWORD=secret
 APP_DEBUG=1
 CORS_ORIGIN=http://localhost:8082
-TOKEN_TTL_HORAS=168
+TOKEN_TTL_HORAS=2
 ```
 
 Si cambia el puerto de la API, hay que actualizar tambien la linea

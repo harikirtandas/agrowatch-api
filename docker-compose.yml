@@ -21,7 +21,7 @@ services:
       # esta API desde un navegador; una app movil no pasa por CORS y no le
       # afecta este valor. Si cambia WEB_PORT, hay que actualizar esto tambien.
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:8082}
-      TOKEN_TTL_HORAS: ${TOKEN_TTL_HORAS:-168}
+      TOKEN_TTL_HORAS: ${TOKEN_TTL_HORAS:-2}
     depends_on:
       mysql:
         condition: service_healthy

@@ -17,5 +17,9 @@ return [
     'cors_origin' => getenv('CORS_ORIGIN') ?: '*',
 
     // vida del token de sesion que emite App\Core\Auth::login(), en horas.
-    'token_ttl_horas' => (int) (getenv('TOKEN_TTL_HORAS') ?: 168), // 7 dias
+    // Vencimiento absoluto desde el login (no se extiende con el uso): a las
+    // 2hs el token deja de ser valido sin importar si hubo actividad, y la
+    // proxima request protegida corta con 401 (el cliente ya lo maneja:
+    // usuarioLogueado() en web/js/global.js hace logout + redirect a login).
+    'token_ttl_horas' => (int) (getenv('TOKEN_TTL_HORAS') ?: 2),
 ];

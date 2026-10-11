@@ -36,7 +36,13 @@ final class Auth
 
         $ttlHoras = (int) (require __DIR__ . '/../../config/app.php')['token_ttl_horas'];
         $token = bin2hex(random_bytes(32));
-        $expira = (new \DateTimeImmutable("+{$ttlHoras} hours"))->format('Y-m-d H:i:s');
+        // UTC explicito: `tokens.expira_en` se compara contra NOW() de MySQL,
+        // que corre en UTC (time_zone=SYSTEM en este docker-compose). Si se
+        // calculara con la zona horaria de PHP (America/Argentina/Buenos_Aires,
+        // UTC-3, ver php.ini) el string quedaria 3hs atras del NOW() de MySQL
+        // -- invisible con un TTL largo (dias), pero con un TTL corto (horas)
+        // el token queda vencido antes de terminar de crearse.
+        $expira = (new \DateTimeImmutable("+{$ttlHoras} hours", new \DateTimeZone('UTC')))->format('Y-m-d H:i:s');
 
         Token::crear($token, (int) $usuario['id'], $expira);
 
