@@ -165,7 +165,7 @@ Usuario demo: **`demo@demo.test` / `secret`**.
 | `PUT` | `/api/costos/{id:\d+}` | sí | reemplaza |
 | `DELETE` | `/api/costos/{id:\d+}` | sí | borra -> 204 |
 | `GET` | `/api/siembras/{id:\d+}/margen` | sí | costo total, margen y color del semáforo (no persiste nada) |
-| `POST` | `/api/sync/cotizaciones` | sí | trae dólar (y cotización de granos) de la API externa |
+| `POST` | `/api/sync/cotizaciones` | sí | trae dólar y cotización de granos de las APIs externas |
 
 Rutas literales antes que paramétricas con el mismo prefijo (ej.
 `/api/siembras/{id}/margen` antes que un eventual `/api/siembras/{id}` genérico
@@ -404,15 +404,27 @@ o si falta el `tipo_cambio` correspondiente a alguna fecha de costo en USD.
     { "tipo": "oficial", "fecha": "2026-09-21", "valor": "1052.5000" },
     { "tipo": "blue", "fecha": "2026-09-21", "valor": "1210.0000" }
   ],
-  "cotizaciones_insertadas": [],
-  "ya_existian": ["oficial 2026-09-21", "mep 2026-09-21"]
+  "cotizaciones_insertadas": [
+    { "cultivo": "soja", "fecha": "2026-10-08", "precio": "371.35", "moneda": "USD", "mercado": "pizarra_rosario" },
+    { "cultivo": "maiz", "fecha": "2026-10-08", "precio": "194.63", "moneda": "USD", "mercado": "pizarra_rosario" }
+  ],
+  "ya_existian": ["oficial 2026-09-21", "mep 2026-09-21"],
+  "fuentes_con_error": []
 }
 ```
 
-Trae `tipos_cambio` desde `https://dolarapi.com/v1/dolares` (sin API key) y,
-si la fuente de granos elegida está disponible, `cotizaciones`. Inserta solo
-lo que falta (respeta los `UNIQUE`, nunca actualiza una fila existente). Si la
-API externa no responde o corta la conexión -> `502 { "error": { "status": 502, "mensaje": "No se pudo contactar la API de cotizaciones." } }`,
+Trae `tipos_cambio` desde `https://dolarapi.com/v1/dolares` (sin API key) y
+`cotizaciones` de granos desde `https://granosar.lfcaucino.workers.dev/api/v1/pizarra`
+(API pública de granos.ar, sin API key, atribución requerida por su licencia
+de uso libre — solo cotiza soja/maíz/trigo/girasol/sorgo; el precio se toma
+en USD/tn directo, sin reconvertir). Inserta solo lo que falta (respeta los
+`UNIQUE`, nunca actualiza una fila existente).
+
+Las dos fuentes son independientes: si **una** falla, la otra igual se
+sincroniza y la respuesta sigue siendo `200`, con el nombre de la fuente
+caída en `fuentes_con_error` (`"dolarapi.com"` y/o `"granos.ar"`). Solo si
+**las dos** fallan se corta con
+`502 { "error": { "status": 502, "mensaje": "No se pudo contactar ninguna API de cotizaciones." } }`,
 sin romper el resto de la aplicación.
 
 ## El cliente JS (`web/js/api.js`) — el foco de este starter
