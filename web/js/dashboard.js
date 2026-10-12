@@ -450,10 +450,12 @@ function dibujarMercado(chips, idContenedor) {
         return;
     }
     contenedor.innerHTML = chips.map((c) => `
-        <div class="chip ${c.vencido ? 'chip--vencido' : ''}">
-            <small>${escapar(c.nombre)}</small>
-            <strong>${c.valor}${c.unidad ? ` ${c.unidad}` : ''}</strong>
-            <span class="chip__fecha">${c.vencido ? `Hace ${c.dias} días` : `al ${fechaCorta(c.fecha)}`}</span>
+        <div class="mercado__fila ${c.vencido ? 'mercado__fila--vencido' : ''}">
+            <div class="mercado__linea">
+                <span class="mercado__nombre">${escapar(c.nombre)}</span>
+                <span class="mercado__precio">${c.valor}${c.unidad ? ` ${c.unidad}` : ''}</span>
+            </div>
+            <span class="mercado__fecha">${c.vencido ? `Hace ${c.dias} días` : `al ${fechaCorta(c.fecha)}`}</span>
         </div>`).join('');
 }
 

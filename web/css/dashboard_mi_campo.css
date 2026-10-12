@@ -539,20 +539,6 @@ body {
   line-height: 1.5;
 }
 
-.cotizacion-fila {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  padding: 6px 0;
-  border-top: 1px solid var(--gris-borde);
-}
-
-.cotizacion-fila span:first-child {
-  flex: 1;
-  color: var(--gris-texto);
-}
-
 .cambio--positivo {
   color: var(--bien);
   font-size: 12px;
@@ -1010,46 +996,49 @@ body {
 
 .colchon-fila__encabezado strong { font-weight: 700; }
 
-/* Mercado (cotizaciones) */
+/* Mercado (cotizaciones), en filas */
 .mercado {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+}
+
+.mercado__fila {
+  padding: 10px 0;
+  border-top: 1px solid var(--gris-borde);
+}
+
+.mercado__fila:first-child {
+  border-top: none;
+}
+
+.mercado__linea {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
   gap: 10px;
 }
 
-.chip {
-  background: var(--verde-claro);
-  border-radius: 12px;
-  padding: 8px 12px;
-  display: flex;
-  flex-direction: column;
-  min-width: 110px;
+.mercado__nombre {
+  color: var(--gris-texto);
+  font-size: 14.5px;
+  font-weight: 700;
 }
 
-.chip small {
-  color: var(--verde-medio);
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.chip strong {
+.mercado__precio {
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
-  font-size: 15px;
-  color: var(--negro-texto);
+  white-space: nowrap;
 }
 
-.chip__fecha {
+.mercado__fecha {
+  display: block;
   font-size: 11px;
   color: var(--gris-texto);
   margin-top: 2px;
 }
 
-.chip--vencido {
-  background: #f9e1db;
-}
-
-.chip--vencido .chip__fecha {
-  color: #b03a22;
+.mercado__fila--vencido .mercado__fecha {
+  color: var(--alerta);
   font-weight: 600;
 }
 
