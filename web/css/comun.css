@@ -85,29 +85,47 @@
   padding-left: 16px;
   border-left: 1px solid rgba(255, 255, 255, 0.18);
 }
+/* Los 3 botones de crear: arrancan cuadrados (solo el ícono) y al pasar el
+   mouse se estiran a rectángulo mostrando el texto al lado. */
 .barra-superior__accion {
-  width: 42px;
   height: 42px;
-  display: grid;
-  place-items: center;
+  min-width: 42px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  overflow: hidden;
+  white-space: nowrap;
   border: none;
   border-radius: 12px;
   background: var(--verde-medio, #4f8f63);
   color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
-  transition:
-    background 0.15s,
-    transform 0.12s;
+  transition: gap 0.2s ease, background 0.15s;
 }
-.barra-superior__accion:hover {
-  background: #5fa676;
-  transform: translateY(-1px);
-}
-.barra-superior__accion svg {
-  width: 22px;
-  height: 22px;
-}
+.barra-superior__accion svg { flex: none; width: 22px; height: 22px; }
 
+/* El texto arranca "aplastado" en 0 de ancho y se despliega al hacer hover. */
+.barra-superior__accion span {
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-width 0.22s ease, opacity 0.18s ease;
+}
+.barra-superior__accion:hover,
+.barra-superior__accion:focus-visible {
+  background: #5fa676;
+  gap: 8px;
+}
+.barra-superior__accion:hover span,
+.barra-superior__accion:focus-visible span {
+  max-width: 180px;
+  opacity: 1;
+}
 /* ---------- Globito de ayuda al pasar el mouse ---------- */
 /* Cualquier elemento con class="con-tip" y data-tip="texto" muestra el texto
    debajo al pasar el cursor (y también al llegar con el teclado). */
@@ -153,7 +171,7 @@
     height: 36px;
   }
   .barra-superior__accion {
-    width: 38px;
+    min-width: 38px;
     height: 38px;
   }
 }
@@ -161,7 +179,6 @@
 @media (prefers-reduced-motion: reduce) {
   .barra-superior__icono,
   .barra-superior__accion,
-  .con-tip::after {
-    transition: none;
-  }
+  .barra-superior__accion span,
+  .con-tip::after { transition: none; }
 }

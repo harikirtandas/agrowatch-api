@@ -75,12 +75,12 @@
     </nav>
 
     <div class="barra-superior__acciones">
-      ${ACCIONES.map(
-        (a) => `
-        <button type="button" class="barra-superior__accion con-tip"
-                data-accion="${a.accion}" data-tip="${a.tip}" aria-label="${a.tip}">${svg(ICONOS[a.icono])}</button>
-      `,
-      ).join("")}
+           ${ACCIONES.map((a) => `
+        <button type="button" class="barra-superior__accion"
+                data-accion="${a.accion}" aria-label="${a.tip}">
+          ${svg(ICONOS[a.icono])}<span>${a.tip}</span>
+        </button>
+      `).join('')}
       <button type="button" class="barra-superior__icono con-tip" data-cerrar-sesion
               data-tip="Cerrar sesión" aria-label="Cerrar sesión">${svg(ICONOS.salir)}</button>
     </div>
