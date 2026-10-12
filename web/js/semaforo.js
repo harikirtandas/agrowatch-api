@@ -188,8 +188,12 @@ async function modoCampania() {
   ]);
 
   if (establecimientos.length === 0) {
-    window.location.href = 'configuracion_de_campos.html';
-    return;
+    Modales.avisoVacio({
+            texto: 'Todavía no tenés ningún campo cargado.',
+            boton: 'Crear establecimiento',
+            accion: 'establecimiento',
+        });
+        return;
   }
   const guardado = localStorage.getItem('establecimientoActual');
   const establecimiento = establecimientos.find((e) => String(e.id) === guardado) ?? establecimientos[0];

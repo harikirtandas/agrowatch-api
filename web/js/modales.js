@@ -753,5 +753,22 @@ const Modales = (() => {
         return true;
     }
 
-    return { abrir, cerrar };
+    // Franja discreta arriba del contenido, para cuando todavia no hay datos
+    // que mostrar. A diferencia de tapar la pantalla, deja ver la vista
+    // completa (vacia, con guiones) y no saca al usuario de donde estaba.
+    function avisoVacio({ texto, boton, accion }) {
+        const destino = document.querySelector('.contenido');
+        if (!destino || destino.querySelector('.aviso-vacio')) return;
+
+        const franja = document.createElement('div');
+        franja.className = 'aviso-vacio';
+        franja.innerHTML = `
+            <span class="aviso-vacio__texto">${escapar(texto)}</span>
+            <button type="button" class="boton-agro boton-agro--principal">${escapar(boton)}</button>
+        `;
+        franja.querySelector('button').addEventListener('click', () => abrir(accion));
+        destino.prepend(franja);
+    }
+
+    return { abrir, cerrar, avisoVacio };
 })();

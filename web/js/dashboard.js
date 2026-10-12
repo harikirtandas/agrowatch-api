@@ -688,8 +688,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     ]);
 
     if (establecimientos.length === 0) {
-        // Usuario que omitio el paso 2
-        window.location.href = 'configuracion_de_campos.html';
+        // Usuario que omitio el paso 2 del registro: se queda en la pantalla
+        // y crea el campo desde el modal, sin que lo saquen de donde estaba.
+        Modales.avisoVacio({
+            texto: 'Todavía no tenés ningún campo cargado.',
+            boton: 'Crear establecimiento',
+            accion: 'establecimiento',
+        });
         return;
     }
 

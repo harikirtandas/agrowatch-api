@@ -68,8 +68,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         ?? (await API.get('/establecimientos'))[0]?.id;
     }
     if (!establecimientoId) {
-      window.location.href = 'configuracion_de_campos.html';
-      return;
+      Modales.avisoVacio({
+            texto: 'Todavía no tenés ningún campo cargado.',
+            boton: 'Crear establecimiento',
+            accion: 'establecimiento',
+        });
+        return;
     }
     lotes = await API.get(`/lotes?establecimiento_id=${establecimientoId}`);
 

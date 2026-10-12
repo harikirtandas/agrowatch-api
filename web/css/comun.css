@@ -576,3 +576,26 @@
   color: var(--negro-texto, #1a1a1a);
 }
 .modal-agro__filaTitulo .campo__opcional { font-size: 12.5px; }
+
+
+/* ---- Aviso cuando todavia no hay datos ----
+   Franja discreta arriba del contenido: deja ver la pantalla completa
+   (vacia) en vez de taparla con un cartel. */
+.aviso-vacio {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  padding: 13px 18px;
+  background: var(--verde-claro, #eef2ea);
+  border: 1px solid var(--gris-borde, #e2e2dc);
+  border-left: 3px solid var(--verde-medio, #4f8f63);
+  border-radius: 10px;
+}
+.aviso-vacio__texto {
+  font-size: 14px;
+  color: var(--negro-texto, #1a1a1a);
+}
+.aviso-vacio .boton-agro { padding: 9px 15px; font-size: 13.5px; }
