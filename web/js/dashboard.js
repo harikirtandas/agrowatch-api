@@ -368,7 +368,7 @@ function dibujarBarrasDivergentes(datos, idContenedor) {
     const rango = (max - min) || 1;
     const z = ((0 - min) / rango) * 100;
 
-    contenedor.innerHTML = datos.map((d) => {
+    const barras = datos.map((d) => {
         const w = Math.abs(d.valor) / rango * 100;
         const left = d.valor >= 0 ? z : z - w;
         const color = d.clase === 'sin-dato' ? 'var(--gris-texto)' : `var(--${d.clase})`;
@@ -381,6 +381,7 @@ function dibujarBarrasDivergentes(datos, idContenedor) {
                 <span class="mbarra__valor">${fUsd(d.valor)}</span>
             </div>`;
     }).join('');
+    contenedor.innerHTML = `${barras}<p class="eje-nota">La línea vertical es el cero: a la izquierda se pierde plata.</p>`;
 }
 
 function dibujarGraficoMargen(filas, idContenedor) {
@@ -625,11 +626,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     mapa.on('click', () => { tarjeta.hidden = true;});
 
     let ultimosPuntosMapa = [];
-    document.getElementById('mapaLotes').addEventListener('toggle', (ev) => {
+    const detalleMapa = document.getElementById('mapaLotes');
+    detalleMapa.addEventListener('toggle', (ev) => {
         if (!ev.target.open) return;
         mapa.invalidateSize();
         if (ultimosPuntosMapa.length === 1) mapa.setView(ultimosPuntosMapa[0], Mapa.ZOOM_CERCA);
         else if (ultimosPuntosMapa.length > 1) mapa.fitBounds(ultimosPuntosMapa, { padding: [40, 40] });
+    });
+
+    // Mapa y Clima están plegados por separado pero se abren/cierran juntos: abrir
+    // cualquiera de las dos abre la otra (y cerrar una cierra la otra). El guard evita
+    // el loop infinito, ya que togglear ".open" por código dispara "toggle" de nuevo.
+    const detalleClima = document.getElementById('climaLotes');
+    detalleMapa.addEventListener('toggle', () => {
+        if (detalleClima.open !== detalleMapa.open) detalleClima.open = detalleMapa.open;
+    });
+    detalleClima.addEventListener('toggle', () => {
+        if (detalleMapa.open !== detalleClima.open) detalleMapa.open = detalleClima.open;
     });
 
     // Datos que no dependen del establecimiento
@@ -770,7 +783,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         ultimosPuntosMapa = puntos;
         // Si el <details> está cerrado el contenedor mide 0: ajustar la vista ahora daría
         // un zoom inválido. Se aplica recién al abrirlo (ver el listener de "toggle" arriba).
-        if (document.getElementById('mapaLotes').open) {
+        if (detalleMapa.open) {
             if (puntos.length === 1) mapa.setView(puntos[0], Mapa.ZOOM_CERCA);
             else if (puntos.length > 1) mapa.fitBounds(puntos, { padding: [40, 40] });
         }
