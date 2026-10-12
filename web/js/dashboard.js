@@ -5,7 +5,33 @@ const ESTADOS = {
     rojo: { clase: 'alerta', texto: 'Alerta'},
 };
 
-const fechaCorta = (iso) => iso.split('-').reverse().join('/')
+// Mismo umbral que CalculoMargen::UMBRAL_VERDE (src/app/Services/CalculoMargen.php).
+// No está expuesto por la API: si cambia ahí, hay que cambiarlo acá también.
+const UMBRAL_VERDE = 0.20;
+
+// Mismas 7 categorías del enum real (src/app/Schemas/costos.json), no las del boceto de referencia.
+const CATEGORIAS_COSTO = {
+    semilla: '#4f8f63',
+    fertilizante: '#e0a83c',
+    herbicida: '#d1583f',
+    maquinaria: '#1c3325',
+    labor: '#e8b84b',
+    flete: '#6c93b0',
+    otro: '#9aa0a6',
+};
+
+const COLORES_CULTIVO = ['#4f8f63', '#1c3325', '#e0a83c', '#6c93b0', '#e8b84b', '#8fae83'];
+const COLOR_SIN_SEMBRAR = '#c9cfc9';
+
+// No hay un campo de "días sin actualizar" en la API: se calcula acá contra la fecha de la cotización.
+const DIAS_COTIZACION_VIEJA = 2;
+
+const capitalizar = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+const fechaCorta = (iso) => iso.split('-').reverse().join('/');
+
+const fUsd = (v) => v === null ? '-' : `${v < 0 ? '−' : ''}US$ ${formatoNumero(Math.abs(v), 0)}`;
+const fArs = (v) => v === null ? '-' : `${v < 0 ? '−' : ''}$ ${formatoNumero(Math.abs(v), 0)}`;
+const fKg = (v) => v === null ? '-' : `${v < 0 ? '−' : ''}${formatoNumero(Math.abs(v), 0)} kg/ha`;
 
 function textoClima(codigo) {
     if (codigo === 0) return 'Despejado';
@@ -20,6 +46,471 @@ function textoClima(codigo) {
     return 'Tormenta';
 }
 
+// ---------- cálculos puros sobre una fila {lote, siembra, margen, motivo, estado} ----------
+
+// Colchón: cuánto puede bajar el rinde antes de perder plata. rinde_esperado viene en kg/ha,
+// igual que rinde_indiferencia_kg_ha (confirmado en SiembraController::margen() y el comentario
+// de CalculoMargen.php) — no se convierte a qq/ha como en el boceto de referencia.
+function colchonKgHa(fila) {
+    if (!fila.margen || fila.siembra?.rinde_esperado == null) return null;
+    return num(fila.siembra.rinde_esperado) - num(fila.margen.rinde_indiferencia_kg_ha);
+}
+
+function margenUsdPorHa(fila) {
+    if (!fila.margen) return null;
+    const ha = num(fila.margen.ha_sembradas);
+    return ha > 0 ? num(fila.margen.margen_bruto_usd) / ha : null;
+}
+
+// rojo primero, después amarillo, verde, y sin datos al final.
+function severidad(fila) {
+    if (fila.estado === 'rojo') return 0;
+    if (fila.estado === 'amarillo') return 1;
+    if (fila.estado === 'verde') return 2;
+    return 3;
+}
+
+function filasOrdenadas(filas) {
+    return [...filas].sort((a, b) => {
+        const diferencia = severidad(a) - severidad(b);
+        if (diferencia !== 0) return diferencia;
+        const pa = a.margen ? (num(a.margen.margen_pct) ?? -Infinity) : -Infinity;
+        const pb = b.margen ? (num(b.margen.margen_pct) ?? -Infinity) : -Infinity;
+        return pa - pb;
+    });
+}
+
+// Misma lógica de 3 ramas que CalculoMargen::semaforo().
+function semaforoDeMargen(margen, ingreso) {
+    if (margen <= 0) return 'rojo';
+    if (ingreso > 0 && margen >= UMBRAL_VERDE * ingreso) return 'verde';
+    return 'amarillo';
+}
+
+function resumenAgregado(filas) {
+    const conSiembra = filas.filter((f) => f.siembra);
+    const conMargen = filas.filter((f) => f.margen);
+    const lotesEnAlerta = filas.filter((f) => f.estado === 'rojo');
+
+    const hectareas = filas.reduce((total, f) => total + num(f.lote.ha_totales), 0);
+    const haSembradas = conSiembra.reduce((total, f) => total + num(f.siembra.ha_sembradas), 0);
+
+    // Margen por hectárea PONDERADO: total de margen ÷ total de hectáreas sembradas (solo
+    // las siembras con margen calculado) — un promedio simple pesaría igual un lote de 10 ha
+    // que uno de 500.
+    const haSembradasConMargen = conMargen.reduce((total, f) => total + num(f.margen.ha_sembradas), 0);
+    const margenTotalUsdRaw = conMargen.reduce((total, f) => total + num(f.margen.margen_bruto_usd), 0);
+    const margenTotalUsd = conMargen.length > 0 ? margenTotalUsdRaw : null;
+    const margenHaUsd = haSembradasConMargen > 0 ? margenTotalUsdRaw / haSembradasConMargen : null;
+
+    const ingresoTotalUsd = conMargen.reduce((total, f) => total + num(f.margen.ingreso_esperado_usd), 0);
+    const margenPctGlobal = ingresoTotalUsd > 0 ? margenTotalUsdRaw / ingresoTotalUsd : null;
+    const estadoGlobal = conMargen.length === 0 ? null : semaforoDeMargen(margenTotalUsdRaw, ingresoTotalUsd);
+
+    return { filas, conSiembra, lotesEnAlerta, hectareas, haSembradas, margenTotalUsd, margenHaUsd, margenPctGlobal, estadoGlobal };
+}
+
+function agregarCostosPorCategoria(filas) {
+    const totales = {};
+    let haSembradasTotal = 0;
+    for (const f of filas) {
+        if (!f.margen) continue;
+        haSembradasTotal += num(f.margen.ha_sembradas);
+        for (const linea of f.margen.detalle_costos) {
+            totales[linea.categoria] = (totales[linea.categoria] ?? 0) + num(linea.importe_usd);
+        }
+    }
+    const categorias = Object.keys(totales);
+    if (categorias.length === 0) return [];
+    const totalGeneral = categorias.reduce((t, c) => t + totales[c], 0);
+    return categorias
+        .map((categoria) => ({
+            categoria,
+            nombre: capitalizar(categoria),
+            color: CATEGORIAS_COSTO[categoria] ?? '#9aa0a6',
+            usdHa: haSembradasTotal > 0 ? totales[categoria] / haSembradasTotal : 0,
+            porcentaje: totalGeneral > 0 ? Math.round((totales[categoria] / totalGeneral) * 100) : 0,
+        }))
+        .sort((a, b) => b.usdHa - a.usdHa);
+}
+
+function agregarSuperficiePorCultivo(filas) {
+    const porCultivo = new Map();
+    let sinSembrar = 0;
+    for (const f of filas) {
+        if (f.siembra) {
+            const nombre = f.siembra.cultivo_nombre;
+            porCultivo.set(nombre, (porCultivo.get(nombre) ?? 0) + num(f.siembra.ha_sembradas));
+        } else {
+            sinSembrar += num(f.lote.ha_totales);
+        }
+    }
+    const items = [...porCultivo].map(([nombre, ha], i) => ({ nombre, ha, color: COLORES_CULTIVO[i % COLORES_CULTIVO.length] }));
+    if (sinSembrar > 0) items.push({ nombre: 'Sin sembrar', ha: sinSembrar, color: COLOR_SIN_SEMBRAR });
+    return items;
+}
+
+// No hay GET /cotizaciones: se toma la cotización vigente de la primera siembra de cada cultivo
+// que ya trajo su margen (mismo patrón que usaba dibujarCotizaciones).
+function agregarMercado(filas) {
+    const porCultivo = new Map();
+    let tipoCambio = null;
+    for (const f of filas) {
+        if (!f.margen) continue;
+        if (!porCultivo.has(f.siembra.cultivo_nombre)) {
+            porCultivo.set(f.siembra.cultivo_nombre, { ...f.margen.cotizacion_vigente, unidad: f.margen.precio_neto_usd.unidad });
+        }
+        if (!tipoCambio) tipoCambio = f.margen.tipo_cambio_usado;
+    }
+
+    const hoy = new Date();
+    const diasDesde = (iso) => Math.floor((hoy - new Date(iso)) / 86400000);
+
+    const chips = [...porCultivo].map(([nombre, c]) => ({
+        nombre,
+        valor: `${c.moneda} ${formatoNumero(num(c.precio), 2)}`,
+        unidad: `/ ${c.unidad}`,
+        fecha: c.fecha,
+        dias: diasDesde(c.fecha),
+        vencido: diasDesde(c.fecha) > DIAS_COTIZACION_VIEJA,
+    }));
+    if (tipoCambio) {
+        chips.push({
+            nombre: 'Dólar oficial',
+            valor: `$ ${formatoNumero(num(tipoCambio.valor), 2)}`,
+            unidad: '',
+            fecha: tipoCambio.fecha,
+            dias: diasDesde(tipoCambio.fecha),
+            vencido: diasDesde(tipoCambio.fecha) > DIAS_COTIZACION_VIEJA,
+        });
+    }
+    return chips;
+}
+
+// ---------- simulador de precio: recalcula ingreso/margen/semáforo sin tocar el backend ----------
+// El ingreso es lineal en el precio (la retención hoy siempre es 0), así que alcanza con escalarlo.
+
+function recalcularFilaConDelta(fila, delta) {
+    if (!fila.margen) return null;
+    const m = fila.margen;
+    const factor = m.precio_neto_usd.unidad === 'tn' ? 1000 : 100;
+    const precioNetoNuevo = num(m.precio_neto_usd.por_unidad) * (1 + delta);
+    const ingresoNuevo = num(m.ingreso_esperado_usd) * (1 + delta);
+    const costoTotal = num(m.costo_total_usd);
+    const costoHa = num(m.costo_por_ha_usd);
+    const margenNuevo = ingresoNuevo - costoTotal;
+    const margenPctNuevo = ingresoNuevo > 0 ? margenNuevo / ingresoNuevo : null;
+    const rindeIndifNuevo = precioNetoNuevo > 0 ? (costoHa / precioNetoNuevo) * factor : null;
+    const colchonNuevo = (fila.siembra?.rinde_esperado != null && rindeIndifNuevo !== null)
+        ? num(fila.siembra.rinde_esperado) - rindeIndifNuevo
+        : null;
+
+    return {
+        ingresoNuevo,
+        costoTotal,
+        margenNuevo,
+        margenPctNuevo,
+        rindeIndifNuevo,
+        colchonNuevo,
+        estado: semaforoDeMargen(margenNuevo, ingresoNuevo),
+        haSembradas: num(m.ha_sembradas),
+    };
+}
+
+function recalcularTodoConDelta(filas, delta) {
+    return filas.map((fila) => ({ fila, sim: recalcularFilaConDelta(fila, delta) }));
+}
+
+function agregarSimulado(filasSimuladas) {
+    const conSim = filasSimuladas.filter((x) => x.sim);
+    const ingresoTotal = conSim.reduce((t, x) => t + x.sim.ingresoNuevo, 0);
+    const costoTotal = conSim.reduce((t, x) => t + x.sim.costoTotal, 0);
+    // Ingreso base (delta=0), tomado directo de la fila original, para un breakeven que no dependa del slider actual.
+    const ingresoBaseTotal = conSim.reduce((t, x) => t + num(x.fila.margen.ingreso_esperado_usd), 0);
+    const margenTotal = ingresoTotal - costoTotal;
+    const margenPct = ingresoTotal > 0 ? margenTotal / ingresoTotal : null;
+    const haSembradas = conSim.reduce((t, x) => t + x.sim.haSembradas, 0);
+    const estado = conSim.length === 0 ? null : semaforoDeMargen(margenTotal, ingresoTotal);
+    const breakevenPct = ingresoBaseTotal > 0 ? (costoTotal / ingresoBaseTotal - 1) * 100 : null;
+
+    return { ingresoTotal, costoTotal, margenTotal, margenPct, haSembradas, estado, breakevenPct };
+}
+
+function fraseSemaforo(pct) {
+    if (pct === null) return 'Todavía no hay margen calculado para mostrar un porcentaje.';
+    const entero = Math.round(pct * 100);
+    return entero >= 0
+        ? `De cada 100 US$ que entran, ${entero} quedan de margen.`
+        : 'El campo está perdiendo plata: el costo supera al ingreso.';
+}
+
+// ---------- piezas de render que sólo necesitan un id de contenedor ----------
+
+// Mismo velocímetro SVG que semaforo.html (ángulo de aguja y arcos de color), para el
+// semáforo agregado del campo — ocupa el lugar donde antes estaba el mapa.
+const CORTE_GAUGE = 25.7;
+function anguloAguja(pct) {
+    const p = Math.max(-1, Math.min(1, pct));
+    if (p <= 0) return -90 + (p + 1) * (90 - CORTE_GAUGE);
+    if (p < 0.2) return -CORTE_GAUGE + (p / 0.2) * (2 * CORTE_GAUGE);
+    return CORTE_GAUGE + ((p - 0.2) / 0.8) * (90 - CORTE_GAUGE);
+}
+
+function dibujarGaugeSemaforo(idContenedor, estado, pct) {
+    const angulo = anguloAguja(pct ?? -1);
+    const clase = estado ? ESTADOS[estado].clase : 'sin-dato';
+    const texto = estado ? ESTADOS[estado].texto : 'Sin datos';
+    document.getElementById(idContenedor).innerHTML = `
+        <svg viewBox="0 0 220 130" class="semaforo-gauge__svg">
+            <path d="M 20 110 A 90 90 0 0 1 70 27" fill="none" stroke="#d1583f" stroke-width="18" stroke-linecap="round"/>
+            <path d="M 70 27 A 90 90 0 0 1 150 27" fill="none" stroke="#e0a83c" stroke-width="18" stroke-linecap="round"/>
+            <path d="M 150 27 A 90 90 0 0 1 200 110" fill="none" stroke="#4f9d63" stroke-width="18" stroke-linecap="round"/>
+            <g transform="rotate(${angulo} 110 110)">
+                <line x1="110" y1="110" x2="110" y2="34" stroke="#1a1a1a" stroke-width="4" stroke-linecap="round"/>
+            </g>
+            <circle cx="110" cy="110" r="7" fill="#1a1a1a"/>
+        </svg>
+        <strong class="semaforo-gauge__valor">${pct === null ? '-' : `${formatoNumero(pct * 100, 1)}%`}</strong>
+        <span class="semaforo-gauge__etiqueta">Rentabilidad proyectada</span>
+        <p class="semaforo-gauge__estado semaforo-gauge__estado--${clase}">${escapar(texto)}</p>`;
+}
+
+function dibujarCirculoSemaforo(idContenedor, estado, pct, frase, meta) {
+    const clase = estado ? ESTADOS[estado].clase : 'sin-dato';
+    const texto = estado ? ESTADOS[estado].texto : 'Sin datos';
+    const icono = estado === 'rojo' ? '✕' : estado === 'amarillo' ? '!' : estado === 'verde' ? '✓' : '—';
+    const pctTexto = pct === null ? '' : `<small>${Math.round(pct * 100)}%</small>`;
+    document.getElementById(idContenedor).innerHTML = `
+        <div class="sema">
+            <div class="sema__luz sema__luz--${clase}" aria-hidden="true">${icono}</div>
+            <div class="sema__texto">
+                <div class="sema__estado">${escapar(texto)} ${pctTexto}</div>
+                <p class="sema__frase">${escapar(frase)}</p>
+                ${meta ? `<p class="sema__meta">${escapar(meta)}</p>` : ''}
+            </div>
+        </div>`;
+}
+
+// "Campaña X · cotización al DD/MM, dólar al DD/MM" — contexto de qué datos usa el margen.
+function metaSemaforo(campania, mercado) {
+    const partes = [];
+    if (campania) partes.push(`Campaña ${campania.nombre}`);
+
+    const cultivos = mercado.filter((m) => m.nombre !== 'Dólar oficial');
+    const dolar = mercado.find((m) => m.nombre === 'Dólar oficial');
+    const sub = [];
+    if (cultivos.length > 0) {
+        const masReciente = cultivos.reduce((a, b) => (a.fecha > b.fecha ? a : b));
+        sub.push(`cotización al ${fechaCorta(masReciente.fecha)}`);
+    }
+    if (dolar) sub.push(`dólar al ${fechaCorta(dolar.fecha)}`);
+    if (sub.length > 0) partes.push(sub.join(', '));
+
+    return partes.join(' · ');
+}
+
+function dibujarBala(rindeEsperado, rindeEquilibrio, clase) {
+    if (rindeEsperado == null || rindeEquilibrio == null) {
+        return '<p class="bala__texto">Sin datos de rinde para mostrar la barra.</p>';
+    }
+    const max = Math.max(rindeEsperado, rindeEquilibrio, 1) * 1.15;
+    const color = clase === 'sin-dato' ? 'var(--gris-texto)' : `var(--${clase})`;
+    return `<div class="bala__pista" role="img" aria-label="Rinde esperado ${formatoNumero(rindeEsperado, 0)}, equilibrio ${formatoNumero(rindeEquilibrio, 0)} kg por hectárea">
+            <i class="bala__relleno" style="width:${(rindeEsperado / max * 100).toFixed(1)}%;background:${color}"></i>
+            <b class="bala__marca" style="left:calc(${(rindeEquilibrio / max * 100).toFixed(1)}% - 1px)"></b>
+        </div>
+        <p class="bala__texto">Barra: rinde esperado. Marca negra: rinde de equilibrio.</p>`;
+}
+
+function dibujarBarrasDivergentes(datos, idContenedor) {
+    const contenedor = document.getElementById(idContenedor);
+    if (datos.length === 0) {
+        contenedor.innerHTML = '<p class="grafico-vacio">Todavía no hay datos para mostrar.</p>';
+        return;
+    }
+    const min = Math.min(0, ...datos.map((d) => d.valor));
+    const max = Math.max(0, ...datos.map((d) => d.valor));
+    const rango = (max - min) || 1;
+    const z = ((0 - min) / rango) * 100;
+
+    contenedor.innerHTML = datos.map((d) => {
+        const w = Math.abs(d.valor) / rango * 100;
+        const left = d.valor >= 0 ? z : z - w;
+        const color = d.clase === 'sin-dato' ? 'var(--gris-texto)' : `var(--${d.clase})`;
+        return `<div class="mbarra">
+                <span class="mbarra__nombre">${escapar(d.nombre)}</span>
+                <div class="mbarra__pista">
+                    <i class="mbarra__eje" style="left:${z.toFixed(2)}%"></i>
+                    <i class="mbarra__barra" style="left:${left.toFixed(2)}%;width:${w.toFixed(2)}%;background:${color}"></i>
+                </div>
+                <span class="mbarra__valor">${fUsd(d.valor)}</span>
+            </div>`;
+    }).join('');
+}
+
+function dibujarGraficoMargen(filas, idContenedor) {
+    const datos = filasOrdenadas(filas)
+        .filter((f) => f.margen)
+        .map((f) => ({ nombre: `${f.lote.nombre} — ${f.siembra.cultivo_nombre}`, valor: margenUsdPorHa(f), clase: ESTADOS[f.estado]?.clase ?? 'sin-dato' }))
+        .filter((d) => d.valor !== null);
+    dibujarBarrasDivergentes(datos, idContenedor);
+}
+
+function dibujarGraficoMargenSimulado(filasSimuladas, idContenedor) {
+    const datos = filasSimuladas
+        .filter((x) => x.sim && x.fila.siembra)
+        .map(({ fila, sim }) => ({
+            nombre: `${fila.lote.nombre} — ${fila.siembra.cultivo_nombre}`,
+            valor: sim.haSembradas > 0 ? sim.margenNuevo / sim.haSembradas : null,
+            clase: ESTADOS[sim.estado]?.clase ?? 'sin-dato',
+        }))
+        .filter((d) => d.valor !== null);
+    dibujarBarrasDivergentes(datos, idContenedor);
+}
+
+function dibujarGraficoCostos(costos, idContenedor) {
+    const contenedor = document.getElementById(idContenedor);
+    if (costos.length === 0) {
+        contenedor.innerHTML = '<p class="grafico-vacio">Todavía no hay costos cargados.</p>';
+        return;
+    }
+    const barra = costos.map((c) => `<i style="flex:${Math.max(c.porcentaje, 1)};background:${c.color}" title="${escapar(c.nombre)}"></i>`).join('');
+    const leyenda = costos.map((c) => `<div class="leyenda__fila"><i style="background:${c.color}"></i><span>${escapar(c.nombre)}</span><span>${fUsd(c.usdHa)}/ha</span><span>${c.porcentaje}%</span></div>`).join('');
+    contenedor.innerHTML = `<div class="apilada" role="img" aria-label="Distribución de costos">${barra}</div><div class="leyenda">${leyenda}</div>`;
+}
+
+function dibujarGraficoSuperficie(items, idContenedor) {
+    const contenedor = document.getElementById(idContenedor);
+    if (items.length === 0) {
+        contenedor.innerHTML = '<p class="grafico-vacio">Todavía no hay siembras para mostrar.</p>';
+        return;
+    }
+    const total = items.reduce((t, i) => t + i.ha, 0);
+    let desde = 0;
+    const tramos = items.map((it) => {
+        const hasta = desde + (it.ha / total) * 360;
+        const tramo = `${it.color} ${desde.toFixed(2)}deg ${hasta.toFixed(2)}deg`;
+        desde = hasta;
+        return tramo;
+    }).join(', ');
+    const leyenda = items.map((it) => `<div class="leyenda__fila"><i style="background:${it.color}"></i><span>${escapar(it.nombre)}</span><span>${formatoNumero(it.ha, 0)} ha</span><span>${Math.round(it.ha / total * 100)}%</span></div>`).join('');
+    contenedor.innerHTML = `<div class="dona-grande">
+            <div class="dona-grande__circulo" style="background:conic-gradient(${tramos})"></div>
+            <div class="leyenda">${leyenda}</div>
+        </div>`;
+}
+
+function dibujarMercado(chips, idContenedor) {
+    const contenedor = document.getElementById(idContenedor);
+    if (chips.length === 0) {
+        contenedor.innerHTML = '<p class="tarjeta-info__texto">Se muestra cuando haya siembras con el margen calculado.</p>';
+        return;
+    }
+    contenedor.innerHTML = chips.map((c) => `
+        <div class="chip ${c.vencido ? 'chip--vencido' : ''}">
+            <small>${escapar(c.nombre)}</small>
+            <strong>${c.valor}${c.unidad ? ` ${c.unidad}` : ''}</strong>
+            <span class="chip__fecha">${c.vencido ? `Hace ${c.dias} días` : `al ${fechaCorta(c.fecha)}`}</span>
+        </div>`).join('');
+}
+
+function dibujarGraficoColchon(filasSimuladas, idContenedor) {
+    const contenedor = document.getElementById(idContenedor);
+    const datos = filasSimuladas.filter((x) => x.sim && x.fila.siembra);
+    if (datos.length === 0) {
+        contenedor.innerHTML = '<p class="grafico-vacio">Todavía no hay datos para mostrar.</p>';
+        return;
+    }
+    contenedor.innerHTML = datos.map(({ fila, sim }) => {
+        const rindeEsperado = num(fila.siembra.rinde_esperado);
+        const clase = ESTADOS[sim.estado]?.clase ?? 'sin-dato';
+        return `<div class="colchon-fila">
+                <div class="colchon-fila__encabezado">
+                    <strong>${escapar(fila.lote.nombre)} — ${escapar(fila.siembra.cultivo_nombre)}</strong>
+                    <span>colchón ${fKg(sim.colchonNuevo)}</span>
+                </div>
+                ${dibujarBala(rindeEsperado, sim.rindeIndifNuevo, clase)}
+            </div>`;
+    }).join('');
+}
+
+function dibujarResumenTiles(agg) {
+    document.getElementById('resumenSembradasHa').textContent = formatoNumero(agg.haSembradas, 1);
+    document.getElementById('resumenSembradasTotal').textContent = `de ${formatoNumero(agg.hectareas, 1)} ha`;
+
+    document.getElementById('resumenMargenBruto').textContent = agg.margenTotalUsd === null ? '-' : fUsd(agg.margenTotalUsd);
+    document.getElementById('resumenMargenHa').textContent =
+        agg.margenHaUsd === null ? '' : `${fUsd(agg.margenHaUsd)} por ha sembrada`;
+
+    document.getElementById('resumenAlerta').textContent = `${agg.lotesEnAlerta.length} de ${agg.filas.length}`;
+    document.getElementById('resumenAlertaDetalle').textContent =
+        agg.lotesEnAlerta.map((f) => f.lote.nombre).join(', ');
+}
+
+function dibujarListaLotes(filas, urlEditar) {
+    const lista = document.getElementById('listaLotes');
+    if (filas.length === 0) {
+        lista.innerHTML = `<p>Este establecimiento todavía no tiene lotes. <a href="${urlEditar}">Agregar lotes</a></p>`;
+        return;
+    }
+
+    lista.innerHTML = filasOrdenadas(filas).map((fila, i) => {
+        const { lote, siembra, margen, motivo, estado } = fila;
+        const destino = siembra ? `semaforo.html?siembra=${siembra.id}` : `datos_de_siembra.html?lote=${lote.id}`;
+        const titulo = siembra ? `${lote.nombre} — ${siembra.cultivo_nombre}` : `${lote.nombre} — sin siembra`;
+        const ha = `${formatoNumero(num(lote.ha_totales), 1)} ha`;
+        const clase = ESTADOS[estado]?.clase ?? 'sin-dato';
+        const textoPill = ESTADOS[estado]?.texto ?? (siembra ? 'Sin datos' : 'Sin siembra');
+
+        const metricas = margen
+            ? `<div><small>Margen</small><strong>${fUsd(margenUsdPorHa(fila))}/ha</strong></div>
+               <div><small>Colchón</small><strong>${fKg(colchonKgHa(fila))}</strong></div>`
+            : `<div><small>Estado</small><strong>${escapar(motivo ?? (siembra ? 'Sin datos' : 'Sin siembra'))}</strong></div>`;
+
+        const boton = margen
+            ? `<button type="button" class="lote__boton" data-detalle="${i}" aria-expanded="false">Ver detalle</button>`
+            : `<a href="${destino}" class="lote__boton">${siembra ? 'Ver detalle' : 'Cargar siembra'}</a>`;
+
+        const detalle = margen ? `
+            <div class="lote__detalle" id="detalleLote${i}" hidden>
+                <div><small>Margen total del lote</small><strong>${fArs(num(margen.margen_bruto_ars))}</strong></div>
+                <div><small>Rinde esperado</small><strong>${formatoNumero(num(siembra.rinde_esperado), 0)} kg/ha</strong></div>
+                <div><small>Rinde de equilibrio</small><strong>${formatoNumero(num(margen.rinde_indiferencia_kg_ha), 0)} kg/ha</strong></div>
+                <div class="lote__detalle--ancho">${dibujarBala(num(siembra.rinde_esperado), num(margen.rinde_indiferencia_kg_ha), clase)}</div>
+                <div class="lote__detalle--ancho"><a href="${destino}" class="lote__boton">Abrir lote completo</a></div>
+            </div>` : '';
+
+        return `<div class="lote__fila">
+                <span class="pill pill--${clase}"><i class="punto punto--${clase}"></i>${escapar(textoPill)}</span>
+                <span class="lote__nombre"><strong>${escapar(titulo)}</strong><span>${ha}</span></span>
+                <span class="lote__metricas">${metricas}</span>
+                ${boton}
+            </div>${detalle}`;
+    }).join('');
+}
+
+function dibujarResultadoSimulado(agg, delta) {
+    document.getElementById('simuladorSalida').textContent =
+        delta === 0 ? 'Sin cambios en el precio' : `${delta > 0 ? '+' : ''}${Math.round(delta * 100)}% sobre el precio actual`;
+
+    document.getElementById('simuladorResultado').innerHTML = `
+        <div><small>Margen bruto</small><strong>${fUsd(agg.margenTotal)}</strong></div>
+        <div><small>Margen por ha sembrada</small><strong>${fUsd(agg.haSembradas > 0 ? agg.margenTotal / agg.haSembradas : null)}/ha</strong></div>
+        <div><small>Ingreso total</small><strong>${fUsd(agg.ingresoTotal)}</strong></div>`;
+
+    const eq = document.getElementById('simuladorEquilibrio');
+    if (agg.breakevenPct === null) {
+        eq.textContent = 'Todavía no hay datos suficientes para calcular el punto de equilibrio.';
+        eq.className = 'simulador__equilibrio pill--sin-dato';
+    } else if (agg.margenTotal >= 0) {
+        eq.textContent = `El campo aguanta una baja de hasta ${Math.abs(Math.round(agg.breakevenPct))}% en el precio antes de perder plata.`;
+        eq.className = 'simulador__equilibrio pill--bien';
+    } else {
+        eq.textContent = `Estás por debajo del punto de equilibrio, que está en una baja de ${Math.abs(Math.round(agg.breakevenPct))}% respecto del precio actual.`;
+        eq.className = 'simulador__equilibrio pill--alerta';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     const usuario = await usuarioLogueado();
     if (!usuario) return;
@@ -31,11 +522,51 @@ document.addEventListener('DOMContentLoaded', async () => {
     const hoy = new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long'});
     document.querySelector('.encabezado-panel__fecha').textContent =  `${hoy.charAt(0).toUpperCase()}${hoy.slice(1)} — así está tu campo hoy`;
 
-    // Mapa
+    // Pestañas
+    const panelComoVoy = document.getElementById('panelComoVoy');
+    const panelSimulador = document.getElementById('panelSimulador');
+    document.querySelectorAll('.panel-tabs__boton').forEach((boton) => {
+        boton.addEventListener('click', () => {
+            const activo = boton.dataset.tab === 'comoVoy';
+            panelComoVoy.hidden = !activo;
+            panelSimulador.hidden = activo;
+            document.querySelectorAll('.panel-tabs__boton').forEach((b) => {
+                b.classList.toggle('panel-tabs__boton--activo', b === boton);
+                b.setAttribute('aria-selected', String(b === boton));
+            });
+        });
+    });
+
+    // Un solo listener delegado para expandir/ocultar el detalle de un lote (no se reatacha en cada render).
+    document.getElementById('listaLotes').addEventListener('click', (ev) => {
+        const boton = ev.target.closest('[data-detalle]');
+        if (!boton) return;
+        const panel = document.getElementById(`detalleLote${boton.dataset.detalle}`);
+        const abierto = panel.hidden;
+        panel.hidden = !abierto;
+        boton.textContent = abierto ? 'Ocultar detalle' : 'Ver detalle';
+        boton.setAttribute('aria-expanded', String(abierto));
+    });
+
+    // Slider del simulador
+    const slider = document.getElementById('simuladorPrecio');
+    slider.addEventListener('input', () => aplicarSimulador(Number(slider.value) / 100));
+
+    // Mapa: va dentro de un <details> plegado por defecto. Leaflet no mide bien un
+    // contenedor oculto (display:none), así que al abrirlo hay que invalidar el tamaño
+    // y volver a aplicar la vista con los últimos puntos dibujados.
     const mapa = Mapa.crearMapa('mapaLeaflet');
     const capaLotes = L.layerGroup().addTo(mapa);
     const tarjeta = document.getElementById('tarjetaFlotante');
     mapa.on('click', () => { tarjeta.hidden = true;});
+
+    let ultimosPuntosMapa = [];
+    document.getElementById('mapaLotes').addEventListener('toggle', (ev) => {
+        if (!ev.target.open) return;
+        mapa.invalidateSize();
+        if (ultimosPuntosMapa.length === 1) mapa.setView(ultimosPuntosMapa[0], Mapa.ZOOM_CERCA);
+        else if (ultimosPuntosMapa.length > 1) mapa.fitBounds(ultimosPuntosMapa, { padding: [40, 40] });
+    });
 
     // Datos que no dependen del establecimiento
     const [establecimientos, campanias] = await Promise.all([
@@ -58,7 +589,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     selector.innerHTML = establecimientos
         .map((e) => `<option value="${e.id}">🏡 ${escapar(e.nombre)}</option>`)
         .join('');
-    
+
     const guardado = localStorage.getItem('establecimientoActual');
     selector.value = establecimientos.some((e) => String(e.id) === guardado) ? guardado : String(establecimientos[0].id);
 
@@ -72,6 +603,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const rindeQq = (margen) => (margen ? num(margen.rinde_indiferencia_kg_ha) / 100 : null );
 
     let cargaActual = 0;
+    let filasActuales = [];
 
     // Trae el dólar del día de dolarapi.com (una vez por día). Si falla, se sigue con el último guardado.
     const hoyIso = new Date().toISOString().slice(0, 10);
@@ -87,7 +619,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function cargarEstablecimiento(id) {
         const estaCarga = ++cargaActual;
         tarjeta.hidden = true;
-        
+        slider.value = 0;
+
         const urlEditar = `configuracion_de_campos.html?establecimiento=${id}`;
         document.getElementById('editarEstablecimiento').href = urlEditar;
 
@@ -98,7 +631,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         ]);
 
         // Margen de cada lote con siembra, si falla el lote se ve gris y se guarda el motivo para mostrarlo al usuario.
-        const filas = await Promise.all(lotes.map(async (lote) => {
+        filasActuales = await Promise.all(lotes.map(async (lote) => {
             const siembra = siembras.find((s) => Number(s.lote_id) === Number(lote.id)) ?? null;
             let margen = null;
             let motivo = null;
@@ -114,13 +647,36 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (estaCarga !== cargaActual) return;
 
-        dibujarMapa(filas, establecimiento);
-        dibujarLista(filas, urlEditar);
-        dibujarResumen(filas);
-        dibujarCotizaciones(filas);
-        dibujarClima(filas);
+        dibujarMapa(filasActuales, establecimiento);
+        dibujarClima(filasActuales, establecimiento);
+
+        const agg = resumenAgregado(filasActuales);
+        const mercado = agregarMercado(filasActuales);
+        dibujarResumenTiles(agg);
+        dibujarCirculoSemaforo('circuloSemaforo', agg.estadoGlobal, agg.margenPctGlobal, fraseSemaforo(agg.margenPctGlobal), metaSemaforo(campania, mercado));
+        dibujarGaugeSemaforo('gaugeSemaforo', agg.estadoGlobal, agg.margenPctGlobal);
+        dibujarMercado(mercado, 'mercado1');
+        dibujarListaLotes(filasActuales, urlEditar);
+        dibujarGraficoMargen(filasActuales, 'graficoMargenReal');
+
+        const costos = agregarCostosPorCategoria(filasActuales);
+        dibujarGraficoCostos(costos, 'graficoCostos1');
+        dibujarGraficoCostos(costos, 'graficoCostos2');
+
+        const superficie = agregarSuperficiePorCultivo(filasActuales);
+        dibujarGraficoSuperficie(superficie, 'graficoSuperficie1');
+
+        aplicarSimulador(0);
     }
 
+    function aplicarSimulador(delta) {
+        const simuladas = recalcularTodoConDelta(filasActuales, delta);
+        const agg = agregarSimulado(simuladas);
+        dibujarCirculoSemaforo('circuloSemaforoSim', agg.estado, agg.margenPct, fraseSemaforo(agg.margenPct));
+        dibujarResultadoSimulado(agg, delta);
+        dibujarGraficoColchon(simuladas, 'graficoColchon');
+        dibujarGraficoMargenSimulado(simuladas, 'graficoMargenSim');
+    }
 
     function dibujarMapa(filas, establecimiento) {
         capaLotes.clearLayers();
@@ -143,8 +699,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         // se va a usar cuando establecimiento guarde lat/lng
         if (num(establecimiento.lat) !== null) puntos.push([num(establecimiento.lat), num(establecimiento.lng)]);
 
-        if (puntos.length === 1) mapa.setView(puntos[0], Mapa.ZOOM_CERCA);
-        else if (puntos.length > 1) mapa.fitBounds(puntos, { padding: [40, 40] });
+        ultimosPuntosMapa = puntos;
+        // Si el <details> está cerrado el contenedor mide 0: ajustar la vista ahora daría
+        // un zoom inválido. Se aplica recién al abrirlo (ver el listener de "toggle" arriba).
+        if (document.getElementById('mapaLotes').open) {
+            if (puntos.length === 1) mapa.setView(puntos[0], Mapa.ZOOM_CERCA);
+            else if (puntos.length > 1) mapa.fitBounds(puntos, { padding: [40, 40] });
+        }
     }
 
     function mostrarTarjeta({ lote, siembra, margen, motivo, estado}) {
@@ -155,135 +716,37 @@ document.addEventListener('DOMContentLoaded', async () => {
         tarjeta.hidden = false;
     }
 
-    function dibujarLista(filas, urlEditar) {
-        const lista = document.getElementById('listaLotes');
-        if (filas.length === 0) {
-            lista.innerHTML = `<p>Este establecimiento todavía no tiene lotes. <a href="${urlEditar}">Agregar lotes</a></p>`;
-            return;
+    // El clima es uno solo por establecimiento: los lotes de un mismo campo comparten
+    // la misma zona geográfica, así que no tiene sentido pedirlo lote por lote. Se usa
+    // la ubicación del establecimiento si la tiene, y si no, el promedio de sus lotes
+    // ubicados (un centro aproximado del campo).
+    function ubicacionEstablecimiento(filas, establecimiento) {
+        if (num(establecimiento.lat) !== null) {
+            return { lat: num(establecimiento.lat), lng: num(establecimiento.lng) };
         }
-
-        lista.innerHTML = filas.map(({ lote, siembra, margen, motivo, estado}) => {
-            // con siembra va a semaforo, sin a cargarla.
-            const destino = siembra ? `semaforo.html?siembra=${siembra.id}` : `datos_de_siembra.html?lote=${lote.id}`;
-            const titulo = siembra ? `${lote.nombre} — ${siembra.cultivo_nombre}` : `${lote.nombre} — sin siembra`;
-            
-            const ha = `${formatoNumero(num(lote.ha_totales), 1)} ha`;
-            const detalle = margen ? `${ha} · ${formatoNumero(rindeQq(margen), 1)} qq/ha` : (motivo ? `${ha} · ${motivo}` : ha);
-            const clasePunto = ESTADOS[estado] ? `punto--${ESTADOS[estado].clase}` : 'punto--sin-dato';
-
-            return `<a href="${destino}" class="tarjeta-lote" data-lote="${lote.id}">
-                <i class="punto ${clasePunto}"></i>
-                <span class="tarjeta-lote__texto">
-                    <strong>${escapar(titulo)}</strong>
-                    <span>${escapar(detalle)}</span>
-                </span>
-                <span class="tarjeta-lote__flecha" aria-hidden="true">›</span>
-                </a>`;
-        }).join('');
-    }
-
-    function dibujarResumen(filas) {
-        const conSiembra = filas.filter((f) => f.siembra);
-        const conMargen = filas.filter((f) => f.margen);
-        const cuenta = (estado) => filas.filter((f) => f.estado === estado).length;
-        const verdes = cuenta('verde');
-        const amarillos = cuenta('amarillo');
-        const rojos = cuenta('rojo');
-        const sinDatos = filas.length - verdes - amarillos - rojos;
-
-        const hectareas = filas.reduce((total, f) => total + num(f.lote.ha_totales), 0);
-
-        // Margen por hectárea PONDERADO: total de margen ÷ total de hectáreas sembradas.
-        // (Un promedio simple haría pesar igual un lote de 10 ha que uno de 500.)
-        const margenTotal = conMargen.reduce((total, f) => total + num(f.margen.margen_bruto_ars), 0);
-        const haSembradas = conMargen.reduce((total, f) => total + num(f.margen.ha_sembradas), 0);
-        const margenHa = haSembradas > 0 ? margenTotal / haSembradas : null;
-
-        document.getElementById('resumenHectareas').textContent = `${formatoNumero(hectareas, 1)} ha`;
-        document.getElementById('resumenSembrados').textContent = `${conSiembra.length} de ${filas.length}`;
-        document.getElementById('resumenMargen').textContent =
-            margenHa === null ? '-' : `$${formatoNumero(margenHa / 1000)}k /ha`;
-        document.getElementById('resumenAlerta').textContent = `${rojos} de ${filas.length}`;
-
-        document.getElementById('semaforoTexto').textContent =
-            `${filas.length} ${filas.length === 1 ? 'lote' : 'lotes'} · ${conSiembra.length} sembrado${conSiembra.length === 1 ? '' : 's'}`;
-        document.getElementById('semaforoLista').innerHTML = `
-            <li><i class="punto punto--bien"></i>${verdes} en verde</li>
-            <li><i class="punto punto--ajustado"></i>${amarillos} ajustado</li>
-            <li><i class="punto punto--alerta"></i>${rojos} en alerta</li>
-            <li><i class="punto punto--sin-dato"></i>${sinDatos} sin datos</li>`;
-
-        // Dona: cada color ocupa una porción proporcional a su cantidad de lotes.
-        // conic-gradient(color desde hasta, ...) arma la torta en grados (0 a 360).
-        const dona = document.querySelector('.semaforo__dona');
-        if (filas.length === 0) {
-            dona.style.background = '#c9cfc9';
-            return;
-        }
-        let desde = 0;
-        const porcion = (color, cantidad) => {
-            const hasta = desde + (cantidad / filas.length) * 360;
-            const tramo = `${color} ${desde}deg ${hasta}deg`;
-            desde = hasta;
-            return tramo;
-        };
-        dona.style.background = `conic-gradient(${[
-            porcion('var(--bien)', verdes),
-            porcion('var(--ajustado)', amarillos),
-            porcion('var(--alerta)', rojos),
-            porcion('#c9cfc9', sinDatos),
-        ].join(', ')})`;
-    }
-
-    function dibujarCotizaciones(filas) {
-        const contenedor = document.getElementById('listaCotizaciones');
-        const porCultivo = new Map();
-        for (const f of filas) {
-            if (f.margen && !porCultivo.has(f.siembra.cultivo_nombre)) {
-                porCultivo.set(f.siembra.cultivo_nombre, f.margen);
-            }
-        }
-
-        if (porCultivo.size === 0) {
-            contenedor.innerHTML = '<p class="tarjeta-info__texto">Se muestra cuando haya siembras con el margen calculado.</p>';
-            return;
-        }
-
-        contenedor.innerHTML = [...porCultivo].map(([cultivo, m]) => {
-            const c = m.cotizacion_vigente;
-            return `
-                <div class="cotizacion-fila">
-                    <span>${escapar(cultivo)}</span>
-                    <strong>${c.moneda} ${formatoNumero(num(c.precio), 2)} / ${m.precio_neto_usd.unidad}</strong>
-                </div>
-                <p class="tarjeta-info__actualizado">${escapar(c.mercado)} · ${fechaCorta(c.fecha)}</p>`;
-        }).join('');
-    }
-
-    function dibujarClima(filas) {
-        const selectorClima = document.getElementById('selectorClima');
-        const contenido = document.getElementById('climaContenido');
         const ubicados = filas.filter((f) => num(f.lote.lat) !== null);
+        if (ubicados.length === 0) return null;
+        const suma = ubicados.reduce((acc, f) => ({ lat: acc.lat + num(f.lote.lat), lng: acc.lng + num(f.lote.lng) }), { lat: 0, lng: 0 });
+        return { lat: suma.lat / ubicados.length, lng: suma.lng / ubicados.length };
+    }
 
-        if (ubicados.length === 0) {
-            selectorClima.hidden = true;
-            contenido.innerHTML = '<p class="tarjeta-info__texto">Ningún lote tiene ubicación. Ubicalos en "Editar campo".</p>';
+    function dibujarClima(filas, establecimiento) {
+        const contenido = document.getElementById('climaContenido');
+        const ubicacion = ubicacionEstablecimiento(filas, establecimiento);
+
+        if (!ubicacion) {
+            contenido.innerHTML = '<p class="tarjeta-info__texto">Este establecimiento todavía no tiene ubicación. Ubicalo en "Editar campo".</p>';
             return;
         }
 
-        selectorClima.innerHTML = ubicados.map((f) => `<option value="${f.lote.id}">${escapar(f.lote.nombre)}</option>`).join('');
-        selectorClima.hidden = false;
-        selectorClima.onchange = () => {
-            pedirClima(ubicados.find((f) => String(f.lote.id) === selectorClima.value).lote);
-        };
-        pedirClima(ubicados[0].lote);
+        pedirClima(ubicacion);
     }
 
-    async function pedirClima(lote) {
+    async function pedirClima({ lat, lng }) {
         const contenido = document.getElementById('climaContenido');
         contenido.innerHTML = '<p class="tarjeta-info__texto">Cargando pronóstico...</p>';
         const url = 'https://api.open-meteo.com/v1/forecast'
-            + `?latitude=${num(lote.lat)}&longitude=${num(lote.lng)}`
+            + `?latitude=${lat}&longitude=${lng}`
             + '&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code'
             + '&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max'
             + '&timezone=America%2FArgentina%2FBuenos_Aires&forecast_days=3';

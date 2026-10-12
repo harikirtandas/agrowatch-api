@@ -48,9 +48,9 @@
         <div>
           <h1 class="encabezado-lote__titulo">Cargando...</h1>
           <p class="encabezado-lote__subtitulo"></p>
-          <label id="cambioSiembra" class="cambio-siembra" hidden>
-            Ver otro lote:
-            <select id="selectorSiembra" class="cambio-siembra__select"></select>
+          <label id="cambioVista" class="cambio-siembra" hidden>
+            <span id="etiquetaVista">Ver otra campaña:</span>
+            <select id="selectorVista" class="cambio-siembra__select"></select>
           </label>
         </div>
         <div class="encabezado-lote__acciones">
@@ -77,7 +77,7 @@
           <p id="estadoSemaforo" class="semaforo-gauge__estado"></p>
 
           <strong id="valorRinde" class="semaforo-gauge__valor semaforo-gauge__valor--secundario">-</strong>
-          <span class="semaforo-gauge__etiqueta">Rinde de indiferencia</span>
+          <span id="etiquetaSecundaria" class="semaforo-gauge__etiqueta">Rinde de indiferencia</span>
         </div>
 
         <div class="grafico-margen">
@@ -87,7 +87,7 @@
             <div><dt>Costo total</dt><dd id="detCosto">-</dd></div>
             <div><dt>Costo por hectárea</dt><dd id="detCostoHa">-</dd></div>
             <div><dt>Margen bruto</dt><dd id="detMargen">-</dd></div>
-            <div><dt>Precio usado</dt><dd id="detPrecio">-</dd></div>
+            <div><dt id="etiquetaPrecio">Precio usado</dt><dd id="detPrecio">-</dd></div>
             <div><dt>Dólar oficial</dt><dd id="detDolar">-</dd></div>
           </dl>
           <a id="editarSiembra" class="enlace-editar-siembra" href="dashboard_mi_campo.html">Editar siembra y costos</a>

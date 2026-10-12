@@ -314,7 +314,11 @@ body {
   color: #b8860b; 
 }
 .semaforo-gauge__estado--rojo {
-  color: #d1583f; 
+  color: #d1583f;
+}
+
+.semaforo-gauge__estado--sin-dato {
+  color: var(--gris-texto);
 }
 
 .detalle-margen { 

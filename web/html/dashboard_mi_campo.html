@@ -32,7 +32,7 @@
       <a href="configuracion_de_campos.html" class="barra-lateral__avatar" aria-label="Agregar" title="Nuevo establecimiento">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       </a>
-      
+
       <button type="button" class="barra-lateral__icono barra-lateral__salir" data-cerrar-sesion aria-label="Cerrar sesión" title="Cerrar sesión">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
       </button>
@@ -52,39 +52,99 @@
         </div>
       </header>
 
-      <section class="tarjetas-resumen">
-        <div class="tarjeta-resumen">
-          <span class="tarjeta-resumen__etiqueta">Hectáreas totales</span>
-          <strong id="resumenHectareas" class="tarjeta-resumen__valor">-</strong>
-        </div>
-        <div class="tarjeta-resumen">
-          <span class="tarjeta-resumen__etiqueta">Lotes sembrados</span>
-          <strong id="resumenSembrados" class="tarjeta-resumen__valor">-</strong>
-        </div>
-        <div class="tarjeta-resumen">
-          <span class="tarjeta-resumen__etiqueta">Margen por ha sembrada</span>
-          <strong id="resumenMargen" class="tarjeta-resumen__valor">-</strong>
-          <span class="tarjeta-resumen__cambio tarjeta-resumen__cambio--positivo" hidden>▲ 4% vs. semana pasada</span>
-        </div>
-        <div class="tarjeta-resumen">
-          <span class="tarjeta-resumen__etiqueta">Lotes en alerta</span>
-          <strong id="resumenAlerta" class="tarjeta-resumen__valor tarjeta-resumen__valor--alerta">-</strong>
-        </div>
-      </section>
+      <div class="panel-tabs" role="tablist" aria-label="Vista del panel">
+        <button type="button" class="panel-tabs__boton panel-tabs__boton--activo" role="tab" aria-selected="true" aria-controls="panelComoVoy" data-tab="comoVoy">¿Cómo voy?</button>
+        <button type="button" class="panel-tabs__boton" role="tab" aria-selected="false" aria-controls="panelSimulador" data-tab="simulador">¿Qué puedo cambiar?</button>
+      </div>
 
-      <section class="panel-principal">
+      <!-- Pestaña 1: ¿Cómo voy? + ¿Dónde está el problema? -->
+      <div id="panelComoVoy" class="panel-tab" role="tabpanel">
 
-        <!-- Mapa interactivo -->
-        <div class="mapa-lotes" id="mapaLotes">
-          <div class="mapa-lotes__encabezado">
-            <h2 class="mapa-lotes__titulo">Mapa de lotes</h2>
+        <section class="tarjetas-resumen">
+          <div class="tarjeta-resumen">
+            <span class="tarjeta-resumen__etiqueta">Hectáreas sembradas</span>
+            <strong class="tarjeta-resumen__valor"><span id="resumenSembradasHa">-</span> <small id="resumenSembradasTotal"></small></strong>
+          </div>
+          <div class="tarjeta-resumen">
+            <span class="tarjeta-resumen__etiqueta">Margen bruto</span>
+            <strong id="resumenMargenBruto" class="tarjeta-resumen__valor">-</strong>
+            <span id="resumenMargenHa" class="tarjeta-resumen__detalle"></span>
+          </div>
+          <div class="tarjeta-resumen">
+            <span class="tarjeta-resumen__etiqueta">Lotes en alerta</span>
+            <strong id="resumenAlerta" class="tarjeta-resumen__valor tarjeta-resumen__valor--alerta">-</strong>
+            <span id="resumenAlertaDetalle" class="tarjeta-resumen__detalle"></span>
+          </div>
+        </section>
+
+        <section class="panel-principal">
+
+          <!-- Semáforo del establecimiento: estado + % + frase, con la fecha de los datos usados -->
+          <div class="tarjeta-info">
+            <div id="circuloSemaforo"></div>
+          </div>
+
+          <!-- Gauge de rentabilidad (velocímetro): ocupa el centro, donde antes estaba el mapa -->
+          <div class="tarjeta-info tarjeta-gauge">
+            <h2 class="tarjeta-info__titulo">Semáforo del campo</h2>
+            <p class="tarjeta-info__fuente">Rentabilidad proyectada de la campaña actual</p>
+            <div id="gaugeSemaforo" class="semaforo-gauge"></div>
+          </div>
+
+          <div class="tarjeta-info">
+            <h2 class="tarjeta-info__titulo">Mercado</h2>
+            <p class="tarjeta-info__fuente">Lo que usa el cálculo del margen</p>
+            <div id="mercado1" class="mercado">
+              <p class="tarjeta-info__texto">-</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="tarjeta-info seccion">
+          <h2 class="tarjeta-info__titulo">Lotes — del peor al mejor</h2>
+          <p class="tarjeta-info__fuente">Hacé clic en "Ver detalle" para ver el colchón de cada lote</p>
+          <div id="listaLotes" class="lista-lotes"></div>
+        </section>
+
+        <section class="graficos">
+          <div class="tarjeta-info">
+            <h2 class="tarjeta-info__titulo">Margen por lote</h2>
+            <p class="tarjeta-info__fuente">US$ por hectárea, del peor al mejor</p>
+            <div id="graficoMargenReal"></div>
+          </div>
+          <div class="tarjeta-info">
+            <h2 class="tarjeta-info__titulo">¿En qué se va la plata?</h2>
+            <p class="tarjeta-info__fuente">Costos de la campaña, por categoría</p>
+            <div id="graficoCostos1"></div>
+          </div>
+        </section>
+
+        <section class="graficos">
+          <div class="tarjeta-info">
+            <h2 class="tarjeta-info__titulo">Superficie por cultivo</h2>
+            <p class="tarjeta-info__fuente">Cómo se reparten las hectáreas</p>
+            <div id="graficoSuperficie1"></div>
+          </div>
+          <div class="tarjeta-info">
+            <h2 class="tarjeta-info__titulo">Clima</h2>
+            <p class="tarjeta-info__fuente">Pronóstico de la zona del establecimiento</p>
+            <div id="climaContenido">
+              <p class="tarjeta-info__texto">-</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Mapa interactivo: plegado por defecto, el usuario lo abre si quiere verlo -->
+        <details class="mapa-lotes" id="mapaLotes">
+          <summary class="mapa-lotes__resumen">
+            <span class="mapa-lotes__titulo">Mapa de lotes</span>
             <div class="mapa-lotes__leyenda">
               <span class="leyenda-item"><i class="punto punto--bien"></i>Bien</span>
               <span class="leyenda-item"><i class="punto punto--ajustado"></i>Ajustado</span>
               <span class="leyenda-item"><i class="punto punto--alerta"></i>Alerta</span>
               <span class="leyenda-item"><i class="punto punto--sin-dato"></i>Sin datos</span>
             </div>
-          </div>
+          </summary>
 
           <div class="mapa-lotes__lienzo">
             <div id="mapaLeaflet" class="mapa-lotes__leaflet"></div>
@@ -96,42 +156,46 @@
             <div class="tarjeta-flotante__fila"><span>Rinde de indiferencia</span><strong id="flotanteRinde"></strong></div>
             <div class="tarjeta-flotante__fila"><span>Estado</span><strong id="flotanteEstado"></strong></div>
           </div>
-        </div>
+        </details>
 
-        <!-- Panel derecho -->
-        <aside class="panel-derecho">
+      </div>
 
+      <!-- Pestaña 2: ¿Qué puedo cambiar? -->
+      <div id="panelSimulador" class="panel-tab" role="tabpanel" hidden>
+
+        <section class="tarjeta-info simulador" aria-label="Simulador de precio">
+          <div id="circuloSemaforoSim"></div>
+          <div class="simulador__control">
+            <label for="simuladorPrecio">¿Y si cambia el precio de venta?</label>
+            <input type="range" id="simuladorPrecio" min="-40" max="20" step="1" value="0">
+            <div class="simulador__escala"><span>−40%</span><span>0</span><span>+20%</span></div>
+            <output class="simulador__salida" id="simuladorSalida" for="simuladorPrecio"></output>
+          </div>
+          <div class="simulador__resultado" id="simuladorResultado"></div>
+          <p class="simulador__equilibrio" id="simuladorEquilibrio"></p>
+        </section>
+
+        <section class="graficos">
           <div class="tarjeta-info">
-            <h2 class="tarjeta-info__titulo">Cotización de hoy</h2>
-            <p class="tarjeta-info__fuente">La que usa el cálculo del margen</p>
-            <div id="listaCotizaciones">
-              <p class="tarjeta-info__texto">-</p>
+            <h2 class="tarjeta-info__titulo">Colchón por lote</h2>
+            <p class="tarjeta-info__fuente">Cuánto puede bajar el rinde antes de perder plata</p>
+            <div id="graficoColchon"></div>
+          </div>
+          <div class="graficos__columna">
+            <div class="tarjeta-info">
+              <h2 class="tarjeta-info__titulo">Margen por lote</h2>
+              <p class="tarjeta-info__fuente">US$ por hectárea, con el precio simulado</p>
+              <div id="graficoMargenSim"></div>
+            </div>
+            <div class="tarjeta-info">
+              <h2 class="tarjeta-info__titulo">¿En qué se va la plata?</h2>
+              <p class="tarjeta-info__fuente">Los costos no cambian con el precio</p>
+              <div id="graficoCostos2"></div>
             </div>
           </div>
+        </section>
 
-          <div class="tarjeta-info">
-            <div class="tarjeta-info__encabezado">
-              <h2 class="tarjeta-info__titulo">Clima</h2>
-              <select id="selectorClima" class="etiqueta-lote" aria-label="Lote para el pronóstico" hidden></select>
-            </div>
-            <p class="tarjeta-info__texto">El pronóstico es por lote: cada uno tiene su ubicación</p>
-            <div id="climaContenido">
-              <p class="tarjeta-info__texto">-</p>
-            </div>
-          </div>
-
-          <div class="tarjeta-info">
-            <h2 class="tarjeta-info__titulo">Semáforo — resumen</h2>
-            <p id="semaforoTexto" class="tarjeta-info__texto">-</p>
-            <div class="semaforo">
-              <div class="semaforo__dona" aria-hidden="true"></div>
-              <ul id="semaforoLista" class="semaforo__lista"></ul>
-            </div>
-          </div>
-        </aside>
-      </section>
-
-      <section id="listaLotes" class="lista-lotes"></section>
+      </div>
 
     </div>
   </div>
