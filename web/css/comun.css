@@ -1,0 +1,167 @@
+/* comun.css — estilos que comparten TODAS las pantallas de la app.
+   Hoy contiene la barra superior. Al estar en un solo archivo, un cambio acá
+   se ve en todas las pantallas (antes la barra estaba copiada en 6 CSS).
+   Se carga ANTES del CSS propio de cada página. */
+
+/* ---------- Barra superior ---------- */
+/* Queda pegada arriba al hacer scroll (sticky). */
+.barra-superior {
+  position: sticky;
+  top: 0;
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 20px;
+  background: var(--verde-oscuro, #1c3325);
+  color: #fff;
+}
+
+/* El contenido ya no comparte alto con una barra lateral: le descontamos
+   la altura de la barra para que no sobre scroll al pie. */
+.barra-superior ~ .aplicacion {
+  min-height: calc(100vh - 62px);
+}
+
+.barra-superior__marca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+}
+.barra-superior__logo {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: url("../img/logo-aw.svg") center / cover no-repeat;
+  flex: none;
+}
+.barra-superior__nombre {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.barra-superior__nav {
+  display: flex;
+  gap: 6px;
+}
+
+/* Base de todos los botones redondeados de la barra */
+.barra-superior__icono {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.72);
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.barra-superior__icono:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+.barra-superior__icono--activo {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+.barra-superior__icono svg {
+  width: 21px;
+  height: 21px;
+}
+
+/* Los 3 botones de crear: van a la derecha, separados por una línea, y
+   rellenos para que se noten más que los de navegación. */
+.barra-superior__acciones {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+  padding-left: 16px;
+  border-left: 1px solid rgba(255, 255, 255, 0.18);
+}
+.barra-superior__accion {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 12px;
+  background: var(--verde-medio, #4f8f63);
+  color: #fff;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    transform 0.12s;
+}
+.barra-superior__accion:hover {
+  background: #5fa676;
+  transform: translateY(-1px);
+}
+.barra-superior__accion svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* ---------- Globito de ayuda al pasar el mouse ---------- */
+/* Cualquier elemento con class="con-tip" y data-tip="texto" muestra el texto
+   debajo al pasar el cursor (y también al llegar con el teclado). */
+.con-tip {
+  position: relative;
+}
+.con-tip::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #101a13;
+  color: #fff;
+  padding: 5px 9px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.14s;
+  z-index: 10;
+}
+.con-tip:hover::after,
+.con-tip:focus-visible::after {
+  opacity: 1;
+}
+
+/* ---------- Pantallas chicas ---------- */
+@media (max-width: 640px) {
+  .barra-superior {
+    gap: 10px;
+    padding: 8px 12px;
+  }
+  .barra-superior__nombre {
+    display: none;
+  }
+  .barra-superior__acciones {
+    padding-left: 10px;
+  }
+  .barra-superior__icono {
+    width: 36px;
+    height: 36px;
+  }
+  .barra-superior__accion {
+    width: 38px;
+    height: 38px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .barra-superior__icono,
+  .barra-superior__accion,
+  .con-tip::after {
+    transition: none;
+  }
+}
