@@ -22,7 +22,17 @@ const CATEGORIAS_COSTO = {
     otro: '#9aa0a6',
 };
 
-const COLORES_CULTIVO = ['#4f8f63', '#1c3325', '#e0a83c', '#6c93b0', '#e8b84b', '#8fae83'];
+// Color fijo por cultivo (no por orden de aparición): así el mismo cultivo siempre se ve
+// igual, y se eligen a propósito bien separados en el círculo cromático para que no se
+// confundan dos parecidos (ej. verde de soja vs. verde de girasol).
+const COLORES_CULTIVO = {
+    Soja: '#4f8f63',
+    Maiz: '#e0a83c',
+    Girasol: '#c9752e',
+    Trigo: '#6c93b0',
+    Sorgo: '#8a5fb0',
+};
+const COLOR_CULTIVO_DEFECTO = '#9aa0a6';
 const COLOR_SIN_SEMBRAR = '#c9cfc9';
 
 // No hay un campo de "días sin actualizar" en la API: se calcula acá contra la fecha de la cotización.
@@ -147,7 +157,7 @@ function agregarSuperficiePorCultivo(filas) {
             sinSembrar += num(f.lote.ha_totales);
         }
     }
-    const items = [...porCultivo].map(([nombre, ha], i) => ({ nombre, ha, color: COLORES_CULTIVO[i % COLORES_CULTIVO.length] }));
+    const items = [...porCultivo].map(([nombre, ha]) => ({ nombre, ha, color: COLORES_CULTIVO[nombre] ?? COLOR_CULTIVO_DEFECTO }));
     if (sinSembrar > 0) items.push({ nombre: 'Sin sembrar', ha: sinSembrar, color: COLOR_SIN_SEMBRAR });
     return items;
 }
@@ -411,16 +421,24 @@ function dibujarGraficoSuperficie(items, idContenedor) {
         return;
     }
     const total = items.reduce((t, i) => t + i.ha, 0);
+    // Línea blanca fina entre porciones: cada tramo de color "cede" el final de su barrido
+    // a un tramo blanco, así separa de la porción siguiente sin alterar las proporciones
+    // de forma perceptible.
+    const SEPARADOR_DEG = 1.6;
     let desde = 0;
     const tramos = items.map((it) => {
         const hasta = desde + (it.ha / total) * 360;
-        const tramo = `${it.color} ${desde.toFixed(2)}deg ${hasta.toFixed(2)}deg`;
+        const finColor = Math.max(desde, hasta - SEPARADOR_DEG);
+        const tramo = `${it.color} ${desde.toFixed(2)}deg ${finColor.toFixed(2)}deg, var(--blanco) ${finColor.toFixed(2)}deg ${hasta.toFixed(2)}deg`;
         desde = hasta;
         return tramo;
     }).join(', ');
     const leyenda = items.map((it) => `<div class="leyenda__fila"><i style="background:${it.color}"></i><span>${escapar(it.nombre)}</span><span>${formatoNumero(it.ha, 0)} ha</span><span>${Math.round(it.ha / total * 100)}%</span></div>`).join('');
+    const sembradas = items.filter((it) => it.nombre !== 'Sin sembrar').reduce((t, it) => t + it.ha, 0);
     contenedor.innerHTML = `<div class="dona-grande">
-            <div class="dona-grande__circulo" style="background:conic-gradient(${tramos})"></div>
+            <div class="dona-grande__circulo" style="background:conic-gradient(${tramos})">
+                <div class="dona-grande__texto"><strong>${formatoNumero(sembradas, 0)} ha</strong><span>sembradas</span></div>
+            </div>
             <div class="leyenda">${leyenda}</div>
         </div>`;
 }
@@ -709,7 +727,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         dibujarGraficoMargen(filasActuales, 'graficoMargenReal');
 
         const costos = agregarCostosPorCategoria(filasActuales);
-        dibujarGraficoCostos(costos, 'graficoCostos1');
         dibujarGraficoCostos(costos, 'graficoCostos2');
 
         const superficie = agregarSuperficiePorCultivo(filasActuales);
