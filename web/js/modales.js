@@ -340,6 +340,249 @@ const Modales = (() => {
                 });
             },
         },
+        siembra: {
+            titulo: 'Nueva siembra',
+            campos: `
+                <div class="campo campo--tres">
+                    <div>
+                        <label class="campo__etiqueta" for="mCampania">Campaña</label>
+                        <select class="campo__entrada" id="mCampania"><option>Cargando...</option></select>
+                    </div>
+                    <div>
+                        <label class="campo__etiqueta" for="mCultivo">Cultivo</label>
+                        <select class="campo__entrada" id="mCultivo"><option>Cargando...</option></select>
+                    </div>
+                    <div>
+                        <label class="campo__etiqueta" for="mSiembraEst">Establecimiento</label>
+                        <select class="campo__entrada" id="mSiembraEst"><option>Cargando...</option></select>
+                    </div>
+                </div>
+
+                <div class="campo">
+                    <label class="campo__etiqueta">Lotes a sembrar</label>
+                    <p class="modal-agro__pista" id="mPistaLotes">Elegí un establecimiento para ver sus lotes.</p>
+                    <div id="mListaLotes"></div>
+                </div>
+
+                <div class="campo campo--tres">
+                    <div>
+                        <label class="campo__etiqueta" for="mFecha">Fecha de siembra</label>
+                        <input class="campo__entrada" id="mFecha" type="date" required>
+                    </div>
+                    <div>
+                        <label class="campo__etiqueta" for="mVariedad">Variedad <span class="campo__opcional">(opcional)</span></label>
+                        <input class="campo__entrada" id="mVariedad" maxlength="60" placeholder="Ej. DM 53i54">
+                    </div>
+                    <div>
+                        <label class="campo__etiqueta" for="mRinde">Rinde esperado (qq/ha)</label>
+                        <input class="campo__entrada" id="mRinde" type="number" min="0.1" step="0.1" placeholder="Ej. 35">
+                    </div>
+                </div>
+            `,
+            errores: {
+                campania_id: 'mCampania',
+                cultivo_id: 'mCultivo',
+                fecha_siembra: 'mFecha',
+                rinde_esperado: 'mRinde',
+            },
+
+            async alAbrir(form, estado) {
+                estado.lotes = [];            // lotes del establecimiento elegido
+                estado.siembras = [];         // siembras que ya existen en esa campaña
+                estado.elegidos = new Map();  // loteId -> hectáreas escritas
+
+                const selCampania = form.querySelector('#mCampania');
+                const selCultivo = form.querySelector('#mCultivo');
+                const selEst = form.querySelector('#mSiembraEst');
+                const lista = form.querySelector('#mListaLotes');
+                const pista = form.querySelector('#mPistaLotes');
+
+                const opciones = (filas, texto) =>
+                    filas.map((f) => `<option value="${f.id}">${escapar(texto(f))}</option>`).join('');
+
+                // ---- Dibuja la lista de lotes con su estado ----
+                function pintarLotes() {
+                    if (estado.lotes.length === 0) {
+                        lista.innerHTML = '';
+                        pista.textContent = 'Este establecimiento todavía no tiene lotes. Creá uno con el botón de la barra.';
+                        return;
+                    }
+
+                    // Lotes que YA tienen este cultivo en esta campaña: no se pueden
+                    // volver a sembrar (la API lo rechaza con 409). Se bloquean acá
+                    // para que el error no llegue a pasar.
+                    const cultivoId = Number(selCultivo.value);
+                    const tomados = new Map(
+                        estado.siembras
+                            .filter((s) => Number(s.cultivo_id) === cultivoId)
+                            .map((s) => [Number(s.lote_id), s.cultivo_nombre])
+                    );
+
+                    lista.innerHTML = estado.lotes.map((lote) => {
+                        const id = Number(lote.id);
+                        const bloqueado = tomados.has(id);
+                        const max = num(lote.ha_efectivas) ?? 0;
+                        const elegido = estado.elegidos.has(id);
+                        const ha = estado.elegidos.get(id) ?? max;
+                        const motivo = `Ya tiene ${escapar(tomados.get(id) ?? 'ese cultivo')} en esta campaña`;
+
+                        return `
+                            <div class="lote-check${bloqueado ? ' lote-check--bloqueado' : ''}" ${bloqueado ? `title="${motivo}"` : ''}>
+                                <label class="lote-check__nombre">
+                                    <input type="checkbox" data-lote-id="${id}" ${bloqueado ? 'disabled' : ''} ${elegido ? 'checked' : ''}>
+                                    <span>${escapar(lote.nombre)}</span>
+                                    <small>${formatoNumero(max, 2)} ha disponibles</small>
+                                </label>
+                                ${bloqueado
+                                    ? `<span class="lote-check__aviso">${motivo}</span>`
+                                    : `<div class="lote-check__ha">
+                                           <input class="campo__entrada" type="number" data-ha-id="${id}"
+                                                  min="0.01" max="${max}" step="0.01" value="${ha}" ${elegido ? '' : 'disabled'}>
+                                           <span class="lote-check__unidad">ha</span>
+                                       </div>
+                                       <span class="lote-check__error" data-error-id="${id}"></span>`}
+                            </div>
+                        `;
+                    }).join('');
+
+                    pista.textContent = 'Tildá los lotes donde vas a sembrar. Las hectáreas vienen con lo que mide cada lote; podés bajarlas.';
+                    validarHectareas();
+                }
+
+                // ---- No se puede sembrar más de lo que mide el lote ----
+                function validarHectareas() {
+                    let hayError = false;
+                    lista.querySelectorAll('[data-ha-id]').forEach((input) => {
+                        const id = Number(input.dataset.haId);
+                        const aviso = lista.querySelector(`[data-error-id="${id}"]`);
+                        const max = Number(input.max);
+                        const cantidad = Number(input.value);
+                        let mensaje = '';
+
+                        if (estado.elegidos.has(id)) {
+                            if (!input.value || cantidad <= 0) mensaje = 'Poné las hectáreas';
+                            else if (cantidad > max) mensaje = `Máximo ${formatoNumero(max, 2)} ha`;
+                        }
+                        input.classList.toggle('campo__entrada--error', mensaje !== '');
+                        if (aviso) aviso.textContent = mensaje;
+                        if (mensaje) hayError = true;
+                    });
+
+                    estado.invalido = hayError || estado.elegidos.size === 0;
+                    return !estado.invalido;
+                }
+
+                // ---- Eventos delegados: la lista se repinta entera al cambiar filtros ----
+                lista.addEventListener('change', (ev) => {
+                    const check = ev.target.closest('[data-lote-id]');
+                    if (!check) return;
+                    const id = Number(check.dataset.loteId);
+                    const campoHa = lista.querySelector(`[data-ha-id="${id}"]`);
+                    if (check.checked) {
+                        estado.elegidos.set(id, campoHa?.value ?? '');
+                        if (campoHa) campoHa.disabled = false;
+                    } else {
+                        estado.elegidos.delete(id);
+                        if (campoHa) campoHa.disabled = true;
+                    }
+                    validarHectareas();
+                });
+
+                lista.addEventListener('input', (ev) => {
+                    const campoHa = ev.target.closest('[data-ha-id]');
+                    if (!campoHa) return;
+                    estado.elegidos.set(Number(campoHa.dataset.haId), campoHa.value);
+                    validarHectareas();
+                });
+
+                // Al cambiar la campaña hay que releer qué lotes ya están sembrados.
+                async function cambioCampania() {
+                    estado.siembras = await API.get(`/siembras?campania_id=${selCampania.value}`);
+                    estado.elegidos.clear(); // lo elegido pudo haber quedado bloqueado
+                    pintarLotes();
+                }
+
+                async function cambioEstablecimiento() {
+                    estado.lotes = await API.get(`/lotes?establecimiento_id=${selEst.value}`);
+                    estado.elegidos.clear();
+                    pintarLotes();
+                }
+
+                // ---- Carga inicial ----
+                try {
+                    const [campanias, cultivos, establecimientos] = await Promise.all([
+                        API.get('/campanias'),
+                        API.get('/cultivos'),
+                        API.get('/establecimientos'),
+                    ]);
+
+                    const abiertas = campanias.filter((c) => !Number(c.cerrada));
+                    if (abiertas.length === 0) {
+                        selCampania.innerHTML = '<option value="">No hay campañas abiertas</option>';
+                        mostrarError(form, new Error('Creá una campaña desde Perfil antes de cargar una siembra.'));
+                        return;
+                    }
+                    selCampania.innerHTML = opciones(abiertas, (c) => c.nombre);
+                    selCultivo.innerHTML = opciones(cultivos, (c) => c.nombre);
+
+                    const propios = establecimientos.filter((e) => e.rol === 'dueno');
+                    if (propios.length === 0) {
+                        selEst.innerHTML = '<option value="">No tenés establecimientos propios</option>';
+                        mostrarError(form, new Error('Creá un establecimiento antes de cargar una siembra.'));
+                        return;
+                    }
+                    selEst.innerHTML = opciones(propios, (e) => `${e.nombre} — ${e.localidad}`);
+
+                    await cambioCampania();
+                    await cambioEstablecimiento();
+                } catch (error) {
+                    mostrarError(form, error);
+                }
+
+                selCampania.addEventListener('change', () => cambioCampania().catch((e) => mostrarError(form, e)));
+                selEst.addEventListener('change', () => cambioEstablecimiento().catch((e) => mostrarError(form, e)));
+                selCultivo.addEventListener('change', () => {
+                    estado.elegidos.clear(); // con otro cultivo cambia qué está bloqueado
+                    pintarLotes();
+                });
+            },
+
+            async guardar(form, estado) {
+                if (estado.elegidos.size === 0) throw new Error('Elegí al menos un lote para sembrar.');
+                if (estado.invalido) throw new Error('Revisá las hectáreas marcadas en rojo.');
+                if (!valor('mFecha')) throw new Error('Poné la fecha de siembra.');
+                if (!valor('mRinde')) throw new Error('Poné el rinde esperado: sin él no se puede calcular el margen.');
+
+                const base = {
+                    campania_id: Number(valor('mCampania')),
+                    cultivo_id: Number(valor('mCultivo')),
+                    fecha_siembra: valor('mFecha'),
+                    variedad: valor('mVariedad') || null,
+                    // En pantalla se usan quintales; la API guarda kilos por hectárea.
+                    rinde_esperado: Number(valor('mRinde')) * 100,
+                };
+
+                // Una siembra por lote. Si alguna falla, las que salieron bien
+                // quedan guardadas y se informa cuál no pudo (decisión del equipo).
+                const fallidas = [];
+                let creadas = 0;
+                for (const [loteId, ha] of estado.elegidos) {
+                    try {
+                        await API.post('/siembras', { ...base, lote_id: loteId, ha_sembradas: Number(ha) });
+                        creadas += 1;
+                    } catch (error) {
+                        const lote = estado.lotes.find((l) => Number(l.id) === loteId);
+                        fallidas.push(`${lote?.nombre ?? 'Lote ' + loteId}: ${error.message}`);
+                    }
+                }
+
+                if (fallidas.length > 0) {
+                    throw new Error(`Se crearon ${creadas} siembra(s). No se pudo con — ${fallidas.join(' · ')}`);
+                }
+                return { creadas };
+            },
+        },
+
     };
 
     // Devuelve true si abrió la ventana, false si todavía no existe para ese tipo
