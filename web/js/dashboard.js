@@ -5,6 +5,8 @@ const ESTADOS = {
     rojo: { clase: 'alerta', texto: 'Alerta'},
 };
 
+const iconoEstado = (estado) => estado === 'rojo' ? '✕' : estado === 'amarillo' ? '!' : estado === 'verde' ? '✓' : '—';
+
 // Mismo umbral que CalculoMargen::UMBRAL_VERDE (src/app/Services/CalculoMargen.php).
 // No está expuesto por la API: si cambia ahí, hay que cambiarlo acá también.
 const UMBRAL_VERDE = 0.20;
@@ -278,7 +280,7 @@ function dibujarGaugeSemaforo(idContenedor, estado, pct) {
 function dibujarCirculoSemaforo(idContenedor, estado, pct, frase, meta) {
     const clase = estado ? ESTADOS[estado].clase : 'sin-dato';
     const texto = estado ? ESTADOS[estado].texto : 'Sin datos';
-    const icono = estado === 'rojo' ? '✕' : estado === 'amarillo' ? '!' : estado === 'verde' ? '✓' : '—';
+    const icono = iconoEstado(estado);
     const pctTexto = pct === null ? '' : `<small>${Math.round(pct * 100)}%</small>`;
     document.getElementById(idContenedor).innerHTML = `
         <div class="sema">
@@ -311,15 +313,38 @@ function metaSemaforo(campania, mercado) {
 
 function dibujarBala(rindeEsperado, rindeEquilibrio, clase) {
     if (rindeEsperado == null || rindeEquilibrio == null) {
-        return '<p class="bala__texto">Sin datos de rinde para mostrar la barra.</p>';
+        return '<p class="bala__txt">Sin datos de rinde para mostrar la barra.</p>';
     }
-    const max = Math.max(rindeEsperado, rindeEquilibrio, 1) * 1.15;
+    const max = Math.max(rindeEsperado, rindeEquilibrio, 1) * 1.12;
     const color = clase === 'sin-dato' ? 'var(--gris-texto)' : `var(--${clase})`;
-    return `<div class="bala__pista" role="img" aria-label="Rinde esperado ${formatoNumero(rindeEsperado, 0)}, equilibrio ${formatoNumero(rindeEquilibrio, 0)} kg por hectárea">
-            <i class="bala__relleno" style="width:${(rindeEsperado / max * 100).toFixed(1)}%;background:${color}"></i>
-            <b class="bala__marca" style="left:calc(${(rindeEquilibrio / max * 100).toFixed(1)}% - 1px)"></b>
+    return `<div class="bala">
+        <div class="bala__pista" role="img" aria-label="Rinde esperado ${formatoNumero(rindeEsperado, 0)}, equilibrio ${formatoNumero(rindeEquilibrio, 0)} kg por hectárea">
+            <i class="bala__fill" style="width:${(rindeEsperado / max * 100).toFixed(1)}%;background:${color}"></i>
+            <b class="bala__eq" style="left:calc(${(rindeEquilibrio / max * 100).toFixed(1)}% - 1px)"></b>
         </div>
-        <p class="bala__texto">Barra: rinde esperado. Marca negra: rinde de equilibrio.</p>`;
+        <div class="bala__txt">Barra de color: rinde esperado (${formatoNumero(rindeEsperado, 0)} kg/ha). Marca negra: rinde de equilibrio (${formatoNumero(rindeEquilibrio, 0)} kg/ha).</div>
+    </div>`;
+}
+
+// Contenido del modal de "Ver detalle" de un lote: margen total, rinde esperado, rinde de
+// equilibrio, una lectura en texto y la barra "bala" — mismos 4 campos + bala del boceto de
+// referencia, antes mostrados inline en la fila y ahora en el modal.
+function detalleLoteHtml(fila) {
+    const { siembra, margen, estado } = fila;
+    const clase = ESTADOS[estado].clase;
+    const colchon = colchonKgHa(fila);
+    const rindeEsperado = num(siembra.rinde_esperado);
+    const rindeEquilibrio = num(margen.rinde_indiferencia_kg_ha);
+    const lectura = colchon < 0
+        ? `Para empatar le faltan ${formatoNumero(Math.abs(colchon), 0)} kg/ha.`
+        : `Aguanta una baja de ${formatoNumero(colchon, 0)} kg/ha antes de perder plata.`;
+
+    return `
+        <div><small>Margen total del lote</small><strong>${fUsd(num(margen.margen_bruto_usd))}</strong></div>
+        <div><small>Rinde esperado</small><strong>${formatoNumero(rindeEsperado, 0)} kg/ha</strong></div>
+        <div><small>Rinde de equilibrio</small><strong>${formatoNumero(rindeEquilibrio, 0)} kg/ha</strong></div>
+        <div><small>Lectura</small><strong>${lectura}</strong></div>
+        <div class="detalle__bala">${dibujarBala(rindeEsperado, rindeEquilibrio, clase)}</div>`;
 }
 
 function dibujarBarrasDivergentes(datos, idContenedor) {
@@ -447,6 +472,10 @@ function dibujarResumenTiles(agg) {
         agg.lotesEnAlerta.map((f) => f.lote.nombre).join(', ');
 }
 
+// Misma estructura que filaLote() del boceto de referencia (pestaña "Semáforo primero"):
+// fila con pill + nombre + margen/colchón + botón. "Ver detalle" abre un modal con el margen
+// total, rinde esperado, rinde de equilibrio, una lectura en texto y la barra "bala" (ver
+// detalleLoteHtml() y el manejo del modal en el bootstrap más abajo).
 function dibujarListaLotes(filas, urlEditar) {
     const lista = document.getElementById('listaLotes');
     if (filas.length === 0) {
@@ -456,36 +485,37 @@ function dibujarListaLotes(filas, urlEditar) {
 
     lista.innerHTML = filasOrdenadas(filas).map((fila, i) => {
         const { lote, siembra, margen, motivo, estado } = fila;
-        const destino = siembra ? `semaforo.html?siembra=${siembra.id}` : `datos_de_siembra.html?lote=${lote.id}`;
-        const titulo = siembra ? `${lote.nombre} — ${siembra.cultivo_nombre}` : `${lote.nombre} — sin siembra`;
-        const ha = `${formatoNumero(num(lote.ha_totales), 1)} ha`;
-        const clase = ESTADOS[estado]?.clase ?? 'sin-dato';
-        const textoPill = ESTADOS[estado]?.texto ?? (siembra ? 'Sin datos' : 'Sin siembra');
 
-        const metricas = margen
-            ? `<div><small>Margen</small><strong>${fUsd(margenUsdPorHa(fila))}/ha</strong></div>
-               <div><small>Colchón</small><strong>${fKg(colchonKgHa(fila))}</strong></div>`
-            : `<div><small>Estado</small><strong>${escapar(motivo ?? (siembra ? 'Sin datos' : 'Sin siembra'))}</strong></div>`;
+        // Sin margen calculado (sin siembra, o siembra con un dato faltante): mismo
+        // tratamiento que el boceto le da a un lote sin cultivo.
+        if (!margen) {
+            const destino = siembra ? `semaforo.html?siembra=${siembra.id}` : `datos_de_siembra.html?lote=${lote.id}`;
+            const subtitulo = siembra ? escapar(motivo ?? 'Sin datos') : 'Sin sembrar en esta campaña';
+            const accion = siembra ? 'Ver detalle' : 'Cargar siembra';
+            return `<div class="lote"><div class="lote__fila">
+                <div class="lote__p"><span class="pill pill--sin-dato">Sin datos</span></div>
+                <div class="lote__n"><strong>${escapar(lote.nombre)} · ${formatoNumero(num(lote.ha_totales), 1)} ha</strong><span>${subtitulo}</span></div>
+                <div class="lote__m">
+                    <div><small>Margen</small><strong>—</strong></div>
+                    <div><small>Colchón</small><strong>—</strong></div>
+                </div>
+                <div class="lote__btn"><a href="${destino}" class="btn">${accion}</a></div>
+            </div></div>`;
+        }
 
-        const boton = margen
-            ? `<button type="button" class="lote__boton" data-detalle="${i}" aria-expanded="false">Ver detalle</button>`
-            : `<a href="${destino}" class="lote__boton">${siembra ? 'Ver detalle' : 'Cargar siembra'}</a>`;
+        const clase = ESTADOS[estado].clase;
+        const margenHa = margenUsdPorHa(fila);
+        const colchon = colchonKgHa(fila);
 
-        const detalle = margen ? `
-            <div class="lote__detalle" id="detalleLote${i}" hidden>
-                <div><small>Margen total del lote</small><strong>${fArs(num(margen.margen_bruto_ars))}</strong></div>
-                <div><small>Rinde esperado</small><strong>${formatoNumero(num(siembra.rinde_esperado), 0)} kg/ha</strong></div>
-                <div><small>Rinde de equilibrio</small><strong>${formatoNumero(num(margen.rinde_indiferencia_kg_ha), 0)} kg/ha</strong></div>
-                <div class="lote__detalle--ancho">${dibujarBala(num(siembra.rinde_esperado), num(margen.rinde_indiferencia_kg_ha), clase)}</div>
-                <div class="lote__detalle--ancho"><a href="${destino}" class="lote__boton">Abrir lote completo</a></div>
-            </div>` : '';
-
-        return `<div class="lote__fila">
-                <span class="pill pill--${clase}"><i class="punto punto--${clase}"></i>${escapar(textoPill)}</span>
-                <span class="lote__nombre"><strong>${escapar(titulo)}</strong><span>${ha}</span></span>
-                <span class="lote__metricas">${metricas}</span>
-                ${boton}
-            </div>${detalle}`;
+        return `<div class="lote"><div class="lote__fila">
+                <div class="lote__p"><span class="pill pill--${clase}"><span aria-hidden="true">${iconoEstado(estado)}</span>${escapar(ESTADOS[estado].texto)}</span></div>
+                <div class="lote__n"><strong>${escapar(lote.nombre)} · ${escapar(siembra.cultivo_nombre)}</strong><span>${formatoNumero(num(lote.ha_totales), 1)} ha</span></div>
+                <div class="lote__m">
+                    <div><small>Margen</small><strong class="tx-${clase}">${fUsd(margenHa)}/ha</strong></div>
+                    <div><small>Colchón</small><strong class="tx-${clase}">${fKg(colchon)}</strong></div>
+                </div>
+                <div class="lote__btn"><button type="button" class="btn" data-detalle="${i}">Ver detalle</button></div>
+            </div></div>`;
     }).join('');
 }
 
@@ -537,15 +567,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
-    // Un solo listener delegado para expandir/ocultar el detalle de un lote (no se reatacha en cada render).
+    // Modal de "Ver detalle" de un lote: un solo listener delegado, no se reatacha en cada
+    // render. El índice del botón es la posición en filasOrdenadas(filasActuales), que es
+    // exactamente el mismo orden con el que se dibujó la lista.
+    const modalLote = document.getElementById('modalLote');
+    const modalLoteTitulo = document.getElementById('modalLoteTitulo');
+    const modalLoteContenido = document.getElementById('modalLoteContenido');
+
+    function cerrarModalLote() {
+        modalLote.hidden = true;
+    }
+
     document.getElementById('listaLotes').addEventListener('click', (ev) => {
         const boton = ev.target.closest('[data-detalle]');
         if (!boton) return;
-        const panel = document.getElementById(`detalleLote${boton.dataset.detalle}`);
-        const abierto = panel.hidden;
-        panel.hidden = !abierto;
-        boton.textContent = abierto ? 'Ocultar detalle' : 'Ver detalle';
-        boton.setAttribute('aria-expanded', String(abierto));
+        const fila = filasOrdenadas(filasActuales)[Number(boton.dataset.detalle)];
+        modalLoteTitulo.textContent = `${fila.lote.nombre} — ${fila.siembra.cultivo_nombre}`;
+        modalLoteContenido.innerHTML = detalleLoteHtml(fila);
+        modalLote.hidden = false;
+    });
+    modalLote.querySelector('.modal__fondo').addEventListener('click', cerrarModalLote);
+    modalLote.querySelector('.modal__cerrar').addEventListener('click', cerrarModalLote);
+    document.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Escape' && !modalLote.hidden) cerrarModalLote();
     });
 
     // Slider del simulador
@@ -591,7 +635,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         .join('');
 
     const guardado = localStorage.getItem('establecimientoActual');
-    selector.value = establecimientos.some((e) => String(e.id) === guardado) ? guardado : String(establecimientos[0].id);
+    const idInicial = establecimientos.some((e) => String(e.id) === guardado) ? guardado : String(establecimientos[0].id);
+    selector.value = idInicial;
+    // Se persiste YA, no solo en el "change": si no, mientras el usuario nunca toque el
+    // selector, localStorage queda sin este valor y otras páginas (ej. semaforo.html) no
+    // saben qué establecimiento se está mirando acá.
+    localStorage.setItem('establecimientoActual', idInicial);
 
     selector.addEventListener('change', () => {
         localStorage.setItem('establecimientoActual', selector.value);

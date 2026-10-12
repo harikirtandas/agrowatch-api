@@ -103,7 +103,7 @@
         <section class="tarjeta-info seccion">
           <h2 class="tarjeta-info__titulo">Lotes — del peor al mejor</h2>
           <p class="tarjeta-info__fuente">Hacé clic en "Ver detalle" para ver el colchón de cada lote</p>
-          <div id="listaLotes" class="lista-lotes"></div>
+          <div id="listaLotes" class="lotes"></div>
         </section>
 
         <section class="graficos">
@@ -195,6 +195,18 @@
           </div>
         </section>
 
+      </div>
+
+      <!-- Modal de detalle de lote, abierto desde "Ver detalle" en la lista de lotes -->
+      <div id="modalLote" class="modal" hidden>
+        <div class="modal__fondo"></div>
+        <div class="modal__caja" role="dialog" aria-modal="true" aria-labelledby="modalLoteTitulo">
+          <div class="modal__encabezado">
+            <h3 id="modalLoteTitulo"></h3>
+            <button type="button" class="modal__cerrar" aria-label="Cerrar">✕</button>
+          </div>
+          <div class="detalle" id="modalLoteContenido"></div>
+        </div>
       </div>
 
     </div>

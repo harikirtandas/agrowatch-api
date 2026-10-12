@@ -655,57 +655,67 @@ body {
   color: var(--gris-texto);
 }
 
-/* Lista de lotes (parte inferior) */
-.lista-lotes {
-  display: flex;
-  flex-direction: column;
+/* Lista de lotes (parte inferior) — misma estructura que el boceto de referencia */
+.lotes {
+  padding-block: 8px;
+}
+
+.lote {
+  border-top: 1px solid var(--gris-borde);
+}
+
+.lote:first-of-type {
+  border-top: 0;
 }
 
 .lote__fila {
   display: grid;
-  grid-template-columns: auto minmax(0, 1.4fr) minmax(0, 1.2fr) auto;
+  grid-template-columns: 104px minmax(0, 1.5fr) minmax(0, 1.2fr) auto;
+  grid-template-areas: "p n m btn";
   gap: 14px;
   align-items: center;
-  padding: 14px 4px;
-  border-top: 1px solid var(--gris-borde);
+  padding: 14px 0;
 }
 
-.lote__fila:first-child {
-  border-top: none;
-}
+.lote__p { grid-area: p; }
 
-.lote__nombre {
+.lote__n {
+  grid-area: n;
   min-width: 0;
+}
+
+.lote__n strong {
+  display: block;
+}
+
+.lote__n span {
+  color: var(--gris-texto);
+  font-size: 13px;
+}
+
+.lote__m {
+  grid-area: m;
+  display: flex;
+  gap: 28px;
+}
+
+.lote__m div {
   display: flex;
   flex-direction: column;
 }
 
-.lote__nombre span {
+.lote__m small {
+  color: var(--gris-texto);
   font-size: 12px;
-  color: var(--gris-texto);
-  margin-top: 2px;
 }
 
-.lote__metricas {
-  display: flex;
-  gap: 24px;
-}
-
-.lote__metricas div {
-  display: flex;
-  flex-direction: column;
-}
-
-.lote__metricas small {
-  font-size: 11px;
-  color: var(--gris-texto);
-}
-
-.lote__metricas strong {
+.lote__m strong {
   font-variant-numeric: tabular-nums;
 }
 
-.lote__boton {
+.lote__btn { grid-area: btn; }
+
+.btn {
   border: 1px solid var(--gris-borde);
   background: var(--blanco);
   color: var(--negro-texto);
@@ -716,35 +726,41 @@ body {
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
+  text-decoration: none;
+  display: inline-block;
 }
 
-.lote__boton:hover {
+.btn:hover {
   background: var(--fondo-app);
 }
 
-.lote__detalle {
+.tx-bien { color: #2c7442; }
+.tx-ajustado { color: #86650f; }
+.tx-alerta { color: #b03a22; }
+
+.detalle {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 14px 24px;
-  padding: 4px 4px 18px;
+  padding: 4px 0 18px;
 }
 
-.lote__detalle div {
+.detalle div {
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
 
-.lote__detalle small {
-  font-size: 12px;
+.detalle small {
   color: var(--gris-texto);
+  font-size: 12px;
 }
 
-.lote__detalle strong {
+.detalle strong {
   font-variant-numeric: tabular-nums;
 }
 
-.lote__detalle--ancho {
+.detalle__bala {
   grid-column: 1 / -1;
 }
 
@@ -756,14 +772,14 @@ body {
   margin: 6px 0;
 }
 
-.bala__relleno {
+.bala__fill {
   position: absolute;
   inset: 0 auto 0 0;
   border-radius: 99px;
   display: block;
 }
 
-.bala__marca {
+.bala__eq {
   position: absolute;
   top: -4px;
   bottom: -4px;
@@ -773,9 +789,10 @@ body {
   display: block;
 }
 
-.bala__texto {
-  font-size: 12px;
+.bala__txt {
+  font-size: 12.5px;
   color: var(--gris-texto);
+  font-variant-numeric: tabular-nums;
 }
 
 .seccion {
@@ -1090,6 +1107,68 @@ body {
   background: var(--fondo-app);
 }
 
+/* Modal de detalle de lote */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal[hidden] {
+  display: none;
+}
+
+.modal__fondo {
+  position: absolute;
+  inset: 0;
+  background: rgba(26, 26, 26, 0.5);
+}
+
+.modal__caja {
+  position: relative;
+  background: var(--blanco);
+  border-radius: var(--radio);
+  padding: 24px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+.modal__encabezado {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.modal__encabezado h3 {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.modal__cerrar {
+  border: none;
+  background: var(--fondo-app);
+  color: var(--gris-texto);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 15px;
+  flex: none;
+}
+
+.modal__cerrar:hover {
+  background: var(--gris-borde);
+}
+
 /* Responsive */
 @media (max-width: 1080px) {
   .panel-principal,
@@ -1128,9 +1207,9 @@ body {
   }
   .lote__fila {
     grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: "p n btn" ". m m";
   }
-  .lote__metricas {
-    grid-column: 1 / -1;
+  .lote__m {
     gap: 16px;
   }
 }

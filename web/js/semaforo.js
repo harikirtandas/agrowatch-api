@@ -66,10 +66,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   // siembra puntual. Sin parámetro (ícono "Lotes" de la barra lateral) se ve el semáforo
   // agregado del establecimiento, con un selector para cambiar de campaña.
   const siembraId = num(new URLSearchParams(window.location.search).get('siembra'));
-  if (siembraId) {
-    await modoSiembra(siembraId);
-  } else {
-    await modoCampania();
+  try {
+    if (siembraId) {
+      await modoSiembra(siembraId);
+    } else {
+      await modoCampania();
+    }
+  } catch (error) {
+    // Si algo revienta a mitad de camino (red, un dato inesperado) que se vea el motivo
+    // en vez de quedar la pantalla en blanco sin explicación.
+    mostrarAviso(
+      document.getElementById('avisoSemaforo'),
+      document.querySelector('.tarjeta-semaforo'),
+      `No se pudo cargar el semáforo: ${error.message}`,
+      'dashboard_mi_campo.html',
+      'Volver al panel',
+    );
   }
 });
 
