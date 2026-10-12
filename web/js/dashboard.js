@@ -508,11 +508,26 @@ function dibujarListaLotes(filas, urlEditar) {
         const { lote, siembra, margen, motivo, estado } = fila;
 
         // Sin margen calculado (sin siembra, o siembra con un dato faltante): mismo
-        // tratamiento que el boceto le da a un lote sin cultivo.
+        // tratamiento que el boceto le da a un lote sin cultivo. En ningún sub-caso se
+        // redirige a una vista que no tiene forma de resolverse sola — el modal explica
+        // el motivo y, si corresponde, da un link para completarlo.
         if (!margen) {
-            const destino = siembra ? `semaforo.html?siembra=${siembra.id}` : `datos_de_siembra.html?lote=${lote.id}`;
-            const subtitulo = siembra ? escapar(motivo ?? 'Sin datos') : 'Sin sembrar en esta campaña';
-            const accion = siembra ? 'Ver detalle' : 'Cargar siembra';
+            const sinHectareas = !siembra && num(lote.ha_efectivas) <= 0;
+            let subtitulo;
+            let boton;
+            if (siembra) {
+                // Hay siembra pero el margen no se pudo calcular (falta costos, rinde, etc.).
+                subtitulo = escapar(motivo ?? 'Sin datos');
+                boton = `<button type="button" class="btn" data-sin-datos="${siembra.id}">Ver detalle</button>`;
+            } else if (sinHectareas) {
+                // Un lote sin hectáreas efectivas no se puede sembrar (ni el formulario ni
+                // el cálculo de margen aceptan 0 ha).
+                subtitulo = 'Sin hectáreas sembrables';
+                boton = `<button type="button" class="btn" data-sin-ha="${lote.id}">Ver detalle</button>`;
+            } else {
+                subtitulo = 'Sin sembrar en esta campaña';
+                boton = `<a href="datos_de_siembra.html?lote=${lote.id}" class="btn">Cargar siembra</a>`;
+            }
             return `<div class="lote"><div class="lote__fila">
                 <div class="lote__p"><span class="pill pill--sin-dato">Sin datos</span></div>
                 <div class="lote__n"><strong>${escapar(lote.nombre)} · ${formatoNumero(num(lote.ha_totales), 1)} ha</strong><span>${subtitulo}</span></div>
@@ -520,7 +535,7 @@ function dibujarListaLotes(filas, urlEditar) {
                     <div><small>Margen</small><strong>—</strong></div>
                     <div><small>Colchón</small><strong>—</strong></div>
                 </div>
-                <div class="lote__btn"><a href="${destino}" class="btn">${accion}</a></div>
+                <div class="lote__btn">${boton}</div>
             </div></div>`;
         }
 
@@ -600,12 +615,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     document.getElementById('listaLotes').addEventListener('click', (ev) => {
-        const boton = ev.target.closest('[data-detalle]');
-        if (!boton) return;
-        const fila = filasOrdenadas(filasActuales)[Number(boton.dataset.detalle)];
-        modalLoteTitulo.textContent = `${fila.lote.nombre} — ${fila.siembra.cultivo_nombre}`;
-        modalLoteContenido.innerHTML = detalleLoteHtml(fila);
-        modalLote.hidden = false;
+        const botonDetalle = ev.target.closest('[data-detalle]');
+        if (botonDetalle) {
+            const fila = filasOrdenadas(filasActuales)[Number(botonDetalle.dataset.detalle)];
+            modalLoteTitulo.textContent = `${fila.lote.nombre} — ${fila.siembra.cultivo_nombre}`;
+            modalLoteContenido.innerHTML = detalleLoteHtml(fila);
+            modalLote.hidden = false;
+            return;
+        }
+        const botonSinHa = ev.target.closest('[data-sin-ha]');
+        if (botonSinHa) {
+            const lote = filasActuales.find((f) => f.lote.id === Number(botonSinHa.dataset.sinHa))?.lote;
+            const editarHref = document.getElementById('editarEstablecimiento').href;
+            modalLoteTitulo.textContent = lote?.nombre ?? 'Lote';
+            modalLoteContenido.innerHTML = `<p>Este lote todavía no tiene hectáreas efectivas cargadas (${formatoNumero(num(lote?.ha_efectivas), 1)} ha), así que no se le puede asignar una siembra. Corregí sus hectáreas desde <a href="${editarHref}">Editar campo</a>.</p>`;
+            modalLote.hidden = false;
+            return;
+        }
+        const botonSinDatos = ev.target.closest('[data-sin-datos]');
+        if (botonSinDatos) {
+            const siembraId = Number(botonSinDatos.dataset.sinDatos);
+            const fila = filasActuales.find((f) => f.siembra?.id === siembraId);
+            modalLoteTitulo.textContent = fila ? `${fila.lote.nombre} — ${fila.siembra.cultivo_nombre}` : 'Lote';
+            modalLoteContenido.innerHTML = `
+                <p>${escapar(fila?.motivo ?? 'No se pudo calcular el margen de esta siembra.')}</p>
+                <p><a href="datos_de_siembra.html?siembra=${siembraId}" class="btn">Completar datos de siembra</a></p>`;
+            modalLote.hidden = false;
+        }
     });
     modalLote.querySelector('.modal__fondo').addEventListener('click', cerrarModalLote);
     modalLote.querySelector('.modal__cerrar').addEventListener('click', cerrarModalLote);
