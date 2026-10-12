@@ -60,28 +60,27 @@
       <!-- Pestaña 1: ¿Cómo voy? + ¿Dónde está el problema? -->
       <div id="panelComoVoy" class="panel-tab" role="tabpanel">
 
-        <section class="tarjetas-resumen">
-          <div class="tarjeta-resumen">
-            <span class="tarjeta-resumen__etiqueta">Hectáreas sembradas</span>
-            <strong class="tarjeta-resumen__valor"><span id="resumenSembradasHa">-</span> <small id="resumenSembradasTotal"></small></strong>
-          </div>
-          <div class="tarjeta-resumen">
-            <span class="tarjeta-resumen__etiqueta">Margen bruto</span>
-            <strong id="resumenMargenBruto" class="tarjeta-resumen__valor">-</strong>
-            <span id="resumenMargenHa" class="tarjeta-resumen__detalle"></span>
-          </div>
-          <div class="tarjeta-resumen">
-            <span class="tarjeta-resumen__etiqueta">Lotes en alerta</span>
-            <strong id="resumenAlerta" class="tarjeta-resumen__valor tarjeta-resumen__valor--alerta">-</strong>
-            <span id="resumenAlertaDetalle" class="tarjeta-resumen__detalle"></span>
-          </div>
-        </section>
-
         <section class="panel-principal">
 
-          <!-- Semáforo del establecimiento: estado + % + frase, con la fecha de los datos usados -->
-          <div class="tarjeta-info">
-            <div id="circuloSemaforo"></div>
+          <!-- Tiles de resumen + semáforo del establecimiento, apilados en la primera columna -->
+          <div class="panel-principal__columna">
+            <div class="tarjeta-resumen">
+              <span class="tarjeta-resumen__etiqueta">Hectáreas sembradas</span>
+              <strong class="tarjeta-resumen__valor"><span id="resumenSembradasHa">-</span> <small id="resumenSembradasTotal"></small></strong>
+            </div>
+            <div class="tarjeta-resumen">
+              <span class="tarjeta-resumen__etiqueta">Margen bruto</span>
+              <strong id="resumenMargenBruto" class="tarjeta-resumen__valor">-</strong>
+              <span id="resumenMargenHa" class="tarjeta-resumen__detalle"></span>
+            </div>
+            <div class="tarjeta-resumen">
+              <span class="tarjeta-resumen__etiqueta">Lotes en alerta</span>
+              <strong id="resumenAlerta" class="tarjeta-resumen__valor tarjeta-resumen__valor--alerta">-</strong>
+              <span id="resumenAlertaDetalle" class="tarjeta-resumen__detalle"></span>
+            </div>
+            <div class="tarjeta-info">
+              <div id="circuloSemaforo"></div>
+            </div>
           </div>
 
           <!-- Gauge de rentabilidad (velocímetro): ocupa el centro, donde antes estaba el mapa -->

@@ -220,14 +220,7 @@ body {
   display: none;
 }
 
-/* Tarjetas resumen */
-.tarjetas-resumen {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 20px;
-}
-
+/* Tarjetas resumen (apiladas en .panel-principal__columna) */
 .tarjeta-resumen {
   background: var(--blanco);
   border-radius: var(--radio);
@@ -266,12 +259,26 @@ body {
   line-height: 1.4;
 }
 
-/* Semáforo, gauge y mercado: tres cards iguales, igual criterio que .tarjetas-resumen */
+/* Tiles+estado, gauge y mercado: tres columnas iguales */
 .panel-principal {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
   margin-bottom: 20px;
+}
+
+/* Primera columna: tiles de resumen apilados + la card de estado, repartiendo el
+   espacio que antes ocupaba esa card sola. */
+.panel-principal__columna {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.panel-principal__columna > .tarjeta-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .tarjeta-gauge {
@@ -1204,8 +1211,7 @@ body {
 
 /* Responsive */
 @media (max-width: 1080px) {
-  .panel-principal,
-  .tarjetas-resumen {
+  .panel-principal {
     grid-template-columns: repeat(2, 1fr);
   }
   .graficos,
@@ -1239,8 +1245,7 @@ body {
   .contenido {
     padding: 20px;
   }
-  .panel-principal,
-  .tarjetas-resumen {
+  .panel-principal {
     grid-template-columns: 1fr;
   }
   .lote__fila {
