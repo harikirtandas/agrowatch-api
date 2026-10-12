@@ -47,6 +47,34 @@
   gap: 6px;
 }
 
+/* Ítems de navegación (Panel, Semáforo): ícono + texto, siempre visible. */
+.barra-superior__navitem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.72);
+  text-decoration: none;
+  font-size: 13.5px;
+  font-weight: 600;
+  transition: background 0.15s, color 0.15s;
+}
+.barra-superior__navitem svg {
+  width: 19px;
+  height: 19px;
+  flex: none;
+}
+.barra-superior__navitem:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+.barra-superior__navitem--activo {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+
 /* Base de todos los botones redondeados de la barra */
 .barra-superior__icono {
   width: 40px;
@@ -126,6 +154,54 @@
   max-width: 180px;
   opacity: 1;
 }
+/* ---------- Engranaje + desplegable (Mi perfil / Cerrar sesión) ---------- */
+.barra-superior__perfil {
+  position: relative;
+}
+.barra-superior__menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  background: var(--blanco, #fff);
+  color: var(--negro-texto, #1a1a1a);
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  z-index: 950;
+}
+.barra-superior__menu[hidden] {
+  display: none;
+}
+.barra-superior__menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--negro-texto, #1a1a1a);
+  font: inherit;
+  font-size: 13.5px;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+.barra-superior__menu-item svg {
+  width: 17px;
+  height: 17px;
+  flex: none;
+  color: var(--gris-texto, #6b7268);
+}
+.barra-superior__menu-item:hover {
+  background: var(--verde-claro, #eef2ea);
+}
+
 /* ---------- Globito de ayuda al pasar el mouse ---------- */
 /* Cualquier elemento con class="con-tip" y data-tip="texto" muestra el texto
    debajo al pasar el cursor (y también al llegar con el teclado). */
@@ -161,6 +237,12 @@
     padding: 8px 12px;
   }
   .barra-superior__nombre {
+    display: none;
+  }
+  .barra-superior__navitem {
+    padding: 0 10px;
+  }
+  .barra-superior__navitem span {
     display: none;
   }
   .barra-superior__acciones {
