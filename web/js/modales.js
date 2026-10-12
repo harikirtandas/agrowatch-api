@@ -364,6 +364,18 @@ const Modales = (() => {
                     <div id="mListaLotes"></div>
                 </div>
 
+                <div class="campo">
+                    <div class="modal-agro__filaTitulo">
+                        <label class="campo__etiqueta">Costos <span class="campo__opcional">(se reparten entre los lotes elegidos, segun sus hectareas)</span></label>
+                        <button type="button" class="modal-agro__agregar" id="mAgregarCosto">+ Agregar costo</button>
+                    </div>
+                    <div class="costo-fila costo-fila--encabezado">
+                        <span>Categoria</span><span>Descripcion</span><span>Cantidad</span><span>Unidad</span><span>Precio unit.</span><span>Moneda</span><span></span>
+                    </div>
+                    <div id="mListaCostos"></div>
+                    <p class="modal-agro__pista" id="mPistaCostos"></p>
+                </div>
+
                 <div class="campo campo--tres">
                     <div>
                         <label class="campo__etiqueta" for="mFecha">Fecha de siembra</label>
@@ -469,6 +481,7 @@ const Modales = (() => {
                     });
 
                     estado.invalido = hayError || estado.elegidos.size === 0;
+                    estado.mostrarReparto?.();
                     return !estado.invalido;
                 }
 
@@ -539,6 +552,53 @@ const Modales = (() => {
                     mostrarError(form, error);
                 }
 
+                // ---- Costos: una fila por gasto, se reparten entre los lotes ----
+                const listaCostos = form.querySelector('#mListaCostos');
+                const pistaCostos = form.querySelector('#mPistaCostos');
+
+                const CATEGORIAS = ['semilla', 'fertilizante', 'herbicida', 'maquinaria', 'labor', 'flete', 'otro'];
+
+                function agregarCosto() {
+                    const fila = document.createElement('div');
+                    fila.className = 'costo-fila';
+                    fila.innerHTML = `
+                        <select class="campo__entrada" data-costo="categoria">
+                            ${CATEGORIAS.map((c) => `<option value="${c}">${c}</option>`).join('')}
+                        </select>
+                        <input class="campo__entrada" data-costo="descripcion" maxlength="120" placeholder="Ej. Soja DM 53i54">
+                        <input class="campo__entrada" data-costo="cantidad" type="number" min="0" step="0.01" placeholder="30">
+                        <input class="campo__entrada" data-costo="unidad" maxlength="10" placeholder="bolsa">
+                        <input class="campo__entrada" data-costo="precio" type="number" min="0" step="0.01" placeholder="45000">
+                        <select class="campo__entrada" data-costo="moneda">
+                            <option value="ARS">ARS</option>
+                            <option value="USD">USD</option>
+                        </select>
+                        <button type="button" class="lote-fila__quitar" aria-label="Quitar costo">&#10005;</button>
+                    `;
+                    fila.querySelector('.lote-fila__quitar').addEventListener('click', () => {
+                        fila.remove();
+                        mostrarReparto();
+                    });
+                    fila.addEventListener('input', mostrarReparto);
+                    listaCostos.append(fila);
+                    mostrarReparto();
+                }
+
+                // Muestra como quedaria repartido, antes de guardar.
+                function mostrarReparto() {
+                    const filas = listaCostos.querySelectorAll('.costo-fila');
+                    if (filas.length === 0 || estado.elegidos.size === 0) {
+                        pistaCostos.textContent = '';
+                        return;
+                    }
+                    const haTotal = [...estado.elegidos.values()].reduce((suma, ha) => suma + Number(ha || 0), 0);
+                    if (haTotal <= 0) { pistaCostos.textContent = ''; return; }
+                    pistaCostos.textContent = `Se reparten entre ${estado.elegidos.size} lote(s), ${formatoNumero(haTotal, 2)} ha en total.`;
+                }
+
+                form.querySelector('#mAgregarCosto').addEventListener('click', agregarCosto);
+                estado.mostrarReparto = mostrarReparto;
+
                 selCampania.addEventListener('change', () => cambioCampania().catch((e) => mostrarError(form, e)));
                 selEst.addEventListener('change', () => cambioEstablecimiento().catch((e) => mostrarError(form, e)));
                 selCultivo.addEventListener('change', () => {
@@ -562,17 +622,68 @@ const Modales = (() => {
                     rinde_esperado: Number(valor('mRinde')) * 100,
                 };
 
+                // ---- Costos: se cargan una vez y se reparten entre los lotes ----
+                const costos = [];
+                // Solo las filas de #mListaCostos: la fila de encabezados tambien
+                // tiene la clase .costo-fila pero no tiene inputs adentro.
+                form.querySelectorAll('#mListaCostos .costo-fila').forEach((fila, i) => {
+                    const dato = (k) => fila.querySelector(`[data-costo="${k}"]`).value.trim();
+                    const descripcion = dato('descripcion');
+                    const cantidad = dato('cantidad');
+                    const precio = dato('precio');
+                    const unidad = dato('unidad');
+
+                    if (!descripcion && !cantidad && !precio && !unidad) return; // fila vacia
+
+                    if (!descripcion || !cantidad || !precio || !unidad) {
+                        throw new Error(`Al costo ${i + 1} le faltan datos: descripcion, cantidad, unidad y precio.`);
+                    }
+                    if (Number(cantidad) <= 0 || Number(precio) <= 0) {
+                        throw new Error(`En el costo ${i + 1} la cantidad y el precio tienen que ser mayores que cero.`);
+                    }
+                    costos.push({
+                        categoria: dato('categoria'),
+                        descripcion,
+                        cantidad: Number(cantidad),
+                        unidad,
+                        precio_unitario: Number(precio),
+                        moneda: dato('moneda'),
+                        fecha: base.fecha_siembra, // misma fecha que la siembra
+                    });
+                });
+
+                const elegidos = [...estado.elegidos];
+                const haTotal = elegidos.reduce((suma, [, ha]) => suma + Number(ha), 0);
+                const dosDecimales = (n) => Math.round(n * 100) / 100;
+
+                // Reparto proporcional a las hectareas. La diferencia del redondeo
+                // se le da al ultimo lote para que la suma cierre exacta.
+                const repartos = costos.map((costo) => {
+                    const partes = elegidos.map(([, ha]) => dosDecimales(costo.cantidad * Number(ha) / haTotal));
+                    const sumaPrevias = partes.slice(0, -1).reduce((a, b) => a + b, 0);
+                    partes[partes.length - 1] = dosDecimales(costo.cantidad - sumaPrevias);
+                    return partes;
+                });
+
                 // Una siembra por lote. Si alguna falla, las que salieron bien
-                // quedan guardadas y se informa cuál no pudo (decisión del equipo).
+                // quedan guardadas y se informa cual no pudo (decision del equipo).
                 const fallidas = [];
                 let creadas = 0;
-                for (const [loteId, ha] of estado.elegidos) {
+                for (let i = 0; i < elegidos.length; i += 1) {
+                    const [loteId, ha] = elegidos[i];
+                    const nombreLote = estado.lotes.find((l) => Number(l.id) === loteId)?.nombre ?? `Lote ${loteId}`;
                     try {
-                        await API.post('/siembras', { ...base, lote_id: loteId, ha_sembradas: Number(ha) });
+                        const siembra = await API.post('/siembras', { ...base, lote_id: loteId, ha_sembradas: Number(ha) });
                         creadas += 1;
+
+                        for (let j = 0; j < costos.length; j += 1) {
+                            await API.post(`/siembras/${siembra.id}/costos`, {
+                                ...costos[j],
+                                cantidad: repartos[j][i],
+                            });
+                        }
                     } catch (error) {
-                        const lote = estado.lotes.find((l) => Number(l.id) === loteId);
-                        fallidas.push(`${lote?.nombre ?? 'Lote ' + loteId}: ${error.message}`);
+                        fallidas.push(`${nombreLote}: ${error.message}`);
                     }
                 }
 
