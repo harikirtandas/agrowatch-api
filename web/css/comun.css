@@ -182,3 +182,286 @@
   .barra-superior__accion span,
   .con-tip::after { transition: none; }
 }
+
+/* ===================== Modales ===================== */
+/* Se llaman "modal-agro" y no "modal" a proposito: el dashboard ya tiene sus
+   propias clases .modal para el detalle de lote, y no queremos pisarlas. */
+
+.modal-agro {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-agro[hidden] { display: none; }
+
+/* El fondo difuminado: oscurece y desenfoca lo que hay detras. */
+.modal-agro__fondo {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 28, 22, 0.45);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+.modal-agro__caja {
+  position: relative;
+  width: 100%;
+  max-width: 880px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--blanco, #fff);
+  border-radius: var(--radio, 16px);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.25);
+  animation: modal-agro-entrar 0.18s ease-out;
+}
+@keyframes modal-agro-entrar {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+.modal-agro__cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px 14px;
+  border-bottom: 1px solid var(--gris-borde, #e2e2dc);
+}
+.modal-agro__cabecera h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--negro-texto, #1a1a1a);
+}
+.modal-agro__cerrar {
+  border: none;
+  background: transparent;
+  font-size: 18px;
+  line-height: 1;
+  padding: 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--gris-texto, #6b7268);
+}
+.modal-agro__cerrar:hover { background: var(--verde-claro, #eef2ea); }
+
+/* El cuerpo scrollea si el contenido no entra; la cabecera y el pie quedan fijos. */
+.modal-agro__cuerpo {
+  padding: 18px 24px;
+  overflow-y: auto;
+}
+
+.modal-agro__pie {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 24px 20px;
+  border-top: 1px solid var(--gris-borde, #e2e2dc);
+}
+
+/* ---- Campos del formulario (copiados del estilo que ya usa la app, pero
+   definidos aca para que el modal se vea igual en cualquier pantalla) ---- */
+.modal-agro .campo { margin-bottom: 16px; }
+.modal-agro .campo__etiqueta {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--negro-texto, #1a1a1a);
+  margin-bottom: 8px;
+}
+.modal-agro .campo__entrada {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--gris-borde, #e2e2dc);
+  border-radius: 10px;
+  background: #f7f7f3;
+  font: inherit;
+  font-size: 14px;
+  color: var(--negro-texto, #1a1a1a);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+.modal-agro .campo__entrada:focus { border-color: var(--verde-medio, #4f8f63); }
+.modal-agro .campo__entrada--error { border-color: var(--alerta, #d1583f); }
+.modal-agro .mensaje-error {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--alerta, #d1583f);
+}
+
+/* ---- Botones del pie ---- */
+.boton-agro {
+  padding: 11px 18px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.boton-agro--principal { background: var(--verde-medio, #4f8f63); color: #fff; }
+.boton-agro--principal:hover { background: #5fa676; }
+.boton-agro--secundario {
+  background: transparent;
+  color: var(--gris-texto, #6b7268);
+  border-color: var(--gris-borde, #e2e2dc);
+}
+.boton-agro--secundario:hover { background: var(--verde-claro, #eef2ea); }
+.boton-agro[disabled] { opacity: 0.6; cursor: default; }
+
+@media (max-width: 560px) {
+  .modal-agro { padding: 10px; align-items: flex-end; }
+  .modal-agro__caja { max-height: 92vh; }
+  .modal-agro__pie { flex-direction: column-reverse; }
+  .boton-agro { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-agro__caja { animation: none; }
+}
+
+/* ---- Piezas del modal de establecimiento ---- */
+
+/* Dos campos en una fila (provincia + localidad) */
+.campo--dos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.campo__opcional {
+  font-weight: 400;
+  color: var(--gris-texto, #6b7268);
+}
+
+/* El mapa NECESITA una altura explicita: sin esto Leaflet no dibuja nada. */
+.modal-agro__mapa {
+  height: 300px;
+  border-radius: 10px;
+  border: 1px solid var(--gris-borde, #e2e2dc);
+  overflow: hidden;
+}
+.modal-agro__coords {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  color: var(--gris-texto, #6b7268);
+}
+
+/* Una fila por lote: nombre + dos medidas + la X para quitarla */
+.lote-fila {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr auto auto;
+  gap: 8px;
+  margin-bottom: 8px;
+  align-items: center;
+}
+.lote-fila .campo__entrada { padding: 9px 11px; font-size: 13.5px; }
+.lote-fila__quitar {
+  border: none;
+  background: transparent;
+  color: var(--alerta, #d1583f);
+  font-size: 15px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.lote-fila__quitar:hover { background: #fae3e0; }
+
+.modal-agro__agregar {
+  border: none;
+  background: transparent;
+  color: var(--verde-medio, #4f8f63);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  padding: 4px 0;
+  cursor: pointer;
+}
+.modal-agro__agregar:hover { text-decoration: underline; }
+
+@media (max-width: 560px) {
+  .campo--dos { grid-template-columns: 1fr; }
+  .lote-fila { grid-template-columns: 1fr 1fr auto auto; }
+  .lote-fila .campo__entrada:first-child { grid-column: 1 / -1; }
+}
+
+/* ---- Agregados del modal de establecimiento ---- */
+
+.campo--tres {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr 1fr;
+  gap: 14px;
+}
+
+/* Titulo de seccion con un boton a la derecha */
+.modal-agro__filaTitulo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.modal-agro__filaTitulo .campo__etiqueta { margin-bottom: 0; }
+
+/* Encabezado de las columnas de lotes */
+.lote-fila--encabezado {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gris-texto, #6b7268);
+  margin-bottom: 4px;
+}
+
+.modal-agro__pista {
+  margin: 0 0 8px;
+  font-size: 12.5px;
+  color: var(--gris-texto, #6b7268);
+}
+
+/* Boton "Ubicar": gris en reposo, verde cuando espera el clic en el mapa,
+   y con tilde cuando ya se marco el punto. */
+.boton-ubicar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid var(--gris-borde, #e2e2dc);
+  border-radius: 9px;
+  background: transparent;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--gris-texto, #6b7268);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.boton-ubicar::before { content: '📍'; font-size: 12px; }
+.boton-ubicar:hover { border-color: var(--verde-medio, #4f8f63); color: var(--negro-texto, #1a1a1a); }
+
+/* Esperando que toques el mapa */
+.boton-ubicar--activo {
+  background: var(--verde-medio, #4f8f63);
+  border-color: var(--verde-medio, #4f8f63);
+  color: #fff;
+}
+
+/* Ya tiene punto marcado */
+.boton-ubicar--ubicado {
+  border-color: var(--verde-medio, #4f8f63);
+  color: var(--verde-medio, #4f8f63);
+}
+.boton-ubicar--ubicado::before { content: '✓'; }
+.boton-ubicar--activo.boton-ubicar--ubicado { color: #fff; }
+
+@media (max-width: 760px) {
+  .campo--tres { grid-template-columns: 1fr; }
+  .lote-fila--encabezado { display: none; }
+}

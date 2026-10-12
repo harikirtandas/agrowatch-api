@@ -92,10 +92,13 @@
   barra.querySelectorAll("[data-accion]").forEach((boton) => {
     boton.addEventListener("click", () => {
       const { accion } = boton.dataset;
-      // Etapa 4: acá se va a abrir el modal. Mientras tanto, lleva a la
-      // pantalla que hace esa tarea hoy.
-      const destino = ACCIONES.find((a) => a.accion === accion).destino;
-      window.location.href = destino;
+      // Si ya existe la ventana emergente para esta accion, se abre. Las que
+      // todavia no estan hechas caen a la pantalla que hace esa tarea hoy.
+      // Ojo: Modales se declara con const, asi que NO existe como
+      // window.Modales (solo var y las funciones se cuelgan de window).
+      // Por eso se usa directo, con typeof por si el archivo no cargo.
+      if (typeof Modales !== 'undefined' && Modales.abrir(accion)) return;
+      window.location.href = ACCIONES.find((a) => a.accion === accion).destino;
     });
   });
 })();
