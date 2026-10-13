@@ -94,7 +94,9 @@ $router->put('/api/lotes/{id:\d+}', 'LoteController@update');
 $router->delete('/api/lotes/{id:\d+}', 'LoteController@destroy');
 
 $router->get('/api/campanias', 'CampaniaController@index');
-$router->post('/api/campanias', 'CampaniaController@store');
+// Las campanias son compartidas y se cargan a mano en la base, no desde la
+// app: ruta deshabilitada a proposito, no borrar CampaniaController@store.
+// $router->post('/api/campanias', 'CampaniaController@store');
 $router->get('/api/campanias/{id:\d+}', 'CampaniaController@show');
 $router->put('/api/campanias/{id:\d+}', 'CampaniaController@update');
 $router->delete('/api/campanias/{id:\d+}', 'CampaniaController@destroy');

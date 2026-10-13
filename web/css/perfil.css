@@ -467,19 +467,6 @@ body {
   background: rgba(209, 88, 63, 0.08); 
 }
 
-.formulario-campania {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr) auto;
-  gap: 12px;
-  align-items: end;
-}
-
-.formulario-campania .mensaje-error,
-.formulario-campania .mensaje-ok { 
-  grid-column: 1 / -1; 
-}
-
-
 /* Responsive */
 @media (max-width: 760px) {
   .formulario-perfil {
@@ -508,10 +495,7 @@ body {
   .tarjeta-perfil {
     padding: 20px;
   }
-  .lista-campanias__item { 
-    grid-template-columns: 1fr auto; 
-  }
-  .formulario-campania { 
-    grid-template-columns: 1fr; 
+  .lista-campanias__item {
+    grid-template-columns: 1fr auto;
   }
 }

@@ -74,23 +74,9 @@
 
       <div class="tarjeta-perfil">
         <h2 class="tarjeta-perfil__titulo">Campañas</h2>
-        <p class="tarjeta-perfil__subtitulo">Son compartidas por todos los usuarios: cerrar o crear una afecta a todos</p>
+        <p class="tarjeta-perfil__subtitulo">Son compartidas por todos los usuarios: cerrarla afecta a todos</p>
         <ul id="listaCampanias" class="lista-campanias"></ul>
-        <form id="formCampania" class="formulario-campania">
-          <div class="campo">
-            <label for="campaniaNombre" class="campo__etiqueta">Nombre</label>
-            <input type="text" id="campaniaNombre" class="campo__entrada" maxlength="30" placeholder="Ej. 2027/28" required>
-          </div>
-          <div class="campo">
-            <label for="campaniaInicio" class="campo__etiqueta">Inicio</label>
-            <input type="date" id="campaniaInicio" class="campo__entrada" required>
-          </div>
-          <div class="campo">
-            <label for="campaniaFin" class="campo__etiqueta">Fin</label>
-            <input type="date" id="campaniaFin" class="campo__entrada" required>
-          </div>
-          <button type="submit" class="boton boton--principal">Crear campaña</button>
-        </form>
+        <div id="campaniasMensajes"></div>
       </div>
 
       <button type="button" class="boton boton--salir" data-cerrar-sesion>Cerrar sesión</button>

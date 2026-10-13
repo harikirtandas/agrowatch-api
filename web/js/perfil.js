@@ -81,9 +81,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // 3) Campañas (11.7)
+  // 3) Campañas (11.7). Son compartidas y de alta manual en la base (no se
+  // crean desde la app): esta pantalla solo deja verlas, cerrarlas o
+  // eliminarlas.
   const lista = document.getElementById('listaCampanias');
-  const formCampania = document.getElementById('formCampania');
+  const campaniasMensajes = document.getElementById('campaniasMensajes');
   let campanias = [];
 
   // Trae las campañas y dibuja la lista (la más reciente primero).
@@ -92,7 +94,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       .sort((a, b) => b.fecha_inicio.localeCompare(a.fecha_inicio));
 
     if (campanias.length === 0) {
-      lista.innerHTML = '<li class="lista-campanias__vacia">No hay campañas cargadas. Creá la primera abajo.</li>';
+      lista.innerHTML = '<li class="lista-campanias__vacia">No hay campañas cargadas.</li>';
       return;
     }
 
@@ -117,7 +119,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!boton) return; // el clic no fue en un botón
     const campania = campanias.find((c) => c.id === Number(boton.closest('li').dataset.id));
     const accion = boton.dataset.accion;
-    mostrarError(formCampania, null);
+    mostrarError(campaniasMensajes, null);
 
     try {
       if (accion === 'eliminar') {
@@ -137,33 +139,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       await cargarCampanias();
     } catch (error) {
-      mostrarError(formCampania, error); // ej. 409 "La campana tiene siembras asociadas."
-    }
-  });
-
-  formCampania.addEventListener('submit', async (ev) => {
-    ev.preventDefault();
-    mostrarError(formCampania, null);
-    const inicio = valor('campaniaInicio');
-    const fin = valor('campaniaFin');
-    // Por si el backend no compara las dos fechas entre sí.
-    // (Las fechas AAAA-MM-DD se pueden comparar como texto: "2027-03-31" < "2027-09-01".)
-    if (fin < inicio) {
-      mostrarError(formCampania, new Error('La fecha de fin no puede ser anterior a la de inicio.'));
-      return;
-    }
-
-    const boton = ev.submitter;
-    boton.disabled = true;
-    try {
-      await API.post('/campanias', { nombre: valor('campaniaNombre'), fecha_inicio: inicio, fecha_fin: fin });
-      formCampania.reset();
-      await cargarCampanias();
-      mostrarOk(formCampania, 'Campaña creada.');
-    } catch (error) {
-      mostrarError(formCampania, error, { nombre: 'campaniaNombre', fecha_inicio: 'campaniaInicio', fecha_fin: 'campaniaFin' });
-    } finally {
-      boton.disabled = false;
+      mostrarError(campaniasMensajes, error); // ej. 409 "La campana tiene siembras asociadas."
     }
   });
 
