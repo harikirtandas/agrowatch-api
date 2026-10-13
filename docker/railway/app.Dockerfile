@@ -7,6 +7,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN docker-php-ext-install pdo_mysql mysqli zip bcmath
 RUN a2enmod rewrite
 
+# la imagen base trae el MPM "event" habilitado ademas del "prefork"; mod_php
+# (que es con el que corre esta imagen, no php-fpm) solo funciona con
+# prefork, asi que si quedan los dos cargados Apache no arranca
+# ("AH00534: More than one MPM loaded").
+RUN a2dismod mpm_event || true
+RUN a2enmod mpm_prefork
+
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 COPY docker/apache/000-default.conf /etc/apache2/sites-available/000-default.conf
 COPY docker/php/php.ini /usr/local/etc/php/conf.d/zz-dev.ini
