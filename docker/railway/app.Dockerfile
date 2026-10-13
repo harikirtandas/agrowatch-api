@@ -7,12 +7,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN docker-php-ext-install pdo_mysql mysqli zip bcmath
 RUN a2enmod rewrite
 
-# la imagen base trae el MPM "event" habilitado ademas del "prefork"; mod_php
-# (que es con el que corre esta imagen, no php-fpm) solo funciona con
-# prefork, asi que si quedan los dos cargados Apache no arranca
-# ("AH00534: More than one MPM loaded").
-RUN a2dismod mpm_event || true
-RUN a2enmod mpm_prefork
+# mod_php (con el que corre esta imagen, no php-fpm) solo funciona con el MPM
+# prefork; si queda mas de un MPM cargado Apache no arranca
+# ("AH00534: More than one MPM loaded"). El build anterior mostro que
+# mpm_event ya estaba disabled y mpm_prefork ya enabled, asi que el
+# conflicto viene de otro MPM (worker/itk) - se listan los mods-enabled para
+# confirmarlo en el log de build, y se fuerza a dejar solo prefork.
+RUN a2dismod mpm_event mpm_worker mpm_itk 2>/dev/null; \
+    a2enmod mpm_prefork; \
+    ls -la /etc/apache2/mods-enabled/ | grep -i mpm
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 COPY docker/apache/000-default.conf /etc/apache2/sites-available/000-default.conf
