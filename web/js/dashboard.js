@@ -697,8 +697,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (detalleMapa.open !== detalleClima.open) detalleMapa.open = detalleClima.open;
     });
 
-    // Datos que no dependen del establecimiento
-    const [establecimientos, campanias] = await Promise.all([
+    // Datos que no dependen del establecimiento. "establecimientos" es let y no const
+    // porque se vuelve a pedir cuando se crea uno desde una ventana emergente.
+    let [establecimientos, campanias] = await Promise.all([
         API.get('/establecimientos'),
         API.get('/campanias'),
     ]);
@@ -720,9 +721,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         .sort((a, b) => b.fecha_inicio.localeCompare(a.fecha_inicio)) [0] ?? null;
 
     const selector = document.getElementById('selectorEstablecimiento');
-    selector.innerHTML = establecimientos
+    const opcionesEstablecimientos = () => establecimientos
         .map((e) => `<option value="${e.id}">🏡 ${escapar(e.nombre)}</option>`)
         .join('');
+    selector.innerHTML = opcionesEstablecimientos();
 
     const guardado = localStorage.getItem('establecimientoActual');
     const idInicial = establecimientos.some((e) => String(e.id) === guardado) ? guardado : String(establecimientos[0].id);
@@ -754,6 +756,34 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     await cargarEstablecimiento(Number(selector.value));
+
+    // Después de guardar en una ventana emergente, que se redibuje el panel con los
+    // datos nuevos en vez de recargar la página entera.
+    if (typeof Modales !== 'undefined') {
+        Modales.alGuardarHacer(async () => {
+            // Primero la lista de campos: el selector se arma una sola vez al iniciar,
+            // así que un establecimiento recién creado no estaría entre sus opciones.
+            const elegido = selector.value;
+            const idsPrevios = establecimientos.map((e) => String(e.id));
+            establecimientos = await API.get('/establecimientos');
+            selector.innerHTML = opcionesEstablecimientos();
+
+            // Esta función es la misma para las tres ventanas y no sabe qué se creó, así
+            // que lo deduce: si aparecio un establecimiento que antes no estaba, se salta
+            // a ese (es lo que el usuario acaba de crear, y es donde va a seguir
+            // trabajando). Si no aparecio ninguno -- creó un lote o una siembra -- se
+            // queda en el que estaba mirando, salvo que ya no exista.
+            const nuevo = establecimientos.find((e) => !idsPrevios.includes(String(e.id)));
+            if (nuevo) selector.value = String(nuevo.id);
+            else if (establecimientos.some((e) => String(e.id) === elegido)) selector.value = elegido;
+            else selector.value = String(establecimientos[0].id);
+            localStorage.setItem('establecimientoActual', selector.value);
+
+            // Y después los datos del campo, con la misma función que usa el selector:
+            // ya está hecha para correr varias veces.
+            await cargarEstablecimiento(Number(selector.value));
+        });
+    }
 
     async function cargarEstablecimiento(id) {
         const estaCarga = ++cargaActual;

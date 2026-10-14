@@ -9,6 +9,7 @@ const Modales = (() => {
     // se destruye y recrea en cada apertura.
     let caja = null;
     let foco = null; // a qué elemento devolver el foco al cerrar
+    let alRefrescar = null; // lo registra cada pantalla con alGuardarHacer()
 
     function armarEsqueleto() {
         caja = document.createElement('div');
@@ -784,8 +785,11 @@ const Modales = (() => {
                 cerrar();
                 // Si hay un paso siguiente y existe su ventana, se encadena.
                 if (seguir && ventana.continuaEn && abrir(ventana.continuaEn)) return;
-                // Si no, recargamos para que la pantalla muestre lo creado.
-                window.location.reload();
+                // Si la pantalla registró cómo refrescarse, se le pide que lo haga y
+                // listo. Recargar entera es el plan B para las que todavía no lo
+                // hicieron: así se puede ir pantalla por pantalla sin romper el resto.
+                if (alRefrescar) await alRefrescar();
+                else window.location.reload();
             } catch (error) {
                 mostrarError(form, error, ventana.errores);
             } finally {
@@ -822,5 +826,11 @@ const Modales = (() => {
         destino.prepend(franja);
     }
 
-    return { abrir, cerrar, avisoVacio };
+    // Cada pantalla puede registrar acá la función que ya usa para dibujarse con los
+    // datos de la API (por ejemplo cargarEstablecimiento() del panel). El modal la
+    // llama después de guardar, en vez de recargar la página entera: así no parpadea,
+    // no se vuelve a pedir todo y no se pierde en qué pestaña estaba el usuario.
+    function alGuardarHacer(fn) { alRefrescar = fn; }
+
+    return { abrir, cerrar, avisoVacio, alGuardarHacer };
 })();
