@@ -545,7 +545,14 @@ const Modales = (() => {
                     const abiertas = campanias.filter((c) => !Number(c.cerrada));
                     if (abiertas.length === 0) {
                         selCampania.innerHTML = '<option value="">No hay campañas abiertas</option>';
-                        mostrarError(form, new Error('Creá una campaña desde Perfil antes de cargar una siembra.'));
+                        // Las campañas son compartidas y se cargan a mano en la base
+                        // (POST /api/campanias quedó deshabilitado), así que no se
+                        // puede mandar al usuario a crear una. Reabrir sí lo puede
+                        // hacer él desde Perfil, y son dos situaciones distintas:
+                        // sin ninguna campaña no tiene salida, con todas cerradas sí.
+                        mostrarError(form, new Error(campanias.length === 0
+                            ? 'Todavía no hay ninguna campaña cargada. Pedile a quien administra el sistema que cargue una.'
+                            : 'Todas las campañas están cerradas. Podés reabrir una desde Perfil.'));
                         return;
                     }
                     selCampania.innerHTML = opciones(abiertas, (c) => c.nombre);
