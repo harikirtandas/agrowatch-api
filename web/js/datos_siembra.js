@@ -237,7 +237,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         mostrarEstado('Sin señal: la siembra quedó guardada en este dispositivo y se va a sincronizar sola cuando vuelva la conexión.');
         return;
       }
-      window.location.href = `semaforo.html?siembra=${resultado.siembraId}`;
+      // Al panel, que es de donde se llega acá (desde "Completar datos de siembra").
+      // Antes iba al semáforo de esa siembra puntual: dejaba al usuario en otra
+      // pantalla, distinta de la que estaba mirando. El botón de eliminar de esta
+      // misma pantalla ya volvía al panel, así que ahora los dos terminan igual.
+      window.location.href = 'dashboard_mi_campo.html';
     } catch (error) {
       recordarAvance(envio, filas);
       mostrarErrorDeEnvio(error, filas);

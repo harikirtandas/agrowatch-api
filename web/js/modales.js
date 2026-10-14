@@ -412,6 +412,19 @@ const Modales = (() => {
                 const opciones = (filas, texto) =>
                     filas.map((f) => `<option value="${f.id}">${escapar(texto(f))}</option>`).join('');
 
+                // Deja un lote tildado de entrada, con sus hectáreas efectivas, para
+                // cuando la ventana se abre desde el botón de un lote puntual. Si ese
+                // lote no es de este establecimiento o está bloqueado porque ya tiene
+                // el cultivo elegido, no hace nada y la lista queda como estaba.
+                function preseleccionarLote(id) {
+                    const lote = estado.lotes.find((l) => Number(l.id) === id);
+                    if (!lote) return;
+                    const casilla = lista.querySelector(`[data-lote-id="${id}"]`);
+                    if (!casilla || casilla.disabled) return;
+                    estado.elegidos.set(id, num(lote.ha_efectivas) ?? 0);
+                    pintarLotes();
+                }
+
                 // ---- Dibuja la lista de lotes con su estado ----
                 function pintarLotes() {
                     if (estado.lotes.length === 0) {
@@ -546,8 +559,20 @@ const Modales = (() => {
                     }
                     selEst.innerHTML = opciones(propios, (e) => `${e.nombre} — ${e.localidad}`);
 
+                    // Si llegamos desde el botón de un lote, arrancamos parados en su
+                    // establecimiento. Se chequea que siga existiendo y sea propio: si
+                    // no, se ignora y queda el primero de la lista, como siempre.
+                    const { establecimientoId, loteId } = estado.opciones;
+                    if (establecimientoId && propios.some((e) => Number(e.id) === Number(establecimientoId))) {
+                        selEst.value = String(establecimientoId);
+                    }
+
                     await cambioCampania();
                     await cambioEstablecimiento();
+
+                    // Va al final a propósito: las dos funciones de arriba vacían lo
+                    // elegido, así que tildar antes no serviría de nada.
+                    if (loteId) preseleccionarLote(Number(loteId));
                 } catch (error) {
                     mostrarError(form, error);
                 }
@@ -696,15 +721,18 @@ const Modales = (() => {
 
     };
 
-    // Devuelve true si abrió la ventana, false si todavía no existe para ese tipo
-    function abrir(tipo) {
+    // Devuelve true si abrió la ventana, false si todavía no existe para ese tipo.
+    // "opciones" es contexto con el que arranca la ventana (hoy solo lo usa la de
+    // siembra, para abrirse con un lote ya tildado). Quien no lo manda no cambia
+    // en nada: queda el objeto vacío de siempre.
+    function abrir(tipo, opciones = {}) {
         const ventana = VENTANAS[tipo];
         if (!ventana) return false;
 
         if (!caja) armarEsqueleto();
         foco = document.activeElement;
 
-        const estado = {}; // lo que la ventana va juntando (ubicación, lotes...)
+        const estado = { opciones }; // lo que la ventana va juntando (ubicación, lotes...)
 
         caja.querySelector('#modalAgroTitulo').textContent = ventana.titulo;
 

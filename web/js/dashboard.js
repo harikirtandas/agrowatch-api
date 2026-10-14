@@ -526,7 +526,7 @@ function dibujarListaLotes(filas, urlEditar) {
                 boton = `<button type="button" class="btn" data-sin-ha="${lote.id}">Ver detalle</button>`;
             } else {
                 subtitulo = 'Sin sembrar en esta campaña';
-                boton = `<a href="datos_de_siembra.html?lote=${lote.id}" class="btn">Cargar siembra</a>`;
+                boton = `<button type="button" class="btn" data-sembrar="${lote.id}">Cargar siembra</button>`;
             }
             return `<div class="lote"><div class="lote__fila">
                 <div class="lote__p"><span class="pill pill--sin-dato">Sin datos</span></div>
@@ -615,6 +615,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     document.getElementById('listaLotes').addEventListener('click', (ev) => {
+        // "Cargar siembra" abre la ventana emergente con este lote ya tildado, en
+        // vez de llevar a la pantalla de alta (que al guardar redirigía al semáforo
+        // y sacaba al usuario del panel). Igual que en navbar.js, Modales se declara
+        // con const y no existe como window.Modales: se chequea con typeof, y si el
+        // archivo no cargó se cae a la pantalla de antes para no dejar un botón muerto.
+        const botonSembrar = ev.target.closest('[data-sembrar]');
+        if (botonSembrar) {
+            const loteId = Number(botonSembrar.dataset.sembrar);
+            const lote = filasActuales.find((f) => f.lote.id === loteId)?.lote;
+            if (typeof Modales !== 'undefined' && lote) {
+                Modales.abrir('siembra', { establecimientoId: lote.establecimiento_id, loteId });
+            } else {
+                window.location.href = `datos_de_siembra.html?lote=${loteId}`;
+            }
+            return;
+        }
         const botonDetalle = ev.target.closest('[data-detalle]');
         if (botonDetalle) {
             const fila = filasOrdenadas(filasActuales)[Number(botonDetalle.dataset.detalle)];
