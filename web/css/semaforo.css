@@ -381,10 +381,17 @@ body {
   display: none; 
 }
 
-.enlace-otra-siembra { 
-  display: inline-block; 
-  margin-left: 20px; 
+.enlace-otra-siembra {
+  display: inline-block;
+  margin-left: 20px;
 }
+
+/* El "display" de arriba le gana a la regla [hidden] { display: none } que trae el
+   navegador, porque el CSS propio siempre pisa al del navegador. Sin esto, el JS
+   pone hidden = true en el modo campania y el enlace se queda visible igual, con el
+   href que trae el HTML (dashboard_mi_campo.html), que no es a donde deberia ir.
+   Su hermano #editarSiembra no necesita esto porque su clase no toca "display". */
+.enlace-otra-siembra[hidden] { display: none; }
 
 /* Responsive */
 @media (max-width: 860px) {
