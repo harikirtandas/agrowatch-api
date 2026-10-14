@@ -470,7 +470,12 @@ const Modales = (() => {
                         `;
                     }).join('');
 
-                    pista.textContent = 'Tildá los lotes donde vas a sembrar. Las hectáreas vienen con lo que mide cada lote; podés bajarlas.';
+                    // Sin cultivo elegido no se sabe qué lotes están tomados, así que
+                    // ninguno aparece bloqueado. Se avisa en vez de dejar que el usuario
+                    // tilde lotes que después se le van a destildar solos.
+                    pista.textContent = selCultivo.value
+                        ? 'Tildá los lotes donde vas a sembrar. Las hectáreas vienen con lo que mide cada lote; podés bajarlas.'
+                        : 'Elegí primero el cultivo: de eso depende qué lotes están disponibles.';
                     validarHectareas();
                 }
 
@@ -556,7 +561,13 @@ const Modales = (() => {
                         return;
                     }
                     selCampania.innerHTML = opciones(abiertas, (c) => c.nombre);
-                    selCultivo.innerHTML = opciones(cultivos, (c) => c.nombre);
+                    // El cultivo arranca sin elegir, con una opción vacía adelante. Si
+                    // quedara el primero de la lista puesto, alcanza con no mirarlo para
+                    // cargar una siembra de Soja sin haberla elegido. Además ordena el
+                    // flujo: el cultivo decide qué lotes estan bloqueados, asi que
+                    // conviene elegirlo antes que los lotes.
+                    selCultivo.innerHTML = '<option value="">Elegí un cultivo</option>'
+                        + opciones(cultivos, (c) => c.nombre);
 
                     const propios = establecimientos.filter((e) => e.rol === 'dueno');
                     if (propios.length === 0) {
@@ -636,10 +647,16 @@ const Modales = (() => {
                 selCultivo.addEventListener('change', () => {
                     estado.elegidos.clear(); // con otro cultivo cambia qué está bloqueado
                     pintarLotes();
+                    // Se vuelve a tildar el lote con el que abrió la ventana: como el
+                    // cultivo arranca vacío, el usuario SIEMPRE pasa por acá, y sin esto
+                    // el lote preseleccionado se perdería apenas elige el cultivo. Si con
+                    // el cultivo nuevo quedó bloqueado, preseleccionarLote no hace nada.
+                    if (estado.opciones.loteId) preseleccionarLote(Number(estado.opciones.loteId));
                 });
             },
 
             async guardar(form, estado) {
+                if (!valor('mCultivo')) throw new Error('Elegí el cultivo que vas a sembrar.');
                 if (estado.elegidos.size === 0) throw new Error('Elegí al menos un lote para sembrar.');
                 if (estado.invalido) throw new Error('Revisá las hectáreas marcadas en rojo.');
                 if (!valor('mFecha')) throw new Error('Poné la fecha de siembra.');
