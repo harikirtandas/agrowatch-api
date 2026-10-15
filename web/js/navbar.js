@@ -14,6 +14,8 @@
       '<rect x="4" y="4" width="16" height="16" rx="2"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/>',
     perfil:
       '<circle cx="12" cy="8" r="3.2"/><path d="M4.5 20c1.6-3.6 5-5 7.5-5s5.9 1.4 7.5 5"/>',
+    ayuda:
+      '<circle cx="12" cy="12" r="9"/><path d="M9.3 9.2a2.8 2.8 0 0 1 5.4.9c0 1.9-2.7 2.3-2.7 4"/><line x1="12" y1="17.5" x2="12" y2="17.5"/>',
     salir:
       '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
     engranaje:
@@ -105,6 +107,7 @@
       </button>
       <div class="barra-superior__menu" data-perfil-menu hidden>
         <a href="perfil.html" class="barra-superior__menu-item">${svg(ICONOS.perfil)}<span>Mi perfil</span></a>
+        <a href="primeros_pasos.html" class="barra-superior__menu-item">${svg(ICONOS.ayuda)}<span>Primeros pasos</span></a>
         <button type="button" class="barra-superior__menu-item" data-cerrar-sesion>
           ${svg(ICONOS.salir)}<span>Cerrar sesión</span>
         </button>

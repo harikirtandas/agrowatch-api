@@ -39,6 +39,10 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
+  /* En la landing la marca es un <div>, pero en Primeros pasos es un <a> que
+     vuelve al inicio: sin esto hereda el azul subrayado del navegador. */
+  color: inherit;
+  text-decoration: none;
 }
 
 .encabezado__logo {
@@ -63,6 +67,18 @@ body {
 
 .encabezado__enlace:hover {
   text-decoration: underline;
+}
+
+/* Los dos enlaces del encabezado, agrupados a la derecha. "Primeros pasos"
+   queda en gris para que "Iniciar sesion" siga siendo la accion principal. */
+.encabezado__acciones {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.encabezado__enlace--suave {
+  color: var(--negro-texto);
 }
 
 /* Presentacion */

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="../img/logo-aw.svg">
+  <title>AgroWatchOut — Primeros pasos</title>
+  <!-- Reusa el encabezado de la landing tal cual; el CSS propio va despues
+       porque pisa el fondo verde del body por el claro de las pantallas
+       internas. -->
+  <link rel="stylesheet" href="../css/landing.css">
+  <link rel="stylesheet" href="../css/primeros_pasos.css">
+</head>
+<body>
+
+  <header class="encabezado">
+    <div class="encabezado__contenedor">
+      <a href="landing.html" class="encabezado__marca">
+        <span class="encabezado__logo"></span>
+        <span class="encabezado__nombre">AgroWatchOut</span>
+      </a>
+      <!-- A quien llegó logueado (desde el engranaje) le sirve volver al
+           panel; a quien todavía no tiene cuenta, iniciar sesión. El script
+           del final deja visible el que corresponde. -->
+      <a href="login.html" class="encabezado__enlace" data-sin-sesion>Iniciar sesión</a>
+      <a href="dashboard_mi_campo.html" class="encabezado__enlace" data-con-sesion hidden>Volver al panel</a>
+    </div>
+  </header>
+
+  <main class="guia">
+
+    <div class="guia__intro">
+      <h1 class="guia__titulo">Primeros pasos</h1>
+      <p class="guia__bajada">
+        De cero a ver tu primer semáforo: cuatro pasos, unos diez minutos.
+        Después, cada campaña nueva te lleva un rato corto.
+      </p>
+    </div>
+
+    <ol class="pasos">
+
+      <li class="paso">
+        <span class="paso__numero">1</span>
+        <div class="paso__cuerpo">
+          <h2 class="paso__titulo">Creá tu cuenta y tu campo</h2>
+          <p class="paso__texto">
+            En <strong>Crear usuario</strong> cargás tu nombre, apellido, email y
+            contraseña. El segundo paso te pide tu primer establecimiento:
+            nombre, provincia y localidad, y lo podés ubicar haciendo clic en el
+            mapa. Si tenés más de un campo, después agregás los que quieras.
+          </p>
+        </div>
+      </li>
+
+      <li class="paso">
+        <span class="paso__numero">2</span>
+        <div class="paso__cuerpo">
+          <h2 class="paso__titulo">Cargá los lotes</h2>
+          <p class="paso__texto">
+            Desde <strong>Mi establecimiento</strong>, en la barra de arriba,
+            agregás los lotes de ese campo. De cada uno te pide el nombre y dos
+            superficies:
+          </p>
+          <ul class="paso__lista">
+            <li><strong>Hectáreas totales:</strong> todo lo que mide el lote.</li>
+            <li><strong>Hectáreas efectivas:</strong> lo que realmente se puede
+              sembrar, descontando caminos, bajos y montes.</li>
+          </ul>
+          <p class="paso__texto">
+            Ubicar cada lote en el mapa es opcional, pero es lo que después te
+            muestra el campo dibujado en el panel.
+          </p>
+        </div>
+      </li>
+
+      <li class="paso">
+        <span class="paso__numero">3</span>
+        <div class="paso__cuerpo">
+          <h2 class="paso__titulo">Cargá lo que sembraste, con sus costos</h2>
+          <p class="paso__texto">
+            El botón <strong>Crear siembra</strong> abre un solo formulario con
+            todo: la campaña, el cultivo, los lotes donde lo sembraste, la fecha,
+            el <strong>rinde esperado en quintales por hectárea</strong> y los
+            costos.
+          </p>
+          <ul class="paso__lista">
+            <li>Podés marcar <strong>varios lotes a la vez</strong>: los costos se
+              reparten entre ellos según sus hectáreas, así no cargás lo mismo
+              tres veces.</li>
+            <li>Cada costo lleva <strong>su moneda y su fecha</strong>. Lo que
+              pagaste en pesos se convierte con el dólar de ese día, no con el de
+              hoy: un gasto ya hecho no cambia de valor porque se movió el dólar.</li>
+            <li>Cargá la <strong>semilla propia a precio de mercado</strong>. Si la
+              ponés en cero, el margen te va a dar mejor de lo que es.</li>
+          </ul>
+        </div>
+      </li>
+
+      <li class="paso">
+        <span class="paso__numero">4</span>
+        <div class="paso__cuerpo">
+          <h2 class="paso__titulo">Mirá el panel</h2>
+          <p class="paso__texto">
+            Con eso ya tenés número. En <strong>¿Cómo voy?</strong> vas a ver el
+            semáforo del campo, el margen total y por hectárea, tus lotes
+            ordenados del peor al mejor, en qué se te va la plata y el pronóstico.
+            En <strong>¿Qué puedo cambiar?</strong> movés el precio del grano y
+            todo se recalcula al instante, para ver cuánto aguanta tu campaña si
+            el mercado se da vuelta.
+          </p>
+          <p class="paso__texto">
+            El <strong>Semáforo</strong> de la barra de arriba es la misma lectura,
+            campaña por campaña.
+          </p>
+        </div>
+      </li>
+
+    </ol>
+
+    <section class="bloque">
+      <h2 class="bloque__titulo">Qué te está diciendo cada color</h2>
+      <p class="bloque__bajada">
+        El semáforo mira el <strong>margen bruto</strong>: lo que te queda después
+        de pagar los costos que cargaste, antes del arrendamiento, la estructura y
+        los impuestos.
+      </p>
+      <ul class="colores">
+        <li class="color">
+          <span class="color__punto color__punto--verde"></span>
+          <span class="color__texto"><strong>Verde:</strong> te queda al menos el
+            20 % de lo que vas a cobrar. Hay colchón.</span>
+        </li>
+        <li class="color">
+          <span class="color__punto color__punto--amarillo"></span>
+          <span class="color__texto"><strong>Amarillo:</strong> da positivo, pero
+            justo. Una baja de precio o de rinde te lo come.</span>
+        </li>
+        <li class="color">
+          <span class="color__punto color__punto--rojo"></span>
+          <span class="color__texto"><strong>Rojo:</strong> con esos costos y ese
+            precio, la siembra no paga lo que costó.</span>
+        </li>
+        <li class="color">
+          <span class="color__punto color__punto--gris"></span>
+          <span class="color__texto"><strong>Gris, "Sin datos":</strong> todavía no
+            se puede calcular. Abajo está el porqué.</span>
+        </li>
+      </ul>
+      <p class="bloque__nota">
+        El dato que más se usa en el campo es el <strong>rinde de
+        indiferencia</strong>: cuántos quintales necesitás para empatar. Si tu
+        rinde esperado está muy por encima, dormís tranquilo.
+      </p>
+    </section>
+
+    <section class="bloque">
+      <h2 class="bloque__titulo">Si un lote te aparece en gris</h2>
+      <p class="bloque__bajada">
+        No es un error: le falta un dato para poder calcular. Casi siempre es uno
+        de estos.
+      </p>
+      <ul class="faq">
+        <li class="faq__item">
+          <span class="faq__pregunta">No cargaste los costos de esa siembra.</span>
+          <span class="faq__respuesta">Sin costos no hay margen, y mostrarte un
+            verde sin ellos sería mentirte.</span>
+        </li>
+        <li class="faq__item">
+          <span class="faq__pregunta">Le falta el rinde esperado.</span>
+          <span class="faq__respuesta">Es lo que esperás cosechar, en quintales por
+            hectárea. Completalo desde el lote.</span>
+        </li>
+        <li class="faq__item">
+          <span class="faq__pregunta">El lote no tiene hectáreas efectivas.</span>
+          <span class="faq__respuesta">Corregilas desde "Mi establecimiento".</span>
+        </li>
+        <li class="faq__item">
+          <span class="faq__pregunta">Todavía no hay precio del día para ese cultivo.</span>
+          <span class="faq__respuesta">Los precios y el dólar se actualizan solos
+            al abrir el panel. Si el precio tiene más de dos días, te lo avisa en
+            rojo.</span>
+        </li>
+      </ul>
+      <p class="bloque__nota">
+        Las <strong>campañas</strong> son comunes a todos los usuarios, así que no
+        se crean ni se cierran desde la app: en Perfil las ves, pero no se tocan.
+      </p>
+    </section>
+
+    <div class="cierre" data-sin-sesion>
+      <p class="cierre__texto">¿Arrancamos?</p>
+      <div class="cierre__acciones">
+        <a href="creacion_de_usuario_parte_1.html" class="cierre__boton">Crear mi cuenta</a>
+        <a href="login.html" class="cierre__enlace">Ya tengo cuenta</a>
+      </div>
+    </div>
+
+    <div class="cierre" data-con-sesion hidden>
+      <p class="cierre__texto">Todo listo.</p>
+      <div class="cierre__acciones">
+        <a href="dashboard_mi_campo.html" class="cierre__boton">Ir a mi panel</a>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script>
+    // La página es pública: se entra desde la landing sin cuenta, y desde el
+    // engranaje ya logueado. Lo único que cambia es a dónde invitan los
+    // enlaces, así que no se consulta al backend: alcanza con mirar si hay
+    // token guardado (API.haySesion() no hace ningún request).
+    const haySesion = API.haySesion();
+    document.querySelectorAll('[data-con-sesion]').forEach((el) => { el.hidden = !haySesion; });
+    document.querySelectorAll('[data-sin-sesion]').forEach((el) => { el.hidden = haySesion; });
+  </script>
+
+</body>
+</html>

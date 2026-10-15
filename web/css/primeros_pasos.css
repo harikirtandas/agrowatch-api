@@ -1,0 +1,279 @@
+/* primeros_pasos.css — guía de uso para quien entra por primera vez.
+   Carga DESPUES de landing.css: de ahí salen el encabezado y los colores de
+   marca, y acá solo se agrega lo propio de la guía (y se pisa el fondo verde
+   del body, que acá sería ilegible en un texto largo). */
+
+:root {
+  --fondo-app: #f2f1ec;
+  --gris-borde: #e2e2dc;
+  --gris-lectura: #5c665e;
+  --verde-medio: #4f8f63;
+  --amarillo-semaforo: #e0a82e;
+  --rojo-semaforo: #c0503a;
+  --gris-semaforo: #9aa0a6;
+}
+
+body {
+  background: var(--fondo-app);
+}
+
+.guia {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 56px 24px 88px;
+}
+
+.guia__intro {
+  margin-bottom: 40px;
+}
+
+.guia__titulo {
+  font-size: 27px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.guia__bajada {
+  margin-top: 12px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--gris-lectura);
+}
+
+/* ---------- Los pasos numerados ---------- */
+/* El número sale de la lista, no de un ::before, para que sea una <ol> de
+   verdad: un lector de pantalla la anuncia como "4 elementos". */
+
+.pasos {
+  list-style: none;
+  margin: 0 0 40px;
+  padding: 0;
+}
+
+.paso {
+  display: flex;
+  gap: 18px;
+  background: var(--blanco);
+  border-radius: var(--radio);
+  padding: 26px 28px;
+  margin-bottom: 14px;
+}
+
+.paso__numero {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--verde-medio);
+  color: var(--blanco);
+  font-size: 14px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+}
+
+.paso__titulo {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.paso__texto {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--gris-lectura);
+}
+
+.paso__texto + .paso__texto,
+.paso__lista + .paso__texto {
+  margin-top: 12px;
+}
+
+.paso__lista {
+  margin: 12px 0 0;
+  padding-left: 20px;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--gris-lectura);
+}
+
+.paso__lista li + li {
+  margin-top: 8px;
+}
+
+.paso strong,
+.bloque strong {
+  color: inherit;
+  font-weight: 600;
+}
+
+/* ---------- Bloques de apoyo (colores del semáforo, lotes en gris) ---------- */
+
+.bloque {
+  background: var(--blanco);
+  border-radius: var(--radio);
+  padding: 26px 28px;
+  margin-bottom: 14px;
+}
+
+.bloque__titulo {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.bloque__bajada {
+  margin-top: 10px;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--gris-lectura);
+}
+
+.bloque__nota {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--gris-borde);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--gris-lectura);
+}
+
+
+.colores {
+  list-style: none;
+  margin: 18px 0 0;
+  padding: 0;
+}
+
+.color {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+}
+
+.color + .color {
+  border-top: 1px solid var(--gris-borde);
+}
+
+.color__punto {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin-top: 4px;
+  border-radius: 50%;
+}
+
+.color__punto--verde {
+  background: var(--verde-medio);
+}
+.color__punto--amarillo {
+  background: var(--amarillo-semaforo);
+}
+.color__punto--rojo {
+  background: var(--rojo-semaforo);
+}
+.color__punto--gris {
+  background: var(--gris-semaforo);
+}
+
+.color__texto {
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--gris-lectura);
+}
+
+.faq {
+  list-style: none;
+  margin: 18px 0 0;
+  padding: 0;
+}
+
+.faq__item {
+  padding: 12px 0;
+}
+
+.faq__item + .faq__item {
+  border-top: 1px solid var(--gris-borde);
+}
+
+.faq__pregunta {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.faq__respuesta {
+  display: block;
+  margin-top: 4px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--gris-lectura);
+}
+
+/* ---------- Cierre ---------- */
+
+.cierre {
+  margin-top: 32px;
+  text-align: center;
+}
+
+.cierre__texto {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.cierre__acciones {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.cierre__boton {
+  background: var(--verde-medio);
+  color: var(--blanco);
+  border-radius: 24px;
+  padding: 12px 28px;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.cierre__boton:hover {
+  background: #457f57;
+}
+
+.cierre__enlace {
+  color: var(--verde-medio);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.cierre__enlace:hover {
+  text-decoration: underline;
+}
+
+/* ---------- Pantallas chicas ---------- */
+
+@media (max-width: 640px) {
+  .encabezado {
+    padding: 18px 20px;
+  }
+  .guia {
+    padding: 36px 20px 64px;
+  }
+  .guia__titulo {
+    font-size: 24px;
+  }
+  .paso,
+  .bloque {
+    padding: 22px 20px;
+  }
+  .paso {
+    gap: 14px;
+  }
+}
