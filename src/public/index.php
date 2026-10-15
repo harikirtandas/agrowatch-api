@@ -98,8 +98,11 @@ $router->get('/api/campanias', 'CampaniaController@index');
 // app: ruta deshabilitada a proposito, no borrar CampaniaController@store.
 // $router->post('/api/campanias', 'CampaniaController@store');
 $router->get('/api/campanias/{id:\d+}', 'CampaniaController@show');
-$router->put('/api/campanias/{id:\d+}', 'CampaniaController@update');
-$router->delete('/api/campanias/{id:\d+}', 'CampaniaController@destroy');
+// Una campania no tiene dueno contra el que autorizar: es compartida por todos
+// los usuarios, asi que cerrarla o borrarla afectaria a todos. Rutas
+// deshabilitadas a proposito, no borrar CampaniaController@update/@destroy.
+// $router->put('/api/campanias/{id:\d+}', 'CampaniaController@update');
+// $router->delete('/api/campanias/{id:\d+}', 'CampaniaController@destroy');
 
 $router->get('/api/cultivos', 'CultivoController@index');
 $router->get('/api/cultivos/{id:\d+}', 'CultivoController@show');

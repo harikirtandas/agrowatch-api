@@ -57,6 +57,9 @@ final class CampaniaController extends Controller
     // incluido "cerrada" (cerrar una campania = PUT con "cerrada": true).
     // Se busca ANTES con buscar() para poder devolver 404 si no existe. Las
     // campanias no se filtran por usuario, asi que no hay chequeo de pertenencia.
+    // OJO: ruta deshabilitada en index.php. Justamente porque no hay pertenencia
+    // que chequear (una campania no tiene dueno, es compartida por todos), no
+    // existe un usuario autorizado a modificarla: no se modifica desde la app.
     public function update(int $id): void
     {
     Auth::usuarioActual($this->request);
@@ -109,6 +112,8 @@ final class CampaniaController extends Controller
     // NO tiene ON DELETE CASCADE a proposito (una campania con datos se cierra, no se
     // borra). Se chequea el conteo ANTES de borrar. Sin chequeo de pertenencia porque
     // las campanias no se filtran por usuario.
+    // OJO: ruta deshabilitada en index.php, por el mismo motivo que update():
+    // sin dueno no hay a quien autorizar, y el borrado afectaria a todos.
     public function destroy(int $id): void
     {
         Auth::usuarioActual($this->request);
