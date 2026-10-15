@@ -9,7 +9,7 @@ RUN a2enmod rewrite
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 COPY docker/apache/000-default.conf /etc/apache2/sites-available/000-default.conf
-COPY docker/php/php.ini /usr/local/etc/php/conf.d/zz-dev.ini
+COPY docker/php/php.prod.ini /usr/local/etc/php/conf.d/zz-prod.ini
 
 WORKDIR /var/www/html
 
