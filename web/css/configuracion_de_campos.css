@@ -317,7 +317,13 @@ body {
   background: #eef5ef;
 }
 
-.boton-ubicar {
+/* Boton "Ubicar" de la tabla de lotes de esta pantalla. Tiene nombre propio y
+   no .boton-ubicar (el del modal, en comun.css) porque son dos componentes
+   distintos: este trae su icono como <svg> y marca el estado activo desde la
+   fila (.fila--ubicando), mientras que el del modal lo dibuja con ::before.
+   Mientras compartieron nombre, en esta pantalla cargaban las dos hojas y a
+   cada boton le entraban los dos iconos. */
+.boton-ubicar-lote {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -334,28 +340,28 @@ body {
   transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
-.boton-ubicar svg {
+.boton-ubicar-lote svg {
   width: 15px;
   height: 15px;
 }
 
-.boton-ubicar:hover {
+.boton-ubicar-lote:hover {
   border-color: var(--verde-medio);
 }
 
-.fila--ubicando .boton-ubicar {
+.fila--ubicando .boton-ubicar-lote {
   background: var(--verde-medio);
   border-color: var(--verde-medio);
   color: var(--blanco);
 }
 
-.boton-ubicar--ubicado {
+.boton-ubicar-lote--ubicado {
   background: var(--amarillo-chip);
   border-color: transparent;
   color: var(--amarillo-chip-texto);
 }
 
-.boton-ubicar:disabled,
+.boton-ubicar-lote:disabled,
 .boton-quitar:disabled {
   opacity: 0.5;
   cursor: default;

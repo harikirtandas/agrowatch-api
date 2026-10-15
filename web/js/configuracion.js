@@ -90,9 +90,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         lote.lng = lng;
         lote.marcador?.remove();
         lote.marcador = Mapa.marcadorLote(lat, lng).bindTooltip(nombreLote(lote) || 'Lote').addTo(mapa);
-        const botonUbicar = lote.fila.querySelector('.boton-ubicar');
+        const botonUbicar = lote.fila.querySelector('.boton-ubicar-lote');
         botonUbicar.querySelector('span').textContent = 'Ubicado';
-        botonUbicar.classList.add('boton-ubicar--ubicado');
+        botonUbicar.classList.add('boton-ubicar-lote--ubicado');
         cambiarObjetivo(null);
     }
 
@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <td><input type="number" name="loteHaTotales" class="campo__entrada" min="0.01" step="0.01" placeholder="Ej. 90" required></td>
             <td><input type="number" name="loteHaEfectivas" class="campo__entrada" min="0.01" step="0.01" placeholder="Ej. 85" required></td>
             <td>
-                <button type="button" class="boton-ubicar">
+                <button type="button" class="boton-ubicar-lote">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.2 7-11.5a7 7 0 1 0-14 0C5 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.3"/></svg>
                     <span>Ubicar</span>
                 </button>
@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const lote = { id: datos?.id ?? null, fila, lat: null, lng: null, marcador: null, original: null};
         lotes.push(lote);
 
-        fila.querySelector('.boton-ubicar').addEventListener('click', () => cambiarObjetivo(lote));
+        fila.querySelector('.boton-ubicar-lote').addEventListener('click', () => cambiarObjetivo(lote));
         fila.querySelector('.boton-quitar').addEventListener('click', () => {
             if (lote.id !== null) {
                 if (!confirm(`¿Quitar "${nombreLote(lote)}"? Se va a borrar al guardar.`)) return;
