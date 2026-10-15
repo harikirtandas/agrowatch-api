@@ -1,6 +1,6 @@
 {
-    "name": "harikirtandas/php-api-docker-starter-apache-mysql",
-    "description": "Esqueleto de API REST en PHP plano, sin framework: router propio con verbos HTTP, respuestas JSON, auth por token y CORS",
+    "name": "agrowatchout/agrowatch-api",
+    "description": "API REST de AgroWatchOut: margen bruto proyectado, rinde de indiferencia y semaforo de rentabilidad para siembras agropecuarias",
     "type": "project",
     "require": {
         "php": ">=8.2",
