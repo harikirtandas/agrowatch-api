@@ -20,6 +20,10 @@
       '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
     establecimiento:
       '<path d="M3 10.5 12 4l9 6.5"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5h4v5"/>',
+    // Mapa plegado. Lo usa "Mi establecimiento" en la nav: la casita ya es el
+    // boton de CREAR establecimiento, y a 19px las dos juntas se confunden.
+    mapa:
+      '<path d="m9 4.5-5.2 2.1a1 1 0 0 0-.8 1V19a.6.6 0 0 0 .8.5L9 17.5l6 2 5.2-2.1a1 1 0 0 0 .8-1V4.5a.6.6 0 0 0-.8-.5L15 6z"/><line x1="9" y1="4.5" x2="9" y2="17.5"/><line x1="15" y1="6" x2="15" y2="19.5"/>',
     lote: '<rect x="3" y="4.5" width="18" height="15" rx="2"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="12" y1="4.5" x2="12" y2="12"/>',
     siembra:
       '<path d="M12 21v-8"/><path d="M12 13c0-3.3 2.4-5.5 5.5-5.5C17.5 10.8 15.1 13 12 13z"/><path d="M12 13c0-2.8-2-4.8-4.8-4.8C7.2 11 9.2 13 12 13z"/>',
@@ -31,8 +35,17 @@
   // Navegación: a dónde lleva cada ícono. Perfil no va acá: vive en el
   // desplegable del engranaje, a la derecha de todo.
   const NAV = [
-    { href: "dashboard_mi_campo.html", tip: "Panel", icono: "panel" },
-    { href: "semaforo.html", tip: "Semáforo", icono: "semaforo" },
+    { clave: "panel", href: "dashboard_mi_campo.html", tip: "Panel", icono: "panel" },
+    { clave: "semaforo", href: "semaforo.html", tip: "Semáforo", icono: "semaforo" },
+    // Antes era el enlace "Editar campo" suelto en el encabezado del panel.
+    // Acá se llama "establecimiento" como en el resto de la app, y al ser una
+    // pantalla principal mas vive en la nav junto a Panel y Semaforo.
+    {
+      clave: "establecimiento",
+      href: "configuracion_de_campos.html",
+      tip: "Mi establecimiento",
+      icono: "mapa",
+    },
   ];
 
   // Los 3 botones de crear. "destino" es la pantalla a la que llevan POR AHORA;
@@ -69,7 +82,7 @@
     <nav class="barra-superior__nav">
       ${NAV.map(
         (n) => `
-        <a href="${n.href}"
+        <a href="${n.href}" data-nav="${n.clave}"
            class="barra-superior__navitem${n.href === PAGINA ? " barra-superior__navitem--activo" : ""}"
            aria-label="${n.tip}">${svg(ICONOS[n.icono])}<span>${n.tip}</span></a>
       `,
@@ -100,6 +113,27 @@
   `;
 
   document.body.prepend(barra);
+
+  // "Mi establecimiento" abre la configuracion DEL establecimiento elegido en el
+  // panel, no el alta en blanco: sin ?establecimiento=<id>, configuracion.js
+  // arranca en modo "crear uno nuevo" (que es lo que hace el boton de crear).
+  // El id sale de localStorage, la misma llave que escriben el panel y el
+  // perfil al cambiar de establecimiento. Se recalcula en cada clic porque la
+  // barra se arma una sola vez al cargar la pagina, pero el selector del panel
+  // puede cambiar el establecimiento despues, sin recargar.
+  const itemEstablecimiento = barra.querySelector('[data-nav="establecimiento"]');
+  const hrefEstablecimiento = () => {
+    const id = localStorage.getItem("establecimientoActual");
+    return id
+      ? `configuracion_de_campos.html?establecimiento=${id}`
+      : "configuracion_de_campos.html";
+  };
+  itemEstablecimiento.href = hrefEstablecimiento();
+  // El navegador lee el href DESPUES del listener, asi que alcanza con
+  // actualizarlo acá (no hace falta preventDefault ni location.href a mano).
+  itemEstablecimiento.addEventListener("click", () => {
+    itemEstablecimiento.href = hrefEstablecimiento();
+  });
 
   // Clic en un botón de crear.
   barra.querySelectorAll("[data-accion]").forEach((boton) => {

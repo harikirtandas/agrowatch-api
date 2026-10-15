@@ -642,9 +642,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         const botonSinHa = ev.target.closest('[data-sin-ha]');
         if (botonSinHa) {
             const lote = filasActuales.find((f) => f.lote.id === Number(botonSinHa.dataset.sinHa))?.lote;
-            const editarHref = document.getElementById('editarEstablecimiento').href;
+            // El enlace salía del <a> "Editar campo" del encabezado, que se mudó a la
+            // barra de arriba ("Mi establecimiento"). Ahora la URL se arma acá, y
+            // apunta al establecimiento DEL LOTE (no al elegido en el selector).
+            const editarHref = `configuracion_de_campos.html?establecimiento=${lote?.establecimiento_id}`;
             modalLoteTitulo.textContent = lote?.nombre ?? 'Lote';
-            modalLoteContenido.innerHTML = `<p>Este lote todavía no tiene hectáreas efectivas cargadas (${formatoNumero(num(lote?.ha_efectivas), 1)} ha), así que no se le puede asignar una siembra. Corregí sus hectáreas desde <a href="${editarHref}">Editar campo</a>.</p>`;
+            modalLoteContenido.innerHTML = `<p>Este lote todavía no tiene hectáreas efectivas cargadas (${formatoNumero(num(lote?.ha_efectivas), 1)} ha), así que no se le puede asignar una siembra. Corregí sus hectáreas desde <a href="${editarHref}">Mi establecimiento</a>.</p>`;
             modalLote.hidden = false;
             return;
         }
@@ -790,8 +793,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         tarjeta.hidden = true;
         slider.value = 0;
 
+        // Ya no hay enlace "Editar campo" en el encabezado al que pisarle el href
+        // (se mudó a la barra de arriba como "Mi establecimiento"), pero la URL
+        // sigue haciendo falta: dibujarListaLotes() la usa para el "Agregar lotes"
+        // del establecimiento todavía sin lotes.
         const urlEditar = `configuracion_de_campos.html?establecimiento=${id}`;
-        document.getElementById('editarEstablecimiento').href = urlEditar;
 
         const establecimiento = establecimientos.find((e) => e.id === id);
         const [lotes, siembras] = await Promise.all([
@@ -903,7 +909,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const ubicacion = ubicacionEstablecimiento(filas, establecimiento);
 
         if (!ubicacion) {
-            contenido.innerHTML = '<p class="tarjeta-info__texto">Este establecimiento todavía no tiene ubicación. Ubicalo en "Editar campo".</p>';
+            contenido.innerHTML = '<p class="tarjeta-info__texto">Este establecimiento todavía no tiene ubicación. Ubicalo en "Mi establecimiento".</p>';
             return;
         }
 

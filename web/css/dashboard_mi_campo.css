@@ -500,20 +500,6 @@ body {
   background: var(--blanco);
 }
 
-.mapa-lotes__editar {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--blanco);
-  border-radius: 20px;
-  padding: 6px 14px;
-  font-size: 13px;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.mapa-lotes__editar:hover {
-  background: rgba(255, 255, 255, 0.18);
-}
-
 /* Tarjeta flotante del lote seleccionado */
 .tarjeta-flotante {
   position: absolute;
@@ -1167,17 +1153,12 @@ body {
   background: #9aa0a6;
 }
 
-.encabezado-panel .mapa-lotes__establecimiento,
-.encabezado-panel .mapa-lotes__editar {
+.encabezado-panel .mapa-lotes__establecimiento {
   background: var(--blanco);
   color: var(--negro-texto);
   border: 1px solid var(--gris-borde);
   font-size: 14px;
   padding: 8px 14px;
-}
-
-.encabezado-panel .mapa-lotes__editar:hover {
-  background: var(--fondo-app);
 }
 
 /* Modal de detalle de lote */
