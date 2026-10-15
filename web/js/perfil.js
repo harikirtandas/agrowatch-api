@@ -81,17 +81,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // 3) Campañas (11.7). Son compartidas y de alta manual en la base (no se
-  // crean desde la app): esta pantalla solo deja verlas, cerrarlas o
-  // eliminarlas.
+  // 3) Campañas (11.7). Son compartidas por TODOS los usuarios y de alta manual
+  // en la base (no se crean desde la app), asi que esta pantalla es de solo
+  // lectura: no se cierran, no se reabren y no se eliminan desde el perfil.
+  // Antes habia botones de Cerrar/Reabrir/Eliminar, pero cualquier usuario
+  // logueado podia cambiarle el estado a una campania que afecta a todos los
+  // demas (el backend tampoco filtra por usuario: la campania no tiene dueno),
+  // asi que la vista ya no ofrece esa accion.
   const lista = document.getElementById('listaCampanias');
   const campaniasMensajes = document.getElementById('campaniasMensajes');
-  let campanias = [];
 
   // Trae las campañas y dibuja la lista (la más reciente primero).
   async function cargarCampanias() {
-    campanias = (await API.get('/campanias'))
-      .sort((a, b) => b.fecha_inicio.localeCompare(a.fecha_inicio));
+    let campanias;
+    try {
+      campanias = await API.get('/campanias');
+    } catch (error) {
+      // Antes el unico error posible era el de cerrar/eliminar; ahora el GET es
+      // la unica llamada de esta tarjeta, asi que se muestra igual en la caja.
+      mostrarError(campaniasMensajes, error);
+      return;
+    }
+    campanias.sort((a, b) => b.fecha_inicio.localeCompare(a.fecha_inicio));
 
     if (campanias.length === 0) {
       lista.innerHTML = '<li class="lista-campanias__vacia">No hay campañas cargadas.</li>';
@@ -105,43 +116,9 @@ document.addEventListener('DOMContentLoaded', async () => {
           <span class="lista-campanias__nombre">${escapar(c.nombre)}</span>
           <span class="lista-campanias__fechas">${fechaCorta(c.fecha_inicio)} – ${fechaCorta(c.fecha_fin)}</span>
           <span class="etiqueta-rol ${cerrada ? 'etiqueta-rol--asesor' : 'etiqueta-rol--dueno'}">${cerrada ? 'Cerrada' : 'Abierta'}</span>
-          <button type="button" class="boton-campania" data-accion="${cerrada ? 'reabrir' : 'cerrar'}">${cerrada ? 'Reabrir' : 'Cerrar'}</button>
-          <button type="button" class="boton-quitar" data-accion="eliminar" aria-label="Eliminar campaña ${escapar(c.nombre)}">✕</button>
         </li>`;
     }).join('');
   }
-
-  // Un solo listener para TODOS los botones de la lista ("delegación de eventos"):
-  // la lista se vuelve a dibujar después de cada cambio (los botones son nuevos),
-  // y así no hay que volver a enganchar un listener por botón.
-  lista.addEventListener('click', async (ev) => {
-    const boton = ev.target.closest('button[data-accion]');
-    if (!boton) return; // el clic no fue en un botón
-    const campania = campanias.find((c) => c.id === Number(boton.closest('li').dataset.id));
-    const accion = boton.dataset.accion;
-    mostrarError(campaniasMensajes, null);
-
-    try {
-      if (accion === 'eliminar') {
-        if (!confirm(`¿Eliminar la campaña ${campania.nombre}?`)) return;
-        await API.del(`/campanias/${campania.id}`);
-      } else {
-        const cerrar = accion === 'cerrar';
-        if (cerrar && !confirm(`¿Cerrar la campaña ${campania.nombre}? Se cierra para todos los usuarios y no se le podrán cargar siembras nuevas.`)) return;
-        // PUT es reemplazo completo: van los 4 campos aunque solo cambie "cerrada",
-        // y "cerrada" tiene que ser booleano (campanias.update.json), no 0/1.
-        await API.put(`/campanias/${campania.id}`, {
-          nombre: campania.nombre,
-          fecha_inicio: campania.fecha_inicio,
-          fecha_fin: campania.fecha_fin,
-          cerrada: cerrar,
-        });
-      }
-      await cargarCampanias();
-    } catch (error) {
-      mostrarError(campaniasMensajes, error); // ej. 409 "La campana tiene siembras asociadas."
-    }
-  });
 
   await cargarCampanias();
 });

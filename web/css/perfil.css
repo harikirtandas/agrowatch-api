@@ -413,7 +413,7 @@ body {
 
 .lista-campanias__item {
   display: grid;
-  grid-template-columns: 1fr auto auto auto auto;
+  grid-template-columns: 1fr auto auto;
   align-items: center;
   gap: 12px;
   padding: 12px 0;
@@ -435,36 +435,6 @@ body {
 
 .lista-campanias .etiqueta-rol { 
   margin-left: 0; 
-}
-
-.boton-campania {
-  border: 1px solid var(--gris-borde);
-  border-radius: 20px;
-  padding: 6px 12px;
-  background: var(--blanco);
-  color: var(--verde-medio);
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.boton-campania:hover { 
-  border-color: var(--verde-medio); 
-}
-
-.boton-quitar {
-  background: none;
-  border: none;
-  border-radius: 8px;
-  padding: 6px;
-  color: #d1583f;
-  font-family: inherit;
-  font-size: 16px;
-  cursor: pointer;
-}
-.boton-quitar:hover { 
-  background: rgba(209, 88, 63, 0.08); 
 }
 
 /* Responsive */
