@@ -32,82 +32,6 @@ body {
   min-height: 100vh;
 }
 
-/* Barra lateral */
-.barra-lateral {
-  width: 80px;
-  background: var(--verde-oscuro);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 24px 0;
-  gap: 32px;
-}
-
-.barra-lateral__logo {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: url('../img/logo-aw.svg') center / cover no-repeat;
-}
-
-.barra-lateral__nav {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  flex: 1;
-}
-
-.barra-lateral__icono {
-  width: 44px;
-  height: 44px;
-  border: none;
-  border-radius: 12px;
-  background: transparent;
-  color: #b9c4bb;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  text-decoration: none;
-  transition: background-color 0.15s ease, color 0.15s ease;
-}
-
-.barra-lateral__icono svg {
-  width: 22px;
-  height: 22px;
-}
-
-.barra-lateral__icono:hover {
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.barra-lateral__icono--activo {
-  background: rgba(255, 255, 255, 0.12);
-  color: var(--blanco);
-}
-
-.barra-lateral__avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: var(--bien);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--blanco);
-  text-decoration: none;
-  transition: background-color 0.15s ease;
-}
-
-.barra-lateral__avatar svg {
-  width: 18px;
-  height: 18px;
-}
-
-.barra-lateral__avatar:hover {
-  background: #457f57;
-}
-
 /* Contenido */
 .contenido {
   flex: 1;
@@ -1138,17 +1062,6 @@ body {
   font-size: 13px;
 }
 
-.barra-lateral__salir {
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  font-family: inherit;
-}
-
-.barra-lateral__salir:hover {
-  color: #f0b5a8;
-}
-
 .punto--sin-dato {
   background: #9aa0a6;
 }
@@ -1247,14 +1160,6 @@ body {
 @media (max-width: 640px) {
   .aplicacion {
     flex-direction: column;
-  }
-  .barra-lateral {
-    width: 100%;
-    flex-direction: row;
-    padding: 12px 20px;
-  }
-  .barra-lateral__nav {
-    flex-direction: row;
   }
   .contenido {
     padding: 20px;
