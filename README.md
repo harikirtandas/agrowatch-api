@@ -2,12 +2,14 @@
 
 **¿Lo que sembraste te va a dejar plata?** AgroWatchOut es una aplicación web para productores agropecuarios: el productor carga sus campos, sus lotes y lo que sembró en cada uno con sus costos, y la app calcula el **margen bruto proyectado**, el **rinde de indiferencia** y un **semáforo de rentabilidad** con el precio del grano y el dólar del día.
 
-|                    |                                                                                  |
-| ------------------ | -------------------------------------------------------------------------------- |
-| **App (frontend)** | https://agrowatchout.up.railway.app                                              |
-| **API**            | https://api-rest-agro.up.railway.app/api                                         |
-| **Materia**        | Aplicaciones Móviles y Cloud Computing (UPSO), Trabajo Práctico Integrador N.º 1 |
-| **Docentes**       | Eduardo Mónaco y Heber Alonso                                                    |
+|                    |                                                                                                |
+| ------------------ | ---------------------------------------------------------------------------------------------- |
+| **App (frontend)** | https://agrowatchout.up.railway.app                                                            |
+| **API**            | https://api-rest-agro.up.railway.app/api                                                       |
+| **Materia**        | Aplicaciones Móviles y Cloud Computing (UPSO), Trabajo Práctico Integrador N.º 1               |
+| **Docentes**       | Eduardo Mónaco y Heber Alonso                                                                  |
+| **Grupo**          | 1                                                                                              |
+| **Integrantes**    | Jorge Bianchi, Gabriel R. Iglesias, Marcos San Román, Camila Ailén Rodríguez y Facundo Curiman |
 
 ## Índice
 
